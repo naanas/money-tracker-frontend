@@ -59,15 +59,21 @@ export function AuthProvider({ children }) {
     });
     return data; 
   };
+  
   const login = async (email, password) => {
     const { data } = await axiosClient.post('/api/auth/login', {
       email,
       password,
     });
     await supabase.auth.setSession(data.data.session);
+    
+    // [PERUBAHAN DITAMBAHKAN DI SINI]
+    triggerSuccessAnimation(); // Panggil animasi sukses
+
     navigate('/dashboard');
     return data;
   };
+
   const logout = async () => {
     await supabase.auth.signOut();
     navigate('/login');
