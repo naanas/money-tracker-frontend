@@ -28,47 +28,45 @@ const Register = () => {
   };
 
   return (
-    // Menggunakan class dari CSS baru
-    <div className="auth-form">
-      <form onSubmit={handleSubmit}>
-        <h2>Register</h2>
-        {error && <p className="error">{error}</p>}
-        {message && <p className="success">{message}</p>}
-        <div className="form-group">
-          <label>Full Name</label>
-          <input
-            type="text"
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <label>Email</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <label>Password</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
-        <button type="submit" disabled={loading}>
-          {loading ? 'Registering...' : 'Register'}
-        </button>
-        <p>
-          Sudah punya akun? <Link to="/login">Login di sini</Link>
-        </p>
-      </form>
-    </div>
+    // Kita hapus <div className="auth-form"> dari sini
+    <form onSubmit={handleSubmit}>
+      <h2>Register</h2>
+      {error && <p className="error">{error}</p>}
+      {message && <p className="success">{message}</p>}
+      <div className="form-group">
+        <label>Full Name</label>
+        <input
+          type="text"
+          value={fullName}
+          onChange={(e) => setFullName(e.target.value)}
+          required
+        />
+      </div>
+      <div className="form-group">
+        <label>Email</label>
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+      </div>
+      <div className="form-group">
+        <label>Password</label>
+        <input
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+      </div>
+      <button type="submit" disabled={loading}>
+        {loading ? 'Registering...' : 'Register'}
+      </button>
+      <p>
+        Sudah punya akun? <Link to="/login">Login di sini</Link>
+      </p>
+    </form>
   );
 };
 

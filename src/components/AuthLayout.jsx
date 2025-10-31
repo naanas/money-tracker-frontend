@@ -6,7 +6,8 @@ const AuthLayout = () => {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return <div>Loading...</div>;
+    // Tampilkan layar loading kosong selagi mengecek auth
+    return <div className="auth-layout"></div>;
   }
 
   if (user) {
@@ -14,8 +15,20 @@ const AuthLayout = () => {
     return <Navigate to="/dashboard" replace />;
   }
 
-  // Jika belum login, tampilkan halaman (Login atau Register)
-  return <Outlet />;
+  // Jika belum login, tampilkan layout sidebar form
+  // dan render halaman (Login atau Register) di dalamnya
+  return (
+    <div className="auth-layout">
+      <div className="auth-sidebar">
+        <div className="auth-form-container">
+          <Outlet />
+        </div>
+      </div>
+      <div className="auth-main-content">
+        {/* Biarkan kosong agar gelap seperti di screenshot */}
+      </div>
+    </div>
+  );
 };
 
 export default AuthLayout;

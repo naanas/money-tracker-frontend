@@ -24,37 +24,35 @@ const Login = () => {
   };
 
   return (
-    // Menggunakan class dari CSS baru
-    <div className="auth-form">
-      <form onSubmit={handleSubmit}>
-        <h2>Login</h2>
-        {error && <p className="error">{error}</p>}
-        <div className="form-group">
-          <label>Email</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <label>Password</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
-        <button type="submit" disabled={loading}>
-          {loading ? 'Logging in...' : 'Login'}
-        </button>
-        <p>
-          Belum punya akun? <Link to="/register">Daftar di sini</Link>
-        </p>
-      </form>
-    </div>
+    // Kita hapus <div className="auth-form"> dari sini
+    <form onSubmit={handleSubmit}>
+      <h2>Login</h2>
+      {error && <p className="error">{error}</p>}
+      <div className="form-group">
+        <label>Email</label>
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+      </div>
+      <div className="form-group">
+        <label>Password</label>
+        <input
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+      </div>
+      <button type="submit" disabled={loading}>
+        {loading ? 'Logging in...' : 'Login'}
+      </button>
+      <p>
+        Belum punya akun? <Link to="/register">Daftar di sini</Link>
+      </p>
+    </form>
   );
 };
 

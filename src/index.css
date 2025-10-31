@@ -449,3 +449,42 @@ button:disabled {
 @keyframes fill {
   100% { box-shadow: inset 0px 0px 0px 40px var(--color-accent-success); }
 }
+
+
+/* === AUTH LAYOUT === */
+.auth-layout {
+  display: flex;
+  width: 100%;
+  height: 100vh;
+}
+
+.auth-sidebar {
+  width: 100%;
+  max-width: 450px; /* Lebar sidebar form */
+  background-color: var(--color-bg-medium);
+  border-right: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 2.5rem;
+}
+
+.auth-main-content {
+  flex-grow: 1;
+  background-color: var(--color-bg-dark); /* Area gelap di kanan */
+}
+
+/* Ganti .auth-form menjadi .auth-form-container */
+.auth-form-container {
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto; /* Pusatkan form di dalam sidebar */
+}
+
+/* Pastikan form di dalam container tidak punya background lagi */
+.auth-form-container form {
+  background-color: transparent;
+  padding: 0;
+  border: none;
+  box-shadow: none;
+}
