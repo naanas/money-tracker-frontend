@@ -1354,3 +1354,37 @@ button:disabled {
 .budget-details-list .list-item:first-child {
   padding-top: 1rem;
 }
+
+/* ... (SEMUA CSS ANDA YANG SUDAH ADA BIARKAN DI ATAS) ... */
+
+/* === [BARU] Styling untuk Input Mata Uang === */
+.input-currency {
+  text-align: right; /* Bikin angka rata kanan */
+  font-weight: 500;
+  font-size: 1.1rem !important;
+}
+
+/* === [BARU] Styling untuk Budget Item yang Bisa Diklik === */
+.budget-details-list .list-item.clickable {
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.budget-details-list .list-item.clickable:hover {
+  background-color: var(--color-bg-light);
+}
+
+/* === [BARU] Styling untuk tombol Batal di form budget === */
+.budget-form .form-group-inline {
+  display: flex;
+  gap: 10px;
+}
+
+.budget-form .form-group-inline .btn-secondary {
+  width: auto; /* Jangan 100% */
+  padding: 0 1.5rem;
+  background-color: var(--color-border);
+}
+.budget-form .form-group-inline .btn-secondary:hover {
+  background-color: var(--color-bg-light);
+}

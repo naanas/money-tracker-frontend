@@ -15,8 +15,13 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  
+  // === [STATE BARU UNTUK EDIT BUDGET] ===
+  const [budgetToEdit, setBudgetToEdit] = useState(null);
+  // === [AKHIR STATE BARU] ===
 
   const fetchData = useCallback(async () => {
+    // ... (kode fetchData Anda tidak berubah)
     setError('');
     try {
       const [analyticsRes, transactionsRes, categoriesRes] = await Promise.all([
@@ -39,11 +44,14 @@ const Dashboard = () => {
     fetchData();
   }, [fetchData]);
 
+  // [MODIFIKASI] handleDataUpdate sekarang juga membersihkan form edit
   const handleDataUpdate = () => {
     fetchData();
+    setBudgetToEdit(null); // Bersihkan form edit setelah update
   };
 
   if (loading) {
+    // ... (kode loading Anda tidak berubah)
     return (
       <div className="dashboard-layout">
         <aside className="sidebar">
@@ -59,21 +67,18 @@ const Dashboard = () => {
     );
   }
 
-  // === [MODIFIKASI LOGIKA BUDGET] ===
-  // Ambil total_amount dari struktur analytics baru
+  // ... (kode kalkulasi budget tidak berubah)
   const budgetAmount = analytics?.budget?.total_amount || 0;
   const budgetSpent = analytics?.summary?.total_expenses || 0;
   const budgetRemaining = analytics?.budget?.remaining || 0;
   const budgetProgress = budgetAmount > 0 ? (budgetSpent / budgetAmount) * 100 : 0;
-  // Ambil detail sub-budget
   const budgetDetails = analytics?.budget?.details || [];
-  // === [AKHIR MODIFIKASI] ===
 
 
   return (
     <>
       <div className="dashboard-layout">
-        {/* === SIDEBAR (DESKTOP) === */}
+        {/* ... (Sidebar tidak berubah) ... */}
         <aside className="sidebar">
           <div className="sidebar-header">
             <h1>💰 Money Tracker</h1>
@@ -88,6 +93,7 @@ const Dashboard = () => {
 
         {/* === KONTEN UTAMA === */}
         <main className="main-content">
+          {/* ... (Mobile header tidak berubah) ... */}
           <header className="mobile-header">
             <h1>💰 Money Tracker</h1>
             <button onClick={logout} className="logout-btn-mobile">
@@ -99,7 +105,7 @@ const Dashboard = () => {
           {error && <p className="error">{error}</p>}
           
           <div className="dashboard-grid">
-            {/* --- 1. Ringkasan Finansial (Tidak berubah) --- */}
+            {/* ... (Kartu Ringkasan tidak berubah) ... */}
             {analytics && (
               <section className="card card-summary">
                 <h3>Ringkasan Bulan Ini</h3>
@@ -119,11 +125,10 @@ const Dashboard = () => {
               </section>
             )}
 
-            {/* === [KARTU BUDGET DIROMBAK TOTAL] === */}
+            {/* --- [KARTU BUDGET DIMODIFIKASI] --- */}
             <section className="card card-budget">
               <h3>Budget Bulan Ini</h3>
               
-              {/* --- Progress Bar Total --- */}
               <div className="budget-info">
                 <span>Terpakai: {formatCurrency(budgetSpent)}</span>
                 <span>Sisa: {formatCurrency(budgetRemaining)}</span>
@@ -141,17 +146,24 @@ const Dashboard = () => {
               
               <hr className="modal-divider" />
 
-              {/* --- Form Input Sub-Budget --- */}
+              {/* [MODIFIKASI] Teruskan state edit ke BudgetForm */}
               <BudgetForm 
                 categories={categories} 
-                onBudgetSet={handleDataUpdate} 
+                onBudgetSet={handleDataUpdate}
+                budgetToEdit={budgetToEdit}
+                onClearEdit={() => setBudgetToEdit(null)}
               />
               
-              {/* --- Daftar Sub-Budget yang Sudah Ditetapkan --- */}
+              {/* [MODIFIKASI] Buat daftar sub-budget bisa diklik */}
               <div className="budget-details-list">
                 {budgetDetails.length > 0 ? (
                   budgetDetails.map(budget => (
-                    <div className="list-item" key={budget.category_name}>
+                    <div 
+                      className="list-item clickable" // [BARU] Tambah class 'clickable'
+                      key={budget.category_name}
+                      onClick={() => setBudgetToEdit(budget)} // [BARU] Aksi onClick
+                      title="Klik untuk edit"
+                    >
                       <span>{budget.category_name}</span>
                       <span style={{fontWeight: 500}}>{formatCurrency(budget.amount)}</span>
                     </div>
@@ -163,10 +175,10 @@ const Dashboard = () => {
                 )}
               </div>
             </section>
-            {/* === [AKHIR ROMBAKAN KARTU BUDGET] === */}
+            {/* --- [AKHIR KARTU BUDGET] --- */}
 
 
-            {/* --- 3. Form Tambah Transaksi (Tidak berubah) --- */}
+            {/* ... (Kartu Form Transaksi tidak berubah) ... */}
             <section className="card card-form">
               <h3>Tambah Transaksi Baru</h3>
               <TransactionForm 
@@ -176,7 +188,7 @@ const Dashboard = () => {
               />
             </section>
 
-            {/* --- 4. Transaksi Terakhir (Tidak berubah) --- */}
+            {/* ... (Kartu Transaksi Terakhir tidak berubah) ... */}
             <section className="card card-list">
               <h3>5 Transaksi Terakhir</h3>
               <ul>
@@ -199,7 +211,7 @@ const Dashboard = () => {
               </ul>
             </section>
 
-            {/* --- 5. Pengeluaran per Kategori (Tidak berubah) --- */}
+            {/* ... (Kartu Pengeluaran per Kategori tidak berubah) ... */}
             {analytics && (
               <section className="card card-list">
                 <h3>Pengeluaran per Kategori</h3>
@@ -222,7 +234,7 @@ const Dashboard = () => {
         </main>
       </div>
 
-      {/* === MODAL KATEGORI (Tidak berubah) === */}
+      {/* ... (Modal Kategori tidak berubah) ... */}
       {isCategoryModalOpen && (
         <CategoryForm 
           existingCategories={categories}
