@@ -1,15 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import axiosClient from '../api/axiosClient';
-// [BARU] Impor helper format
 import { formatNumberInput, parseNumberInput } from '../utils/format';
 
-const TransactionForm = ({ categories, onTransactionAdded, onOpenCategoryModal }) => {
-  // [MODIFIKASI] amount sekarang string angka mentah (e.g., "500000")
+// [MODIFIKASI] Ambil prop 'selectedDate'
+const TransactionForm = ({ categories, onTransactionAdded, onOpenCategoryModal, selectedDate }) => {
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState('');
   const [type, setType] = useState('expense');
   const [description, setDescription] = useState('');
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  
+  // === [MODIFIKASI STATE TANGGAL] ===
+  // Fungsi untuk membuat tanggal hari ini TAPI di bulan & tahun yang dipilih
+  const getInitialDate = () => {
+    const today = new Date();
+    const targetDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), today.getDate());
+    return targetDate.toISOString().split('T')[0];
+  };
+
+  const [date, setDate] = useState(getInitialDate());
+
+  // Update tanggal jika bulan diganti
+  useEffect(() => {
+    setDate(getInitialDate());
+  }, [selectedDate]);
+  // === [AKHIR MODIFIKASI] ===
+
+
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -31,7 +47,7 @@ const TransactionForm = ({ categories, onTransactionAdded, onOpenCategoryModal }
     
     try {
       await axiosClient.post('/api/transactions', {
-        amount: parseFloat(amount), // Ubah string angka mentah jadi float
+        amount: parseFloat(amount),
         category: category || (type === 'expense' ? 'Other Expenses' : 'Other Income'),
         type,
         description,
@@ -53,13 +69,12 @@ const TransactionForm = ({ categories, onTransactionAdded, onOpenCategoryModal }
     <form onSubmit={handleSubmit} className="transaction-form">
       {error && <p className="error">{error}</p>}
       <div className="form-group-radio">
-        {/* ... (radio button tidak berubah) ... */}
         <label>
           <input 
             type="radio" 
             value="expense" 
             checked={type === 'expense'} 
-            onChange={() => { setType('expense'); setCategory(''); }}
+            onChange={() => setType('expense')}
           />
           Pengeluaran
         </label>
@@ -68,29 +83,26 @@ const TransactionForm = ({ categories, onTransactionAdded, onOpenCategoryModal }
             type="radio" 
             value="income" 
             checked={type === 'income'} 
-            onChange={() => { setType('income'); setCategory(''); }}
+            onChange={() => setType('income')}
           />
           Pemasukan
         </label>
       </div>
 
-      {/* === [INPUT JUMLAH DIMODIFIKASI] === */}
       <div className="form-group">
         <label>Jumlah</label>
         <input
-          type="text" // Ganti ke text
-          inputMode="numeric" // Tampilkan keyboard angka di HP
-          value={formatNumberInput(amount)} // Tampilkan format (e.g., "500.000")
-          onChange={(e) => setAmount(parseNumberInput(e.target.value))} // Simpan angka mentah (e.g., "500000")
+          type="text" 
+          inputMode="numeric"
+          value={formatNumberInput(amount)} 
+          onChange={(e) => setAmount(parseNumberInput(e.target.value))} 
           placeholder="0"
           required
-          className="input-currency" // Class baru untuk styling
+          className="input-currency" 
         />
       </div>
-      {/* === [AKHIR MODIFIKASI] === */}
 
       <div className="form-group-inline">
-        {/* ... (dropdown kategori tidak berubah) ... */}
         <div className="form-group" style={{ flexGrow: 1 }}>
           <label>Kategori</label>
           <select value={category} onChange={(e) => setCategory(e.target.value)} required>
@@ -111,7 +123,6 @@ const TransactionForm = ({ categories, onTransactionAdded, onOpenCategoryModal }
       </div>
 
       <div className="form-group">
-        {/* ... (input tanggal tidak berubah) ... */}
         <label>Tanggal</label>
         <input
           type="date"
@@ -121,7 +132,6 @@ const TransactionForm = ({ categories, onTransactionAdded, onOpenCategoryModal }
         />
       </div>
       <div className="form-group">
-        {/* ... (input deskripsi tidak berubah) ... */}
         <label>Deskripsi (Opsional)</label>
         <input
           type="text"

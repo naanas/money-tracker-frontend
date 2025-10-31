@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import axiosClient from '../api/axiosClient';
-// [BARU] Impor helper format
 import { formatNumberInput, parseNumberInput } from '../utils/format';
 
-// [MODIFIKASI] Ambil prop baru: budgetToEdit dan onClearEdit
-const BudgetForm = ({ categories, onBudgetSet, budgetToEdit, onClearEdit }) => {
-  // State amount sekarang menyimpan string angka mentah (e.g., "2000000")
+// [MODIFIKASI] Ambil prop baru: selectedDate, budgetToEdit, onClearEdit
+const BudgetForm = ({ categories, onBudgetSet, selectedDate, budgetToEdit, onClearEdit }) => {
   const [amount, setAmount] = useState('');
   const [categoryName, setCategoryName] = useState('');
   const [loading, setLoading] = useState(false);
@@ -13,14 +11,12 @@ const BudgetForm = ({ categories, onBudgetSet, budgetToEdit, onClearEdit }) => {
 
   const expenseCategories = categories.filter(c => c.type === 'expense');
 
-  // [BARU] Efek untuk mengisi form saat mode edit
+  // Efek untuk mengisi form saat mode edit
   useEffect(() => {
     if (budgetToEdit) {
-      // Isi form dengan data yang diklik
       setAmount(budgetToEdit.amount.toString());
       setCategoryName(budgetToEdit.category_name);
     } else {
-      // Bersihkan form
       setAmount('');
       setCategoryName('');
     }
@@ -36,21 +32,24 @@ const BudgetForm = ({ categories, onBudgetSet, budgetToEdit, onClearEdit }) => {
     setLoading(true);
     setMessage('');
 
-    const currentMonth = new Date().getMonth() + 1;
-    const currentYear = new Date().getFullYear();
+    // === [MODIFIKASI] ===
+    // Gunakan month/year dari selectedDate, BUKAN new Date()
+    const month = selectedDate.getMonth() + 1;
+    const year = selectedDate.getFullYear();
+    // === [AKHIR MODIFIKASI] ===
 
     try {
       await axiosClient.post('/api/budgets', {
-        amount: parseFloat(amount), // Ubah string angka mentah jadi float
-        month: currentMonth,
-        year: currentYear,
+        amount: parseFloat(amount) || 0, // Kirim 0 jika dikosongkan (untuk hapus/reset)
+        month: month,
+        year: year,
         category_name: categoryName 
       });
 
       setMessage(budgetToEdit ? 'Budget diubah!' : 'Budget disimpan!');
       onBudgetSet(); // Refresh dashboard
       // onClearEdit() akan dipanggil dari dashboard
-
+      
       setTimeout(() => setMessage(''), 2000); 
     } catch (err) {
       setMessage(err.response?.data?.error || 'Gagal simpan budget');
@@ -60,15 +59,14 @@ const BudgetForm = ({ categories, onBudgetSet, budgetToEdit, onClearEdit }) => {
 
   return (
     <form onSubmit={handleSubmit} className="budget-form">
-      {message && <p className={message.includes('Gagal') ? 'error' : 'success'} style={{textAlign: 'center', marginTop: '1rem', marginBottom: '0'}}>{message}</p>}
+      {message && <p className={message.includes('Gagal') ? 'error' : 'success'} style={{textAlign: 'center', margin: '0 0 1rem 0'}}>{message}</p>}
       
-      <div className="form-group" style={{marginTop: '1.5rem'}}>
+      <div className="form-group">
         <label>Kategori Pengeluaran</label>
         <select 
           value={categoryName} 
           onChange={(e) => setCategoryName(e.target.value)}
-          // [BARU] Nonaktifkan pilihan kategori saat mode edit
-          disabled={!!budgetToEdit}
+          disabled={!!budgetToEdit} // Nonaktifkan saat mode edit
           required
         >
           <option value="" disabled>Pilih Kategori</option>
@@ -78,39 +76,33 @@ const BudgetForm = ({ categories, onBudgetSet, budgetToEdit, onClearEdit }) => {
         </select>
       </div>
       
-      {/* === [INPUT JUMLAH DIMODIFIKASI] === */}
       <div className="form-group">
-        <label>Jumlah Budget</label>
+        <label>Jumlah Budget (Kosongkan untuk hapus)</label>
         <input
-          type="text" // Ganti ke text
-          inputMode="numeric" // Tampilkan keyboard angka di HP
-          value={formatNumberInput(amount)} // Tampilkan format (e.g., "2.000.000")
-          onChange={(e) => setAmount(parseNumberInput(e.target.value))} // Simpan angka mentah (e.g., "2000000")
+          type="text" 
+          inputMode="numeric"
+          value={formatNumberInput(amount)} 
+          onChange={(e) => setAmount(parseNumberInput(e.target.value))} 
           placeholder="0"
-          required
-          className="input-currency" // Class baru untuk styling
+          className="input-currency" 
         />
       </div>
-      {/* === [AKHIR MODIFIKASI] === */}
 
-      {/* === [TOMBOL DIMODIFIKASI] === */}
       <div className="form-group-inline" style={{ marginTop: '1rem' }}>
         <button type="submit" disabled={loading} style={{width: '100%'}}>
           {loading ? 'Menyimpan...' : (budgetToEdit ? 'Ubah Budget' : 'Atur Budget')}
         </button>
-        {/* [BARU] Tampilkan tombol Batal jika sedang mode edit */}
         {budgetToEdit && (
           <button 
             type="button" 
             className="btn-secondary" 
-            onClick={onClearEdit} // Panggil fungsi clear dari dashboard
+            onClick={onClearEdit}
             disabled={loading}
           >
             Batal
           </button>
         )}
       </div>
-      {/* === [AKHIR MODIFIKASI] === */}
     </form>
   );
 };

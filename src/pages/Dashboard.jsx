@@ -1,7 +1,7 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import axiosClient from '../api/axiosClient';
-import { formatCurrency } from '../utils/format';
+import { formatCurrency, formatMonthYear } from '../utils/format';
 
 import TransactionForm from '../components/TransactionForm';
 import BudgetForm from '../components/BudgetForm';
@@ -9,24 +9,32 @@ import CategoryForm from '../components/CategoryForm';
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
+  
+  // === [STATE BARU UNTUK BULAN] ===
+  // State utama untuk bulan & tahun yang sedang dilihat
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  
   const [analytics, setAnalytics] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
-  
-  // === [STATE BARU UNTUK EDIT BUDGET] ===
   const [budgetToEdit, setBudgetToEdit] = useState(null);
-  // === [AKHIR STATE BARU] ===
 
+  // === [FUNGSI FETCHDATA DIMODIFIKASI] ===
+  // Sekarang mengambil data berdasarkan selectedDate
   const fetchData = useCallback(async () => {
-    // ... (kode fetchData Anda tidak berubah)
+    setLoading(true); // Set loading=true setiap kali pindah bulan
     setError('');
+
+    const month = selectedDate.getMonth() + 1;
+    const year = selectedDate.getFullYear();
+
     try {
       const [analyticsRes, transactionsRes, categoriesRes] = await Promise.all([
-        axiosClient.get('/api/analytics/summary'),
-        axiosClient.get('/api/transactions?limit=5'),
+        axiosClient.get('/api/analytics/summary', { params: { month, year } }),
+        axiosClient.get('/api/transactions', { params: { limit: 5, month, year } }),
         axiosClient.get('/api/categories'),
       ]);
 
@@ -38,47 +46,75 @@ const Dashboard = () => {
       setError('Gagal mengambil data dashboard');
     }
     setLoading(false);
-  }, []);
+  }, [selectedDate]); // [PENTING] Jalankan ulang fungsi ini jika selectedDate berubah
 
+  // Ambil data saat halaman dimuat & saat selectedDate berubah
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
-  // [MODIFIKASI] handleDataUpdate sekarang juga membersihkan form edit
   const handleDataUpdate = () => {
     fetchData();
-    setBudgetToEdit(null); // Bersihkan form edit setelah update
+    setBudgetToEdit(null); 
   };
 
-  if (loading) {
-    // ... (kode loading Anda tidak berubah)
-    return (
-      <div className="dashboard-layout">
-        <aside className="sidebar">
-           <div className="sidebar-header">
-             <h1>💰 Money Tracker</h1>
-           </div>
-        </aside>
-        <main className="main-content loading-content">
-          <div className="spinner"></div>
-          <h2>Loading Dashboard...</h2>
-        </main>
-      </div>
-    );
-  }
+  // === [FUNGSI BARU UNTUK NAVIGASI BULAN] ===
+  const handlePrevMonth = () => {
+    setSelectedDate(prevDate => new Date(prevDate.getFullYear(), prevDate.getMonth() - 1, 1));
+  };
+  const handleNextMonth = () => {
+    setSelectedDate(prevDate => new Date(prevDate.getFullYear(), prevDate.getMonth() + 1, 1));
+  };
+  // === [AKHIR FUNGSI BARU] ===
 
-  // ... (kode kalkulasi budget tidak berubah)
-  const budgetAmount = analytics?.budget?.total_amount || 0;
-  const budgetSpent = analytics?.summary?.total_expenses || 0;
-  const budgetRemaining = analytics?.budget?.remaining || 0;
-  const budgetProgress = budgetAmount > 0 ? (budgetSpent / budgetAmount) * 100 : 0;
-  const budgetDetails = analytics?.budget?.details || [];
+  // === [DATA UNTUK "POCKET" BUDGET] ===
+  // Kita gabungkan data budget dan data pengeluaran
+  const budgetPockets = useMemo(() => {
+    if (!analytics) return [];
+    
+    const budgetDetails = analytics.budget?.details || [];
+    const expenses = analytics.expenses_by_category || {};
+
+    // Map semua detail budget dan tambahkan info 'spent'
+    const pockets = budgetDetails.map(budget => {
+      const spent = expenses[budget.category_name] || 0;
+      return {
+        ...budget,
+        spent: spent,
+        remaining: budget.amount - spent,
+        progress: budget.amount > 0 ? (spent / budget.amount) * 100 : 0,
+      };
+    });
+
+    // [BONUS] Tampilkan juga kategori yang ada pengeluaran tapi tidak di-budget
+    Object.keys(expenses).forEach(categoryName => {
+      if (!pockets.find(p => p.category_name === categoryName)) {
+        pockets.push({
+          id: categoryName, // Pakai nama sebagai key
+          category_name: categoryName,
+          amount: 0, // Budget 0
+          spent: expenses[categoryName],
+          remaining: -expenses[categoryName],
+          progress: 100 // Anggap 100% overbudget
+        });
+      }
+    });
+
+    return pockets;
+
+  }, [analytics]);
+  
+  // Data total untuk progress bar utama
+  const totalBudget = analytics?.budget?.total_amount || 0;
+  const totalSpent = analytics?.summary?.total_expenses || 0;
+  const totalRemaining = analytics?.budget?.remaining || 0;
+  const totalProgress = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
 
 
   return (
     <>
       <div className="dashboard-layout">
-        {/* ... (Sidebar tidak berubah) ... */}
+        {/* === SIDEBAR (DESKTOP) === */}
         <aside className="sidebar">
           <div className="sidebar-header">
             <h1>💰 Money Tracker</h1>
@@ -93,7 +129,6 @@ const Dashboard = () => {
 
         {/* === KONTEN UTAMA === */}
         <main className="main-content">
-          {/* ... (Mobile header tidak berubah) ... */}
           <header className="mobile-header">
             <h1>💰 Money Tracker</h1>
             <button onClick={logout} className="logout-btn-mobile">
@@ -101,14 +136,27 @@ const Dashboard = () => {
             </button>
           </header>
 
-          <h2>Dashboard</h2>
-          {error && <p className="error">{error}</p>}
+          {/* === [NAVIGATOR BULAN BARU] === */}
+          <div className="month-navigator">
+            <button onClick={handlePrevMonth}>&lt;</button>
+            <h2>{formatMonthYear(selectedDate)}</h2>
+            <button onClick={handleNextMonth}>&gt;</button>
+          </div>
           
-          <div className="dashboard-grid">
-            {/* ... (Kartu Ringkasan tidak berubah) ... */}
-            {analytics && (
+          {error && <p className="error">{error}</p>}
+
+          {/* Tampilkan spinner jika loading, atau grid jika selesai */}
+          {loading ? (
+            <div className="loading-content">
+              <div className="spinner"></div>
+              <h2>Loading Data...</h2>
+            </div>
+          ) : (
+            <div className="dashboard-grid">
+              
+              {/* --- 1. Ringkasan Finansial --- */}
               <section className="card card-summary">
-                <h3>Ringkasan Bulan Ini</h3>
+                <h3>Ringkasan {formatMonthYear(selectedDate)}</h3>
                 <div className="summary-item">
                   <span>Total Pemasukan</span>
                   <span className="income">{formatCurrency(analytics.summary.total_income)}</span>
@@ -123,118 +171,107 @@ const Dashboard = () => {
                   <span>{formatCurrency(analytics.summary.balance)}</span>
                 </div>
               </section>
-            )}
 
-            {/* --- [KARTU BUDGET DIMODIFIKASI] --- */}
-            <section className="card card-budget">
-              <h3>Budget Bulan Ini</h3>
-              
-              <div className="budget-info">
-                <span>Terpakai: {formatCurrency(budgetSpent)}</span>
-                <span>Sisa: {formatCurrency(budgetRemaining)}</span>
-              </div>
-              <div className="progress-bar-container">
-                <div 
-                  className="progress-bar-fill" 
-                  style={{ width: `${Math.min(budgetProgress, 100)}%` }}
-                ></div>
-              </div>
-              <div className="budget-info total">
-                <span>Total Budget: {formatCurrency(budgetAmount)}</span>
-                <span>{budgetProgress.toFixed(0)}%</span>
-              </div>
-              
-              <hr className="modal-divider" />
+              {/* === [KARTU BUDGET "POCKET"] === */}
+              <section className="card card-budget-pocket">
+                <h3>Budget Pockets</h3>
+                {/* Progress Bar Total */}
+                <div className="budget-info total">
+                  <span>Total Budget: {formatCurrency(totalBudget)}</span>
+                  <span>{totalProgress.toFixed(0)}%</span>
+                </div>
+                <div className="progress-bar-container">
+                  <div 
+                    className="progress-bar-fill" 
+                    style={{ width: `${Math.min(totalProgress, 100)}%` }}
+                  ></div>
+                </div>
+                
+                {/* Form untuk Atur Budget */}
+                <BudgetForm 
+                  categories={categories} 
+                  onBudgetSet={handleDataUpdate}
+                  budgetToEdit={budgetToEdit}
+                  onClearEdit={() => setBudgetToEdit(null)}
+                  selectedDate={selectedDate} // [PENTING] Kirim tanggal
+                />
 
-              {/* [MODIFIKASI] Teruskan state edit ke BudgetForm */}
-              <BudgetForm 
-                categories={categories} 
-                onBudgetSet={handleDataUpdate}
-                budgetToEdit={budgetToEdit}
-                onClearEdit={() => setBudgetToEdit(null)}
-              />
-              
-              {/* [MODIFIKASI] Buat daftar sub-budget bisa diklik */}
-              <div className="budget-details-list">
-                {budgetDetails.length > 0 ? (
-                  budgetDetails.map(budget => (
-                    <div 
-                      className="list-item clickable" // [BARU] Tambah class 'clickable'
-                      key={budget.category_name}
-                      onClick={() => setBudgetToEdit(budget)} // [BARU] Aksi onClick
-                      title="Klik untuk edit"
-                    >
-                      <span>{budget.category_name}</span>
-                      <span style={{fontWeight: 500}}>{formatCurrency(budget.amount)}</span>
-                    </div>
-                  ))
-                ) : (
-                  <p style={{textAlign: 'center', fontSize: '0.9em', color: 'var(--color-text-muted)'}}>
-                    Belum ada budget per kategori.
-                  </p>
-                )}
-              </div>
-            </section>
-            {/* --- [AKHIR KARTU BUDGET] --- */}
-
-
-            {/* ... (Kartu Form Transaksi tidak berubah) ... */}
-            <section className="card card-form">
-              <h3>Tambah Transaksi Baru</h3>
-              <TransactionForm 
-                categories={categories} 
-                onTransactionAdded={handleDataUpdate} 
-                onOpenCategoryModal={() => setIsCategoryModalOpen(true)}
-              />
-            </section>
-
-            {/* ... (Kartu Transaksi Terakhir tidak berubah) ... */}
-            <section className="card card-list">
-              <h3>5 Transaksi Terakhir</h3>
-              <ul>
-                {transactions.length > 0 ? (
-                  transactions.map((t) => (
-                    <li key={t.id} className="list-item">
-                      <div className="list-item-details">
-                        <strong>{t.description || t.category}</strong>
-                        <span>{new Date(t.date).toLocaleDateString('id-ID', {day: '2-digit', month: 'short', year: 'numeric'})}</span>
+                {/* Grid "Pocket" */}
+                <div className="pocket-grid">
+                  {budgetPockets.length > 0 ? (
+                    budgetPockets.map(pocket => (
+                      <div 
+                        className="pocket-item" 
+                        key={pocket.id || pocket.category_name} 
+                        onClick={() => setBudgetToEdit(pocket)}
+                      >
+                        <div className="pocket-header">
+                          <span className="pocket-title">{pocket.category_name}</span>
+                          <span className={`pocket-remaining ${pocket.remaining < 0 ? 'expense' : ''}`}>
+                            {pocket.remaining < 0 ? 'Over!' : `${formatCurrency(pocket.remaining)} sisa`}
+                          </span>
+                        </div>
+                        <div className="progress-bar-container small">
+                          <div 
+                            className={`progress-bar-fill ${pocket.progress > 100 ? 'expense' : ''}`}
+                            style={{ width: `${Math.min(pocket.progress, 100)}%` }}
+                          ></div>
+                        </div>
+                        <div className="pocket-footer">
+                          <span className="expense">{formatCurrency(pocket.spent)}</span>
+                          <span className="total"> / {formatCurrency(pocket.amount)}</span>
+                        </div>
                       </div>
-                      <span className={t.type}>
-                        {t.type === 'expense' ? '-' : '+'}
-                        {formatCurrency(t.amount)}
-                      </span>
-                    </li>
-                  ))
-                ) : (
-                  <p>Belum ada transaksi.</p>
-                )}
-              </ul>
-            </section>
+                    ))
+                  ) : (
+                    <p style={{textAlign: 'center', fontSize: '0.9em', color: 'var(--color-text-muted)', gridColumn: '1 / -1'}}>
+                      Belum ada budget per kategori.
+                    </p>
+                  )}
+                </div>
+              </section>
+              {/* === [AKHIR KARTU BUDGET] === */}
 
-            {/* ... (Kartu Pengeluaran per Kategori tidak berubah) ... */}
-            {analytics && (
+              {/* --- 3. Form Tambah Transaksi --- */}
+              <section className="card card-form">
+                <h3>Tambah Transaksi Baru</h3>
+                <TransactionForm 
+                  categories={categories} 
+                  onTransactionAdded={handleDataUpdate} 
+                  onOpenCategoryModal={() => setIsCategoryModalOpen(true)}
+                  selectedDate={selectedDate} // [PENTING] Kirim tanggal
+                />
+              </section>
+
+              {/* --- 4. Transaksi Terakhir --- */}
               <section className="card card-list">
-                <h3>Pengeluaran per Kategori</h3>
+                <h3>Transaksi {formatMonthYear(selectedDate)}</h3>
                 <ul>
-                  {Object.keys(analytics.expenses_by_category).length > 0 ? (
-                    Object.entries(analytics.expenses_by_category).map(([category, amount]) => (
-                      <li key={category} className="list-item">
-                        <span>{category}</span>
-                        <span className="expense">-{formatCurrency(amount)}</span>
+                  {transactions.length > 0 ? (
+                    transactions.map((t) => (
+                      <li key={t.id} className="list-item">
+                        <div className="list-item-details">
+                          <strong>{t.description || t.category}</strong>
+                          <span>{new Date(t.date).toLocaleDateString('id-ID', {day: '2-digit', month: 'short', year: 'numeric'})}</span>
+                        </div>
+                        <span className={t.type}>
+                          {t.type === 'expense' ? '-' : '+'}
+                          {formatCurrency(t.amount)}
+                        </span>
                       </li>
                     ))
                   ) : (
-                    <p>Belum ada pengeluaran.</p>
+                    <p>Belum ada transaksi di bulan ini.</p>
                   )}
                 </ul>
               </section>
-            )}
 
-          </div>
+            </div>
+          )}
         </main>
       </div>
 
-      {/* ... (Modal Kategori tidak berubah) ... */}
+      {/* === MODAL KATEGORI (Tidak berubah) === */}
       {isCategoryModalOpen && (
         <CategoryForm 
           existingCategories={categories}
