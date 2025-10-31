@@ -1,4 +1,4 @@
-/* naanas/money-tracker-frontend/money-tracker-frontend-0ee08000468d6773fb0e7a2a42ba716f486ab211/src/index.css */
+/* naanas/money-tracker-frontend/money-tracker-frontend-cd538d0fa423ae8f894f65f23acb2908a483c96d/src/index.css */
 
 /* === ROOT & VARIABLE === */
 :root {
@@ -320,18 +320,18 @@ button:disabled {
   border-color: var(--color-primary);
 }
 
-/* Konten Loading */
-.main-content.loading-content {
+/* Konten Loading - HILANGKAN DARI SINI */
+/* .main-content.loading-content {
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  height: calc(100vh - 100px); /* Penuhi sisa layar */
+  height: calc(100vh - 100px); 
 }
 .main-content.loading-content h2 {
   font-size: 1.5rem;
   color: var(--color-text-muted);
-}
+} */
 
 /* Grid Dashboard */
 .dashboard-grid {
@@ -696,7 +696,8 @@ button:disabled {
 .verification-box p {
   text-align: center;
 }
-.spinner {
+/* HAPUS SPINNER UTAMA */
+/* .spinner {
   border: 4px solid var(--color-border);
   border-radius: 50%;
   border-top: 4px solid var(--color-primary);
@@ -705,10 +706,14 @@ button:disabled {
   animation: spin 1s linear infinite;
   margin-bottom: 20px;
 }
+.main-content.loading-content h2 {
+  font-size: 1.5rem;
+  color: var(--color-text-muted);
+}
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
-}
+} */
 
 /* Spinner untuk di dalam tombol */
 .btn-spinner {
@@ -720,6 +725,11 @@ button:disabled {
   border-radius: 50%;
   border-top-color: #ffffff; /* Warna top spinner putih */
   animation: spin 1s linear infinite;
+}
+/* Tambahkan @keyframes spin lagi (jika dihapus dari atas) */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 /* Akhir Spinner Tombol */
 
@@ -1178,14 +1188,17 @@ button:disabled {
     padding: 0.25rem 0.75rem;
   }
 
-  /* Konten loading di HP */
+  /* Konten loading di HP - HILANGKAN DARI SINI */
   .main-content.loading-content {
-    height: calc(100vh - 80px); /* Penuhi sisa layar (dikurangi header mobile) */
+    /* Dibiarkan kosong/default agar tidak mengganggu */
   }
 
   /* Style tabungan di HP */
   .card-savings {
     grid-column: 1 / -1;
+  }
+  .savings-form .form-group-triple {
+    grid-template-columns: 1fr;
   }
   .savings-form .form-group-inline {
     flex-direction: column;
