@@ -28,6 +28,16 @@ const Dashboard = () => {
   const [budgetToEdit, setBudgetToEdit] = useState(null);
   const isInitialMount = useRef(true); 
 
+  // FUNGSI UNTUK MENGAMBIL KATEGORI SECARA TERPISAH
+  const fetchCategories = useCallback(async () => {
+    try {
+      const categoriesRes = await axiosClient.get('/api/categories');
+      setCategories(categoriesRes.data.data);
+    } catch (err) {
+      console.error("Failed to re-fetch categories:", err);
+      // Biarkan error di-handle oleh fungsi utama jika ini adalah bagian dari load awal
+    }
+  }, []);
   
   // Fungsi untuk mengambil data bulanan + data tabungan
   const fetchDataForMonth = useCallback(async () => {
@@ -42,7 +52,7 @@ const Dashboard = () => {
       const [analyticsRes, transactionsRes, savingsRes] = await Promise.all([
         axiosClient.get('/api/analytics/summary', { params }),
         axiosClient.get('/api/transactions', { params }), 
-        axiosClient.get('/api/savings'), // <-- [PERBAIKAN] Tidak mengirim params
+        axiosClient.get('/api/savings'), // Tidak mengirim params agar semua goal ditampilkan
       ]);
 
       setAnalytics(analyticsRes.data.data);
@@ -72,7 +82,7 @@ const Dashboard = () => {
           axiosClient.get('/api/categories'),
           axiosClient.get('/api/analytics/summary', { params }),
           axiosClient.get('/api/transactions', { params }), 
-          axiosClient.get('/api/savings'), // <-- [PERBAIKAN] Tidak mengirim params
+          axiosClient.get('/api/savings'),
         ]);
 
         setCategories(categoriesRes.data.data);
@@ -102,18 +112,13 @@ const Dashboard = () => {
 
   // FUNGSI UPDATE (SETELAH SUBMIT FORM)
   const handleDataUpdate = async () => {
+    // Refresh data bulanan dan tabungan
     await fetchDataForMonth(); 
+    // Refresh daftar kategori
+    await fetchCategories();
+    
     triggerSuccessAnimation(); 
     setBudgetToEdit(null); 
-    
-    if (isCategoryModalOpen) {
-      try {
-        const categoriesRes = await axiosClient.get('/api/categories');
-        setCategories(categoriesRes.data.data);
-      } catch (err) {
-        console.error("Failed to re-fetch categories:", err);
-      }
-    }
   };
 
   const totalSavingsCurrent = useMemo(() => {
@@ -131,24 +136,28 @@ const Dashboard = () => {
     e.stopPropagation(); 
     if (!window.confirm('Yakin ingin menghapus budget pocket ini?\n\n(Ini tidak akan menghapus transaksi Anda yang sudah ada.)')) return;
     setError('');
+    setIsRefetching(true);
     try {
       await axiosClient.delete(`/api/budgets/${budgetId}`);
       handleDataUpdate(); 
     } catch (err) {
       console.error("Failed to delete budget:", err);
       setError(err.response?.data?.error || err.message || 'Gagal menghapus budget');
+      setIsRefetching(false);
     }
   };
 
   const handleDeleteTransaction = async (transactionId) => {
     if (!window.confirm('Yakin ingin menghapus transaksi ini?')) return;
     setError('');
+    setIsRefetching(true);
     try {
       await axiosClient.delete(`/api/transactions/${transactionId}`);
       handleDataUpdate(); 
     } catch (err) {
       console.error("Failed to delete transaction:", err);
       setError(err.response?.data?.error || err.message || 'Gagal menghapus transaksi');
+      setIsRefetching(false);
     }
   };
 
@@ -174,6 +183,8 @@ const Dashboard = () => {
     if (!analytics) return [];
     const budgetDetails = analytics.budget?.details || [];
     const expenses = analytics.expenses_by_category || {};
+    
+    // 1. Ambil budget yang sudah di-set
     const pockets = budgetDetails.map(budget => {
       const spent = expenses[budget.category_name] || 0;
       return {
@@ -183,8 +194,12 @@ const Dashboard = () => {
         progress: budget.amount > 0 ? (spent / budget.amount) * 100 : 0,
       };
     });
+    
+    // 2. Tambahkan kategori yang punya pengeluaran tapi TIDAK di-budget (sebagai virtual pocket)
+    const existingBudgetNames = new Set(pockets.map(p => p.category_name));
+    
     Object.keys(expenses).forEach(categoryName => {
-      if (!pockets.find(p => p.category_name === categoryName)) {
+      if (!existingBudgetNames.has(categoryName)) { 
         pockets.push({
           id: `virtual-${categoryName}`, 
           category_name: categoryName,
@@ -195,11 +210,14 @@ const Dashboard = () => {
         });
       }
     });
+
     return pockets;
   }, [analytics]);
+  
   const totalBudget = analytics?.budget?.total_amount || 0;
   const totalSpent = analytics?.summary?.total_expenses || 0;
-  const totalRemaining = analytics?.budget?.remaining || 0;
+  // Perbaikan: Total remaining harus dihitung ulang di frontend
+  const totalRemaining = totalBudget - totalSpent; 
   const totalProgress = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
 
 
@@ -250,9 +268,10 @@ const Dashboard = () => {
           
           {error && <p className="error" style={{textAlign: 'center', padding: '1rem', backgroundColor: 'var(--color-bg-medium)', borderRadius: '12px'}}>{error}</p>}
 
-          {isLoading ? (
+          {isLoading || isRefetching ? (
             <div className="loading-content">
-              {/* Kosong */}
+               <div className="spinner"></div>
+               <h2>{isLoading ? 'Memuat data...' : 'Memperbarui data...'}</h2>
             </div>
           ) : (
             analytics ? (
@@ -290,8 +309,15 @@ const Dashboard = () => {
                   <div className="progress-bar-container">
                     <div 
                       className="progress-bar-fill" 
-                      style={{ width: `${Math.min(totalProgress, 100)}%` }}
+                      style={{ 
+                        width: `${Math.min(totalProgress, 100)}%`,
+                        backgroundColor: totalRemaining < 0 ? 'var(--color-accent-expense)' : 'var(--color-primary)'
+                      }} 
                     ></div>
+                  </div>
+                  <div className="pocket-footer" style={{marginTop: '0.25rem'}}>
+                      <span className="expense">{formatCurrency(totalSpent)}</span>
+                      <span className="total"> / {formatCurrency(totalBudget)}</span>
                   </div>
                   
                   <BudgetForm 
