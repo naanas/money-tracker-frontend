@@ -60,6 +60,9 @@ const BudgetForm = ({ categories, onBudgetSet, selectedDate, budgetToEdit, onCle
     setLoading(false);
   };
 
+  // [BARU] Gabungkan state loading internal dan prop isRefetching
+  const isLoading = loading || isRefetching;
+
   return (
     <form onSubmit={handleSubmit} className="budget-form">
       {message && <p className={message.includes('Gagal') ? 'error' : 'success'} style={{textAlign: 'center', margin: '0 0 1rem 0'}}>{message}</p>}
@@ -69,7 +72,7 @@ const BudgetForm = ({ categories, onBudgetSet, selectedDate, budgetToEdit, onCle
         <select 
           value={categoryName} 
           onChange={(e) => setCategoryName(e.target.value)}
-          disabled={!!budgetToEdit} 
+          disabled={!!budgetToEdit} // [MODIFIKASI] Tetap disable jika mode edit
           required
         >
           <option value="" disabled>Pilih Kategori</option>
@@ -91,22 +94,23 @@ const BudgetForm = ({ categories, onBudgetSet, selectedDate, budgetToEdit, onCle
         />
       </div>
 
-      {/* [MODIFIKASI] Tombol submit sekarang tahu state loading global */}
+      {/* === [TOMBOL DIMODIFIKASI] === */}
       <div className="form-group-inline" style={{ marginTop: '1rem' }}>
-        <button type="submit" disabled={loading || isRefetching} style={{width: '100%'}}>
-          {loading || isRefetching ? 'Menyimpan...' : (budgetToEdit ? 'Ubah Budget' : 'Atur Budget')}
+        <button type="submit" disabled={isLoading} style={{width: '100%'}}>
+          {isLoading ? <div className="btn-spinner"></div> : (budgetToEdit ? 'Ubah Budget' : 'Atur Budget')}
         </button>
         {budgetToEdit && (
           <button 
             type="button" 
             className="btn-secondary" 
             onClick={onClearEdit}
-            disabled={loading || isRefetching}
+            disabled={isLoading} // Tombol batal juga nonaktif saat loading
           >
             Batal
           </button>
         )}
       </div>
+      {/* === [AKHIR MODIFIKASI] === */}
     </form>
   );
 };

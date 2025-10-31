@@ -687,6 +687,19 @@ button:disabled {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+
+/* === [KODE BARU DITAMBAHKAN] === */
+/* Spinner untuk di dalam tombol */
+.btn-spinner {
+  width: 20px;
+  height: 20px;
+  border-width: 3px;
+  margin: 0 auto; /* Pusatkan di dalam tombol */
+  border: 3px solid rgba(255, 255, 255, 0.3); /* Warna border lebih terang */
+  border-radius: 50%;
+  border-top-color: #ffffff; /* Warna top spinner putih */
+  animation: spin 1s linear infinite;
+}
 .checkmark-wrapper {
   width: 80px;
   height: 80px;

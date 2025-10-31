@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import axiosClient from '../api/axiosClient';
 import { formatNumberInput, parseNumberInput } from '../utils/format';
 
-// [MODIFIKASI] Ambil prop 'selectedDate'
-const TransactionForm = ({ categories, onTransactionAdded, onOpenCategoryModal, selectedDate }) => {
+// [MODIFIKASI] Ambil prop 'isRefetching'
+const TransactionForm = ({ categories, onTransactionAdded, onOpenCategoryModal, selectedDate, isRefetching }) => {
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState('');
   const [type, setType] = useState('expense');
@@ -64,6 +64,9 @@ const TransactionForm = ({ categories, onTransactionAdded, onOpenCategoryModal, 
     }
     setLoading(false);
   };
+  
+  // [BARU] Gabungkan state loading internal dan prop isRefetching
+  const isLoading = loading || isRefetching;
 
   return (
     <form onSubmit={handleSubmit} className="transaction-form">
@@ -140,9 +143,12 @@ const TransactionForm = ({ categories, onTransactionAdded, onOpenCategoryModal, 
           placeholder="Makan siang, Gaji, dll."
         />
       </div>
-      <button type="submit" disabled={loading}>
-        {loading ? 'Menyimpan...' : 'Tambah'}
+      
+      {/* === [TOMBOL DIMODIFIKASI] === */}
+      <button type="submit" disabled={isLoading}>
+        {isLoading ? <div className="btn-spinner"></div> : 'Tambah'}
       </button>
+      {/* === [AKHIR MODIFIKASI] === */}
     </form>
   );
 };
