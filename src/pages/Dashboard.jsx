@@ -23,23 +23,20 @@ const Dashboard = () => {
   const [budgetToEdit, setBudgetToEdit] = useState(null);
 
   const fetchData = useCallback(async () => {
+    // ... (fungsi fetchData tidak berubah)
     setLoading(true); 
     setError('');
     setAnalytics(null);
     setTransactions([]);
-
     const month = selectedDate.getMonth() + 1;
     const year = selectedDate.getFullYear();
-
     try {
       const categoriesRes = await axiosClient.get('/api/categories');
       setCategories(categoriesRes.data.data);
-
       const [analyticsRes, transactionsRes] = await Promise.all([
         axiosClient.get('/api/analytics/summary', { params: { month, year } }),
         axiosClient.get('/api/transactions', { params: { month, year } }), 
       ]);
-
       setAnalytics(analyticsRes.data.data);
       setTransactions(transactionsRes.data.data.transactions);
     } catch (err) {
@@ -65,44 +62,50 @@ const Dashboard = () => {
     setSelectedDate(prevDate => new Date(prevDate.getFullYear(), prevDate.getMonth() + 1, 1));
   };
 
+  // === [FUNGSI DELETE BUDGET DIMODIFIKASI] ===
   const handleDeleteBudget = async (e, budgetId) => {
-    e.stopPropagation(); 
-    if (!window.confirm('Yakin ingin menghapus budget pocket ini?')) return;
-    try {
-      await axiosClient.delete(`/api/budgets/${budgetId}`);
-      handleDataUpdate(); 
-    } catch (err) {
-      console.error("Failed to delete budget:", err);
-      setError(err.response?.data?.error || 'Gagal menghapus budget');
-    }
-  };
-
-  // === [FUNGSI BARU UNTUK HAPUS TRANSAKSI] ===
-  const handleDeleteTransaction = async (transactionId) => {
-    if (!window.confirm('Yakin ingin menghapus transaksi ini?')) {
+    e.stopPropagation(); // Hentikan event agar tidak memicu onClick edit
+    
+    // [MODIFIKASI] Peringatan baru yang lebih jelas
+    if (!window.confirm('PERINGATAN!\n\nYakin ingin menghapus budget pocket ini? \n\nINI JUGA AKAN MENGHAPUS SEMUA TRANSAKSI di kategori ini untuk bulan yang sama.')) {
       return;
     }
 
     setError('');
     try {
-      // Panggil endpoint DELETE /api/transactions/:id
+      // Panggil endpoint DELETE baru di backend
+      await axiosClient.delete(`/api/budgets/${budgetId}`);
+      handleDataUpdate(); // Refresh semua data
+    } catch (err) {
+      console.error("Failed to delete budget:", err);
+      setError(err.response?.data?.error || 'Gagal menghapus budget');
+    }
+  };
+  // === [AKHIR MODIFIKASI] ===
+
+  const handleDeleteTransaction = async (transactionId) => {
+    // ... (fungsi ini tidak berubah)
+    if (!window.confirm('Yakin ingin menghapus transaksi ini?')) {
+      return;
+    }
+    setError('');
+    try {
       await axiosClient.delete(`/api/transactions/${transactionId}`);
-      handleDataUpdate(); // Refresh semua data di dashboard
+      handleDataUpdate(); 
     } catch (err) {
       console.error("Failed to delete transaction:", err);
       setError(err.response?.data?.error || 'Gagal menghapus transaksi');
     }
   };
-  // === [AKHIR FUNGSI BARU] ===
 
   const handleResetTransactions = async () => {
+    // ... (fungsi ini tidak berubah)
     setError('');
     const pass = prompt('Ini akan MENGHAPUS SEMUA data transaksi Anda.\nKetik "RESET" untuk konfirmasi:');
     if (pass !== 'RESET') {
       alert('Reset dibatalkan.');
       return;
     }
-
     setLoading(true);
     try {
       await axiosClient.delete('/api/transactions/reset');
@@ -115,7 +118,7 @@ const Dashboard = () => {
   };
 
   const budgetPockets = useMemo(() => {
-    // ... (kode useMemo tidak berubah)
+    // ... (fungsi ini tidak berubah)
     if (!analytics) return [];
     const budgetDetails = analytics.budget?.details || [];
     const expenses = analytics.expenses_by_category || {};
@@ -209,7 +212,9 @@ const Dashboard = () => {
             analytics && !error ? (
               <div className="dashboard-grid">
                 
-                {/* ... (Kartu Ringkasan tidak berubah) ... */}
+                {/* --- Kartu-kartu --- */}
+                {/* (Tidak ada perubahan di JSX kartu, hanya fungsi delete-nya saja) */}
+                
                 <section className="card card-summary">
                   <h3>Ringkasan {formatMonthYear(selectedDate)}</h3>
                   <div className="summary-item">
@@ -227,7 +232,6 @@ const Dashboard = () => {
                   </div>
                 </section>
 
-                {/* ... (Kartu Budget Pockets tidak berubah) ... */}
                 <section className="card card-budget-pocket">
                   <h3>Budget Pockets</h3>
                   <div className="budget-info total">
@@ -240,6 +244,7 @@ const Dashboard = () => {
                       style={{ width: `${Math.min(totalProgress, 100)}%` }}
                     ></div>
                   </div>
+                  
                   <BudgetForm 
                     categories={categories} 
                     onBudgetSet={handleDataUpdate}
@@ -247,6 +252,7 @@ const Dashboard = () => {
                     onClearEdit={() => setBudgetToEdit(null)}
                     selectedDate={selectedDate} 
                   />
+
                   <div className="pocket-grid">
                     {budgetPockets.length > 0 ? (
                       budgetPockets.map(pocket => (
@@ -259,8 +265,8 @@ const Dashboard = () => {
                           {!pocket.id.startsWith('virtual-') && (
                             <button 
                               className="pocket-delete-btn"
-                              onClick={(e) => handleDeleteBudget(e, pocket.id)}
-                              title="Hapus Budget Ini"
+                              onClick={(e) => handleDeleteBudget(e, pocket.id)} // [LOGIKA BARU]
+                              title="Hapus Budget & Transaksi Terkait"
                             >
                               ✕
                             </button>
@@ -291,7 +297,6 @@ const Dashboard = () => {
                   </div>
                 </section>
 
-                {/* ... (Kartu Form Transaksi tidak berubah) ... */}
                 <section className="card card-form">
                   <h3>Tambah Transaksi Baru</h3>
                   <TransactionForm 
@@ -302,14 +307,12 @@ const Dashboard = () => {
                   />
                 </section>
 
-                {/* === [KARTU TRANSAKSI DIMODIFIKASI] === */}
                 <section className="card card-list full-height-card">
                   <h3>Transaksi {formatMonthYear(selectedDate)}</h3>
                   <ul>
                     {transactions.length > 0 ? (
                       transactions.map((t) => (
                         <li key={t.id} className="list-item">
-                          {/* [BARU] Tombol hapus transaksi */}
                           <button 
                             className="btn-delete-item"
                             title="Hapus transaksi ini"
@@ -332,9 +335,7 @@ const Dashboard = () => {
                     )}
                   </ul>
                 </section>
-                {/* === [AKHIR MODIFIKASI] === */}
 
-                {/* ... (Kartu Pengeluaran per Kategori tidak berubah) ... */}
                 {analytics && (
                   <section className="card card-list">
                     <h3>Pengeluaran per Kategori</h3>

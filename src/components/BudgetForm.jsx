@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import axiosClient from '../api/axiosClient';
 import { formatNumberInput, parseNumberInput } from '../utils/format';
 
-// [MODIFIKASI] Ambil prop baru: selectedDate, budgetToEdit, onClearEdit
 const BudgetForm = ({ categories, onBudgetSet, selectedDate, budgetToEdit, onClearEdit }) => {
   const [amount, setAmount] = useState('');
   const [categoryName, setCategoryName] = useState('');
@@ -11,7 +10,6 @@ const BudgetForm = ({ categories, onBudgetSet, selectedDate, budgetToEdit, onCle
 
   const expenseCategories = categories.filter(c => c.type === 'expense');
 
-  // Efek untuk mengisi form saat mode edit
   useEffect(() => {
     if (budgetToEdit) {
       setAmount(budgetToEdit.amount.toString());
@@ -32,21 +30,31 @@ const BudgetForm = ({ categories, onBudgetSet, selectedDate, budgetToEdit, onCle
     setLoading(true);
     setMessage('');
 
-    // === [MODIFIKASI] ===
-    // Gunakan month/year dari selectedDate, BUKAN new Date()
     const month = selectedDate.getMonth() + 1;
     const year = selectedDate.getFullYear();
+
+    // === [MODIFIKASI LOGIKA RESET] ===
+    // Jika amount kosong atau 0, kirim 0. Ini akan me-reset/menghapus budget.
+    const finalAmount = parseFloat(amount) || 0;
     // === [AKHIR MODIFIKASI] ===
 
     try {
       await axiosClient.post('/api/budgets', {
-        amount: parseFloat(amount) || 0, // Kirim 0 jika dikosongkan (untuk hapus/reset)
+        amount: finalAmount, // Kirim 0 jika dikosongkan
         month: month,
         year: year,
         category_name: categoryName 
       });
 
-      setMessage(budgetToEdit ? 'Budget diubah!' : 'Budget disimpan!');
+      // [MODIFIKASI] Pesan yang lebih jelas
+      let successMessage = 'Budget disimpan!';
+      if (finalAmount === 0 && budgetToEdit) {
+        successMessage = 'Budget direset!';
+      } else if (budgetToEdit) {
+        successMessage = 'Budget diubah!';
+      }
+
+      setMessage(successMessage);
       onBudgetSet(); // Refresh dashboard
       // onClearEdit() akan dipanggil dari dashboard
       
@@ -61,12 +69,12 @@ const BudgetForm = ({ categories, onBudgetSet, selectedDate, budgetToEdit, onCle
     <form onSubmit={handleSubmit} className="budget-form">
       {message && <p className={message.includes('Gagal') ? 'error' : 'success'} style={{textAlign: 'center', margin: '0 0 1rem 0'}}>{message}</p>}
       
-      <div className="form-group">
+      <div className="form-group" style={{marginTop: '1.5rem'}}>
         <label>Kategori Pengeluaran</label>
         <select 
           value={categoryName} 
           onChange={(e) => setCategoryName(e.target.value)}
-          disabled={!!budgetToEdit} // Nonaktifkan saat mode edit
+          disabled={!!budgetToEdit} 
           required
         >
           <option value="" disabled>Pilih Kategori</option>
@@ -77,13 +85,14 @@ const BudgetForm = ({ categories, onBudgetSet, selectedDate, budgetToEdit, onCle
       </div>
       
       <div className="form-group">
-        <label>Jumlah Budget (Kosongkan untuk hapus)</label>
+        <label>Jumlah Budget (Isi 0 untuk reset/hapus)</label>
         <input
           type="text" 
           inputMode="numeric"
           value={formatNumberInput(amount)} 
           onChange={(e) => setAmount(parseNumberInput(e.target.value))} 
           placeholder="0"
+          // [MODIFIKASI] Hapus 'required' agar bisa dikosongkan
           className="input-currency" 
         />
       </div>
