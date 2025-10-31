@@ -23,15 +23,6 @@ export function AuthProvider({ children }) {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false); // HANYA set loading=false di sini.
-        
-        // === PERBAIKAN: Hapus blok 'if' di bawah ini ===
-        // Navigasi akan diurus oleh halamannya masing-masing
-        // (AuthCallback.jsx atau Login.jsx)
-        /*
-        if (event === 'SIGNED_IN') {
-          navigate('/dashboard');
-        }
-        */
       }
     );
 
