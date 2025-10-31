@@ -1,11 +1,12 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import axiosClient from '../api/axiosClient';
-import { formatCurrency } from '../utils/format'; // Helper baru yang akan kita buat
+import { formatCurrency } from '../utils/format'; // Asumsi Anda punya file ini
 
 // Komponen baru yang akan kita buat
 import TransactionForm from '../components/TransactionForm';
 import BudgetForm from '../components/BudgetForm';
+import CategoryForm from '../components/CategoryForm'; // [BARU] Impor modal kategori
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
@@ -15,9 +16,13 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  // === [STATE BARU UNTUK MODAL] ===
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  // === [AKHIR STATE BARU] ===
+
   // Fungsi untuk mengambil semua data dashboard
   const fetchData = useCallback(async () => {
-    setLoading(true);
+    // Kita tidak set loading di sini agar refresh bisa berjalan di background
     setError('');
     try {
       // Kita panggil 3 endpoint backend secara bersamaan
@@ -34,7 +39,7 @@ const Dashboard = () => {
       console.error("Failed to fetch dashboard data:", err);
       setError('Gagal mengambil data dashboard');
     }
-    setLoading(false);
+    setLoading(false); // Set loading false hanya setelah semua selesai
   }, []);
 
   // Ambil data saat halaman pertama kali dimuat
@@ -45,7 +50,7 @@ const Dashboard = () => {
   // Fungsi ini akan dipanggil oleh komponen anak setelah berhasil
   // menambah transaksi atau budget, agar data di dashboard ter-refresh
   const handleDataUpdate = () => {
-    fetchData();
+    fetchData(); // Cukup panggil fetchData, dia akan refresh semua
   };
 
   if (loading) {
@@ -121,6 +126,8 @@ const Dashboard = () => {
           <TransactionForm 
             categories={categories} 
             onTransactionAdded={handleDataUpdate} 
+            // [BARU] Kirim fungsi untuk membuka modal ke TransactionForm
+            onOpenCategoryModal={() => setIsCategoryModalOpen(true)}
           />
         </section>
 
@@ -165,6 +172,19 @@ const Dashboard = () => {
         </section>
 
       </div>
+
+      {/* === [MODAL DITAMBAHKAN DI SINI] === */}
+      {/* Modal ini hanya akan tampil jika isCategoryModalOpen === true */}
+      {isCategoryModalOpen && (
+        <CategoryForm 
+          onClose={() => setIsCategoryModalOpen(false)}
+          onSuccess={() => {
+            handleDataUpdate(); // Refresh semua data (termasuk kategori)
+          }}
+        />
+      )}
+      {/* === [AKHIR MODAL] === */}
+
     </div>
   );
 };

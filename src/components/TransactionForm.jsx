@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import axiosClient from '../api/axiosClient';
 
-const TransactionForm = ({ categories, onTransactionAdded }) => {
+// [BARU] Ambil prop onOpenCategoryModal
+const TransactionForm = ({ categories, onTransactionAdded, onOpenCategoryModal }) => {
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState('');
   const [type, setType] = useState('expense');
@@ -79,15 +80,30 @@ const TransactionForm = ({ categories, onTransactionAdded }) => {
           required
         />
       </div>
-      <div className="form-group">
-        <label>Kategori</label>
-        <select value={category} onChange={(e) => setCategory(e.target.value)} required>
-          <option value="" disabled>Pilih Kategori</option>
-          {currentCategories.map(c => (
-            <option key={c.id} value={c.name}>{c.name}</option>
-          ))}
-        </select>
+
+      {/* === [BAGIAN KATEGORI DIMODIFIKASI] === */}
+      <div className="form-group-inline">
+        <div className="form-group" style={{ flexGrow: 1 }}>
+          <label>Kategori</label>
+          <select value={category} onChange={(e) => setCategory(e.target.value)} required>
+            <option value="" disabled>Pilih Kategori</option>
+            {currentCategories.map(c => (
+              // Gunakan c.id atau c.name sebagai key. c.name harus unik.
+              <option key={c.id || c.name} value={c.name}>{c.name}</option>
+            ))}
+          </select>
+        </div>
+        {/* Tombol "Baru +" untuk memanggil modal */}
+        <button 
+          type="button" 
+          className="btn-new-category" 
+          onClick={onOpenCategoryModal}
+        >
+          Baru +
+        </button>
       </div>
+      {/* === [AKHIR MODIFIKASI] === */}
+
       <div className="form-group">
         <label>Tanggal</label>
         <input
