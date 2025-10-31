@@ -1,9 +1,8 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import axiosClient from '../api/axiosClient';
-import { formatCurrency } from '../utils/format'; // (File baru di bawah)
+import { formatCurrency } from '../utils/format';
 
-// Komponen baru (File baru di bawah)
 import TransactionForm from '../components/TransactionForm';
 import BudgetForm from '../components/BudgetForm';
 import CategoryForm from '../components/CategoryForm';
@@ -17,9 +16,7 @@ const Dashboard = () => {
   const [error, setError] = useState('');
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
 
-  // Fungsi untuk mengambil semua data dashboard
   const fetchData = useCallback(async () => {
-    // Jangan set loading true di sini agar refresh bisa 'silent'
     setError('');
     try {
       const [analyticsRes, transactionsRes, categoriesRes] = await Promise.all([
@@ -35,15 +32,13 @@ const Dashboard = () => {
       console.error("Failed to fetch dashboard data:", err);
       setError('Gagal mengambil data dashboard');
     }
-    setLoading(false); // Set loading false hanya setelah semua selesai
+    setLoading(false);
   }, []);
 
-  // Ambil data saat halaman pertama kali dimuat
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
-  // Handler untuk refresh data dari komponen anak
   const handleDataUpdate = () => {
     fetchData();
   };
@@ -59,7 +54,6 @@ const Dashboard = () => {
     );
   }
 
-  // Menghitung data budget
   const budgetAmount = analytics?.budget?.amount || 0;
   const budgetSpent = analytics?.summary?.total_expenses || 0;
   const budgetRemaining = analytics?.budget?.remaining || 0;
@@ -68,12 +62,12 @@ const Dashboard = () => {
   return (
     <>
       <div className="dashboard-layout">
-        {/* === SIDEBAR === */}
+        {/* === SIDEBAR (DESKTOP) === */}
+        {/* Ini akan otomatis disembunyikan di HP oleh CSS baru */}
         <aside className="sidebar">
           <div className="sidebar-header">
             <h1>💰 Money Tracker</h1>
           </div>
-          {/* (Di sini bisa ditambahkan menu navigasi nanti) */}
           <div className="sidebar-footer">
             <div className="user-info">{user?.email}</div>
             <button onClick={logout} className="logout-btn">
@@ -84,6 +78,16 @@ const Dashboard = () => {
 
         {/* === KONTEN UTAMA === */}
         <main className="main-content">
+
+          {/* === HEADER (MOBILE) === */}
+          {/* Header ini hanya akan muncul di HP (diatur oleh CSS) */}
+          <header className="mobile-header">
+            <h1>💰 Money Tracker</h1>
+            <button onClick={logout} className="logout-btn-mobile">
+              Logout
+            </button>
+          </header>
+
           <h2>Dashboard</h2>
           {error && <p className="error">{error}</p>}
           
