@@ -36,13 +36,13 @@ const Dashboard = () => {
     
     const month = selectedDate.getMonth() + 1;
     const year = selectedDate.getFullYear();
-    const params = { month, year }; // <-- Parameter untuk filtering
+    const params = { month, year }; 
 
     try {
       const [analyticsRes, transactionsRes, savingsRes] = await Promise.all([
         axiosClient.get('/api/analytics/summary', { params }),
         axiosClient.get('/api/transactions', { params }), 
-        axiosClient.get('/api/savings', { params }), // <-- [MODIFIKASI] Mengirim params
+        axiosClient.get('/api/savings'), // <-- [PERBAIKAN] Tidak mengirim params
       ]);
 
       setAnalytics(analyticsRes.data.data);
@@ -65,14 +65,14 @@ const Dashboard = () => {
       
       const month = selectedDate.getMonth() + 1;
       const year = selectedDate.getFullYear();
-      const params = { month, year }; // <-- Parameter untuk filtering
+      const params = { month, year }; 
 
       try {
         const [categoriesRes, analyticsRes, transactionsRes, savingsRes] = await Promise.all([
           axiosClient.get('/api/categories'),
           axiosClient.get('/api/analytics/summary', { params }),
           axiosClient.get('/api/transactions', { params }), 
-          axiosClient.get('/api/savings', { params }), // <-- [MODIFIKASI] Mengirim params
+          axiosClient.get('/api/savings'), // <-- [PERBAIKAN] Tidak mengirim params
         ]);
 
         setCategories(categoriesRes.data.data);
