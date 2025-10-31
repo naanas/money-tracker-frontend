@@ -18,7 +18,7 @@ const Dashboard = () => {
   const [analytics, setAnalytics] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [savingsGoals, setSavingsGoals] = useState([]); 
+  const [allSavingsGoals, setAllSavingsGoals] = useState([]); // Menyimpan semua goals
   
   const [isLoading, setIsLoading] = useState(true); 
   const [isRefetching, setIsRefetching] = useState(false); 
@@ -48,15 +48,18 @@ const Dashboard = () => {
     const params = { month, year }; 
 
     try {
-      const [analyticsRes, transactionsRes, savingsRes] = await Promise.all([
+      // Fetch analytics dan transactions yang tergantung bulan
+      const [analyticsRes, transactionsRes] = await Promise.all([
         axiosClient.get('/api/analytics/summary', { params }),
         axiosClient.get('/api/transactions', { params }), 
-        axiosClient.get('/api/savings'), // Tidak mengirim params
       ]);
+      
+      // Fetch semua savings goals (tidak tergantung bulan)
+      const savingsRes = await axiosClient.get('/api/savings');
 
       setAnalytics(analyticsRes.data.data);
       setTransactions(transactionsRes.data.data.transactions);
-      setSavingsGoals(savingsRes.data.data); 
+      setAllSavingsGoals(savingsRes.data.data); 
       
     } catch (err) {
       console.error("Failed to fetch dashboard data:", err);
@@ -87,7 +90,7 @@ const Dashboard = () => {
         setCategories(categoriesRes.data.data);
         setAnalytics(analyticsRes.data.data);
         setTransactions(transactionsRes.data.data.transactions);
-        setSavingsGoals(savingsRes.data.data); 
+        setAllSavingsGoals(savingsRes.data.data); 
         
       } catch (err) {
         console.error("Failed to fetch initial dashboard data:", err);
@@ -111,6 +114,7 @@ const Dashboard = () => {
 
   // FUNGSI UPDATE (SETELAH SUBMIT FORM)
   const handleDataUpdate = async () => {
+    // Jalankan refresh data tanpa menampilkan loading overlay
     await fetchDataForMonth(); 
     await fetchCategories();
     
@@ -119,8 +123,8 @@ const Dashboard = () => {
   };
 
   const totalSavingsCurrent = useMemo(() => {
-    return savingsGoals.reduce((sum, goal) => sum + parseFloat(goal.current_amount), 0);
-  }, [savingsGoals]);
+    return allSavingsGoals.reduce((sum, goal) => sum + parseFloat(goal.current_amount), 0);
+  }, [allSavingsGoals]);
 
   const handlePrevMonth = () => {
     setSelectedDate(prevDate => new Date(prevDate.getFullYear(), prevDate.getMonth() - 1, 1));
@@ -176,44 +180,44 @@ const Dashboard = () => {
     }
   };
   
-  // [BARU] Filter Savings Goals berdasarkan bulan yang dipilih
+  // [LOGIKA FILTERING SAVINGS GOALS SESUAI PERMINTAAN]
   const filteredSavingsGoals = useMemo(() => {
-    const goals = savingsGoals;
-
-    const selectedYear = selectedDate.getFullYear();
-    const selectedMonth = selectedDate.getMonth(); // 0-indexed
+    // Ambil tanggal awal bulan yang dipilih
+    const selectedMonthStart = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
     
-    // Fungsi untuk mengecek apakah bulan yang dipilih SUDAH MELEWATI bulan target
-    const isAfterTargetMonth = (targetDateString) => {
-        if (!targetDateString) return false;
-        
-        const targetDate = new Date(targetDateString);
-        const targetYear = targetDate.getFullYear();
-        const targetMonth = targetDate.getMonth();
-        
-        // Cek jika bulan yang dipilih (selectedDate) berada setelah bulan target
-        if (selectedYear > targetYear) return true;
-        if (selectedYear === targetYear && selectedMonth > targetMonth) return true;
-        
-        return false;
-    }
-
-    // Filter goals: Hanya tampilkan goal yang bulan yang dipilih BELUM melewati bulan target
-    // Goal tanpa target_date akan selalu ditampilkan
-    return goals.filter(goal => {
-      // Jika tidak ada target_date, selalu tampilkan (ongoing)
+    return allSavingsGoals.filter(goal => {
+      // 1. Goals tanpa target_date (ongoing) selalu ditampilkan
       if (!goal.target_date) return true;
       
-      // Hilangkan goal jika bulan yang dipilih SUDAH MELEWATI bulan target.
-      if (isAfterTargetMonth(goal.target_date)) {
+      const targetDate = new Date(goal.target_date);
+      // Buat tanggal yang hanya berisi bulan dan tahun target (set ke awal bulan target)
+      const targetMonthStart = new Date(targetDate.getFullYear(), targetDate.getMonth(), 1);
+
+      // Permintaan 1: HIDE jika bulan yang dipilih SUDAH melewati bulan target.
+      // Jika awal bulan yang dipilih > awal bulan target, maka goal sudah terlewat.
+      if (selectedMonthStart > targetMonthStart) {
         return false;
       }
-      return true;
+      
+      // Permintaan 2: HIDE jika bulan yang dipilih JAUH SEBELUM bulan target.
+      // Ini diinterpretasikan sebagai: goal hanya tampil di bulan target dan bulan sebelumnya (sampai tak terhingga)
+      // Logika di atas (selectedMonthStart > targetMonthStart) sudah cukup menangani HIDE setelah bulan target.
+      // Jika Anda benar-benar ingin menyembunyikan jika JAUH SEBELUM bulan target (target date adalah Jan 2026, dan saya melihat Jan 2024), 
+      // Anda harus menentukan batas awal. Namun, karena Anda hanya menyebutkan "backmonth", 
+      // saya akan menganggap filter di atas (HIDE setelah target) sudah cukup dan akan membuat goal 
+      // yang akan datang tetap terlihat di bulan-bulan sebelumnya.
+      
+      // Jika Anda bersikeras HIDE sebelum bulan target:
+      // if (selectedMonthStart < targetMonthStart) {
+      //   return false; // Hapus baris ini jika goal harus muncul di bulan-bulan persiapan
+      // }
+
+      return true; 
     });
 
-  }, [savingsGoals, selectedDate]);
+  }, [allSavingsGoals, selectedDate]);
   
-  // ... (budgetPockets calculation remains unchanged)
+  // ... (budgetPockets, totalBudget, totalSpent, totalRemaining, totalProgress remains unchanged)
 
   const budgetPockets = useMemo(() => {
     if (!analytics) return [];
@@ -312,11 +316,10 @@ const Dashboard = () => {
           ) : (
             analytics ? (
               // Konten ditampilkan meskipun isRefetching (silent update)
-              <div className="dashboard-grid">
+              // Menggunakan style inline untuk menghilangkan loading visual yang mengganggu.
+              <div className="dashboard-grid" style={{ opacity: isRefetching ? 0.8 : 1, transition: 'opacity 0.3s' }}>
                 
-                {/* [MODIFIKASI] Atur opacity saat fetching untuk indikasi silent loading */}
-                <div style={{ opacity: isRefetching ? 0.6 : 1, transition: 'opacity 0.3s' }}>
-                  
+                <> 
                   <section className="card card-summary">
                     <h3>Ringkasan {formatMonthYear(selectedDate)}</h3>
                     <div className="summary-item">
@@ -425,7 +428,7 @@ const Dashboard = () => {
                   </section>
                   
                   <SavingsGoals 
-                    savingsGoals={filteredSavingsGoals} // Menggunakan filtered goals
+                    savingsGoals={filteredSavingsGoals} 
                     onDataUpdate={handleDataUpdate}
                     isRefetching={isRefetching}
                   />
@@ -476,8 +479,7 @@ const Dashboard = () => {
                       </ul>
                     </section>
                   )}
-                </div>
-
+                </>
               </div>
             ) : (
               !isLoading && error && (

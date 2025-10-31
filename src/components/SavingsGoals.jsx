@@ -1,3 +1,5 @@
+// naanas/money-tracker-frontend/money-tracker-frontend-cd538d0fa423ae8f894f65f23acb2908a483c96d/src/components/SavingsGoals.jsx
+
 import React, { useState } from 'react';
 import axiosClient from '../api/axiosClient';
 import { formatCurrency, formatNumberInput, parseNumberInput } from '../utils/format';
@@ -52,7 +54,7 @@ const SavingsGoals = ({ savingsGoals, onDataUpdate, isRefetching }) => {
       });
       setName('');
       setTargetAmount('');
-      setTargetDate(''); // <-- Reset state
+      setTargetDate(''); 
       triggerSuccessAnimation(); 
       await onDataUpdate(); 
     } catch (err) {
@@ -169,9 +171,10 @@ const SavingsGoals = ({ savingsGoals, onDataUpdate, isRefetching }) => {
             const diffInDays = target ? Math.ceil((target - today.setHours(0,0,0,0)) / (1000 * 60 * 60 * 24)) : null;
 
             let daysRemainingText = '';
+            // Gunakan remaining untuk menentukan status tercapai (memastikan "sisa" tidak minus)
             if (target) {
                 if (remaining <= 0) {
-                    daysRemainingText = 'Tercapai!'; // Abaikan hari jika sudah tercapai
+                    daysRemainingText = 'Tercapai!'; 
                 } else if (diffInDays > 0) {
                     daysRemainingText = `${diffInDays} hari lagi`;
                 } else if (diffInDays === 0) {
@@ -193,7 +196,7 @@ const SavingsGoals = ({ savingsGoals, onDataUpdate, isRefetching }) => {
                 <div className="pocket-header">
                   <span className="pocket-title">{goal.name}</span>
                   <span className={`pocket-remaining ${remaining <= 0 ? 'income' : ''}`}>
-                    {/* [Perbaikan] Memastikan tidak minus dengan menampilkan 'Tercapai!' */}
+                    {/* Memastikan tidak minus */}
                     {remaining <= 0 ? 'Tercapai!' : `${formatCurrency(remaining)} lagi`}
                   </span>
                 </div>
