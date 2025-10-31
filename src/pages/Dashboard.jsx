@@ -223,167 +223,162 @@ const Dashboard = () => {
           {error && <p className="error" style={{textAlign: 'center', padding: '1rem', backgroundColor: 'var(--color-bg-medium)', borderRadius: '12px'}}>{error}</p>}
 
           {/* === [BLOK LOADING DIMODIFIKASI] === */}
-          {/* Tampilkan spinner hanya pada loading AWAL */}
-          {isLoading ? (
-            <div className="loading-content">
-              <div className="spinner"></div>
-              <h2>Loading Data...</h2>
-            </div>
-          ) : (
-            // Tampilkan grid jika sudah tidak loading awal
-            analytics ? (
-              <div className="dashboard-grid">
+          {/* Spinner loading awal dihapus sesuai permintaan */}
+          
+          {/* Tampilkan grid jika analytics sudah ada */}
+          {analytics ? (
+            <div className="dashboard-grid">
+              
+              {/* --- Kartu-kartu --- */}
+              
+              <section className="card card-summary">
+                <h3>Ringkasan {formatMonthYear(selectedDate)}</h3>
+                <div className="summary-item">
+                  <span>Total Pemasukan</span>
+                  <span className="income">{formatCurrency(analytics.summary.total_income)}</span>
+                </div>
+                <div className="summary-item">
+                  <span>Total Pengeluaran</span>
+                  <span className="expense">{formatCurrency(analytics.summary.total_expenses)}</span>
+                </div>
+                <hr />
+                <div className="summary-item total">
+                  <span>Saldo</span>
+                  <span>{formatCurrency(analytics.summary.balance)}</span>
+                </div>
+              </section>
+
+              <section className="card card-budget-pocket">
+                <h3>Budget Pockets</h3>
+                <div className="budget-info total">
+                  <span>Total Budget: {formatCurrency(totalBudget)}</span>
+                  <span>{totalProgress.toFixed(0)}%</span>
+                </div>
+                <div className="progress-bar-container">
+                  <div 
+                    className="progress-bar-fill" 
+                    style={{ width: `${Math.min(totalProgress, 100)}%` }}
+                  ></div>
+                </div>
                 
-                {/* --- Kartu-kartu --- */}
-                
-                <section className="card card-summary">
-                  <h3>Ringkasan {formatMonthYear(selectedDate)}</h3>
-                  <div className="summary-item">
-                    <span>Total Pemasukan</span>
-                    <span className="income">{formatCurrency(analytics.summary.total_income)}</span>
-                  </div>
-                  <div className="summary-item">
-                    <span>Total Pengeluaran</span>
-                    <span className="expense">{formatCurrency(analytics.summary.total_expenses)}</span>
-                  </div>
-                  <hr />
-                  <div className="summary-item total">
-                    <span>Saldo</span>
-                    <span>{formatCurrency(analytics.summary.balance)}</span>
-                  </div>
-                </section>
+                <BudgetForm 
+                  categories={categories} 
+                  onBudgetSet={handleDataUpdate}
+                  budgetToEdit={budgetToEdit}
+                  onClearEdit={() => setBudgetToEdit(null)}
+                  selectedDate={selectedDate} 
+                  isRefetching={isRefetching} // [BARU] Kirim state loading
+                />
 
-                <section className="card card-budget-pocket">
-                  <h3>Budget Pockets</h3>
-                  <div className="budget-info total">
-                    <span>Total Budget: {formatCurrency(totalBudget)}</span>
-                    <span>{totalProgress.toFixed(0)}%</span>
-                  </div>
-                  <div className="progress-bar-container">
-                    <div 
-                      className="progress-bar-fill" 
-                      style={{ width: `${Math.min(totalProgress, 100)}%` }}
-                    ></div>
-                  </div>
-                  
-                  <BudgetForm 
-                    categories={categories} 
-                    onBudgetSet={handleDataUpdate}
-                    budgetToEdit={budgetToEdit}
-                    onClearEdit={() => setBudgetToEdit(null)}
-                    selectedDate={selectedDate} 
-                    isRefetching={isRefetching} // [BARU] Kirim state loading
-                  />
-
-                  <div className="pocket-grid">
-                    {budgetPockets.length > 0 ? (
-                      budgetPockets.map(pocket => (
-                        <div 
-                          className="pocket-item" 
-                          key={pocket.id || pocket.category_name} 
-                          onClick={() => pocket.id.startsWith('virtual-') ? null : setBudgetToEdit(pocket)}
-                          title={pocket.id.startsWith('virtual-') ? "Kategori ini tidak di-budget" : "Klik untuk edit"}
-                        >
-                          {!pocket.id.startsWith('virtual-') && (
-                            <button 
-                              className="pocket-delete-btn"
-                              onClick={(e) => handleDeleteBudget(e, pocket.id)}
-                              title="Hapus Budget & Transaksi Terkait"
-                            >
-                              ✕
-                            </button>
-                          )}
-                          <div className="pocket-header">
-                            <span className="pocket-title">{pocket.category_name}</span>
-                            <span className={`pocket-remaining ${pocket.remaining < 0 ? 'expense' : ''}`}>
-                              {pocket.remaining < 0 ? 'Over!' : `${formatCurrency(pocket.remaining)} sisa`}
-                            </span>
-                          </div>
-                          <div className="progress-bar-container small">
-                            <div 
-                              className={`progress-bar-fill ${pocket.progress > 100 ? 'expense' : ''}`}
-                              style={{ width: `${Math.min(pocket.progress, 100)}%` }}
-                            ></div>
-                          </div>
-                          <div className="pocket-footer">
-                            <span className="expense">{formatCurrency(pocket.spent)}</span>
-                            <span className="total"> / {formatCurrency(pocket.amount)}</span>
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <p style={{textAlign: 'center', fontSize: '0.9em', color: 'var(--color-text-muted)', gridColumn: '1 / -1'}}>
-                        Belum ada budget per kategori.
-                      </p>
-                    )}
-                  </div>
-                </section>
-
-                <section className="card card-form">
-                  <h3>Tambah Transaksi Baru</h3>
-                  <TransactionForm 
-                    categories={categories} 
-                    onTransactionAdded={handleDataUpdate} 
-                    onOpenCategoryModal={() => setIsCategoryModalOpen(true)}
-                    selectedDate={selectedDate}
-                    isRefetching={isRefetching} // [BARU] Kirim state loading
-                  />
-                </section>
-
-                <section className="card card-list full-height-card">
-                  <h3>Transaksi {formatMonthYear(selectedDate)}</h3>
-                  <ul>
-                    {transactions.length > 0 ? (
-                      transactions.map((t) => (
-                        <li key={t.id} className="list-item">
+                <div className="pocket-grid">
+                  {budgetPockets.length > 0 ? (
+                    budgetPockets.map(pocket => (
+                      <div 
+                        className="pocket-item" 
+                        key={pocket.id || pocket.category_name} 
+                        onClick={() => pocket.id.startsWith('virtual-') ? null : setBudgetToEdit(pocket)}
+                        title={pocket.id.startsWith('virtual-') ? "Kategori ini tidak di-budget" : "Klik untuk edit"}
+                      >
+                        {!pocket.id.startsWith('virtual-') && (
                           <button 
-                            className="btn-delete-item"
-                            title="Hapus transaksi ini"
-                            onClick={() => handleDeleteTransaction(t.id)}
+                            className="pocket-delete-btn"
+                            onClick={(e) => handleDeleteBudget(e, pocket.id)}
+                            title="Hapus Budget & Transaksi Terkait"
                           >
                             ✕
                           </button>
-                          <div className="list-item-details">
-                            <strong>{t.description || t.category}</strong>
-                            <span>{new Date(t.date).toLocaleDateString('id-ID', {day: '2-digit', month: 'short', year: 'numeric'})}</span>
-                          </div>
-                          <span className={t.type}>
-                            {t.type === 'expense' ? '-' : '+'}
-                            {formatCurrency(t.amount)}
+                        )}
+                        <div className="pocket-header">
+                          <span className="pocket-title">{pocket.category_name}</span>
+                          <span className={`pocket-remaining ${pocket.remaining < 0 ? 'expense' : ''}`}>
+                            {pocket.remaining < 0 ? 'Over!' : `${formatCurrency(pocket.remaining)} sisa`}
                           </span>
+                        </div>
+                        <div className="progress-bar-container small">
+                          <div 
+                            className={`progress-bar-fill ${pocket.progress > 100 ? 'expense' : ''}`}
+                            style={{ width: `${Math.min(pocket.progress, 100)}%` }}
+                          ></div>
+                        </div>
+                        <div className="pocket-footer">
+                          <span className="expense">{formatCurrency(pocket.spent)}</span>
+                          <span className="total"> / {formatCurrency(pocket.amount)}</span>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p style={{textAlign: 'center', fontSize: '0.9em', color: 'var(--color-text-muted)', gridColumn: '1 / -1'}}>
+                      Belum ada budget per kategori.
+                    </p>
+                  )}
+                </div>
+              </section>
+
+              <section className="card card-form">
+                <h3>Tambah Transaksi Baru</h3>
+                <TransactionForm 
+                  categories={categories} 
+                  onTransactionAdded={handleDataUpdate} 
+                  onOpenCategoryModal={() => setIsCategoryModalOpen(true)}
+                  selectedDate={selectedDate}
+                  isRefetching={isRefetching} // [BARU] Kirim state loading
+                />
+              </section>
+
+              <section className="card card-list full-height-card">
+                <h3>Transaksi {formatMonthYear(selectedDate)}</h3>
+                <ul>
+                  {transactions.length > 0 ? (
+                    transactions.map((t) => (
+                      <li key={t.id} className="list-item">
+                        <button 
+                          className="btn-delete-item"
+                          title="Hapus transaksi ini"
+                          onClick={() => handleDeleteTransaction(t.id)}
+                        >
+                          ✕
+                        </button>
+                        <div className="list-item-details">
+                          <strong>{t.description || t.category}</strong>
+                          <span>{new Date(t.date).toLocaleDateString('id-ID', {day: '2-digit', month: 'short', year: 'numeric'})}</span>
+                        </div>
+                        <span className={t.type}>
+                          {t.type === 'expense' ? '-' : '+'}
+                          {formatCurrency(t.amount)}
+                        </span>
+                      </li>
+                    ))
+                  ) : (
+                    <p>Belum ada transaksi di bulan ini.</p>
+                  )}
+                </ul>
+              </section>
+
+              {analytics && (
+                <section className="card card-list">
+                  <h3>Pengeluaran per Kategori</h3>
+                  <ul>
+                    {Object.keys(analytics.expenses_by_category).length > 0 ? (
+                      Object.entries(analytics.expenses_by_category).map(([category, amount]) => (
+                        <li key={category} className="list-item">
+                          <span>{category}</span>
+                          <span className="expense">-{formatCurrency(amount)}</span>
                         </li>
                       ))
                     ) : (
-                      <p>Belum ada transaksi di bulan ini.</p>
+                      <p>Belum ada pengeluaran.</p>
                     )}
                   </ul>
                 </section>
+              )}
 
-                {analytics && (
-                  <section className="card card-list">
-                    <h3>Pengeluaran per Kategori</h3>
-                    <ul>
-                      {Object.keys(analytics.expenses_by_category).length > 0 ? (
-                        Object.entries(analytics.expenses_by_category).map(([category, amount]) => (
-                          <li key={category} className="list-item">
-                            <span>{category}</span>
-                            <span className="expense">-{formatCurrency(amount)}</span>
-                          </li>
-                        ))
-                      ) : (
-                        <p>Belum ada pengeluaran.</p>
-                      )}
-                    </ul>
-                  </section>
-                )}
-
+            </div>
+          ) : (
+            // Tampilkan error HANYA JIKA loading awal selesai DAN ada error
+            !isLoading && error && (
+              <div style={{textAlign: 'center', color: 'var(--color-text-muted)', marginTop: '2rem'}}>
+                <p>Tidak dapat memuat data. Silakan coba lagi.</p>
               </div>
-            ) : (
-              !isLoading && error && (
-                <div style={{textAlign: 'center', color: 'var(--color-text-muted)', marginTop: '2rem'}}>
-                  <p>Tidak dapat memuat data. Silakan coba lagi.</p>
-                </div>
-              )
             )
           )}
         </main>
