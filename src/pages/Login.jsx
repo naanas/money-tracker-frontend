@@ -24,7 +24,7 @@ const Login = () => {
   };
 
   return (
-    // Kita hapus <div className="auth-form"> dari sini
+    // Hapus <div className="auth-form"> dari sini
     <form onSubmit={handleSubmit}>
       <h2>Login</h2>
       {error && <p className="error">{error}</p>}

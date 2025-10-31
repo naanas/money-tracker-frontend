@@ -1,19 +1,22 @@
 import axios from 'axios';
+// Impor supabase client langsung
 import { supabase } from '../supabaseClient';
 
 const axiosClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
 });
 
-
+// Interceptor untuk menambahkan token ke setiap request
+// Ubah menjadi fungsi 'async'
 axiosClient.interceptors.request.use(
   async (config) => {
     
+    // Minta sesi terbaru langsung dari Supabase
     const { data: { session }, error } = await supabase.auth.getSession();
 
     if (error) {
       console.error('Error getting session in axios interceptor:', error);
-      return config; 
+      return config; // Lanjutkan tanpa token jika ada error
     }
     
     if (session && session.access_token) {

@@ -28,7 +28,7 @@ const Register = () => {
   };
 
   return (
-    // Kita hapus <div className="auth-form"> dari sini
+    // Hapus <div className="auth-form"> dari sini
     <form onSubmit={handleSubmit}>
       <h2>Register</h2>
       {error && <p className="error">{error}</p>}

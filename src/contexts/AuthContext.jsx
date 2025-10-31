@@ -30,7 +30,7 @@ export function AuthProvider({ children }) {
     return () => {
       authListener.subscription.unsubscribe();
     };
-  }, []); // Hapus 'navigate' dari dependencies, tidak diperlukan di sini
+  }, []); // Hapus 'navigate' dari dependencies
 
   // Fungsi register, memanggil backend Anda
   const register = async (email, password, fullName) => {
