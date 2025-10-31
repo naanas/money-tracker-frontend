@@ -40,26 +40,48 @@ body {
 /* === AUTH LAYOUT === */
 .auth-layout {
   display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  padding: 1rem;
+  width: 100%;
+  height: 100vh;
 }
 
-.auth-form {
+.auth-sidebar {
+  width: 100%;
+  max-width: 450px; /* Lebar sidebar form */
   background-color: var(--color-bg-medium);
+  border-right: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   padding: 2.5rem;
-  border-radius: 12px;
-  border: 1px solid var(--color-border);
+  overflow-y: auto;
+}
+
+.auth-main-content {
+  flex-grow: 1;
+  background-color: var(--color-bg-dark); /* Area gelap di kanan */
+}
+
+.auth-form-container {
   width: 100%;
   max-width: 400px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  margin: 0 auto; /* Pusatkan form di dalam sidebar */
 }
 
-.auth-form h2 {
-  text-align: center;
+/* === STYLING UMUM (FORM, BUTTON, DLL) === */
+.auth-form-container form,
+.auth-form-container .verification-box {
+  background-color: transparent;
+  padding: 0;
+  border: none;
+  box-shadow: none;
+  width: 100%;
+}
+
+.auth-form-container h2 {
+  text-align: left; /* Sesuaikan dengan screenshot */
   margin-top: 0;
   margin-bottom: 2rem;
+  font-size: 1.75rem;
 }
 
 .form-group {
@@ -72,6 +94,7 @@ body {
   margin-bottom: 0.5rem;
   font-size: 0.9rem;
   font-weight: 500;
+  color: var(--color-text-muted);
 }
 
 .form-group input,
@@ -134,12 +157,13 @@ button:disabled {
   background-color: var(--color-border);
 }
 
-.auth-form p {
-  text-align: center;
+.auth-form-container p {
+  text-align: left; /* Sesuaikan dengan screenshot */
   margin-top: 1.5rem;
   font-size: 0.9rem;
+  color: var(--color-text-muted);
 }
-.auth-form p a {
+.auth-form-container p a {
   color: var(--color-primary);
   text-decoration: none;
   font-weight: 500;
@@ -197,6 +221,7 @@ button:disabled {
   flex: 1;
   padding: 2rem;
   overflow-y: auto;
+  background-color: var(--color-bg-dark); /* Pastikan background-nya gelap */
 }
 .main-content h2 {
   margin-top: 0;
@@ -392,6 +417,13 @@ button:disabled {
   justify-content: center;
   min-height: 250px;
 }
+.verification-box h2 {
+  text-align: center;
+}
+.verification-box p {
+  text-align: center;
+}
+
 .spinner {
   border: 4px solid var(--color-border);
   border-radius: 50%;
@@ -448,43 +480,4 @@ button:disabled {
 }
 @keyframes fill {
   100% { box-shadow: inset 0px 0px 0px 40px var(--color-accent-success); }
-}
-
-
-/* === AUTH LAYOUT === */
-.auth-layout {
-  display: flex;
-  width: 100%;
-  height: 100vh;
-}
-
-.auth-sidebar {
-  width: 100%;
-  max-width: 450px; /* Lebar sidebar form */
-  background-color: var(--color-bg-medium);
-  border-right: 1px solid var(--color-border);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: 2.5rem;
-}
-
-.auth-main-content {
-  flex-grow: 1;
-  background-color: var(--color-bg-dark); /* Area gelap di kanan */
-}
-
-/* Ganti .auth-form menjadi .auth-form-container */
-.auth-form-container {
-  width: 100%;
-  max-width: 400px;
-  margin: 0 auto; /* Pusatkan form di dalam sidebar */
-}
-
-/* Pastikan form di dalam container tidak punya background lagi */
-.auth-form-container form {
-  background-color: transparent;
-  padding: 0;
-  border: none;
-  box-shadow: none;
 }
