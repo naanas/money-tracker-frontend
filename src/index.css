@@ -1539,3 +1539,49 @@ button:disabled {
   font-weight: 500;
   font-size: 1.1rem !important;
 }
+/* ... (SEMUA CSS ANDA YANG SUDAH ADA BIARKAN DI ATAS) ... */
+
+/* === [BARU] CSS UNTUK TOMBOL HAPUS POCKET === */
+.pocket-item {
+  position: relative; /* Diperlukan untuk memposisikan tombol 'x' */
+  background-color: var(--color-bg-light);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+.pocket-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  border-color: var(--color-primary);
+}
+
+.pocket-delete-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  font-weight: bold;
+  line-height: 1;
+  background-color: var(--color-border);
+  color: var(--color-text-muted);
+  border-radius: 50%;
+  border: none;
+  opacity: 0.5;
+  transition: all 0.2s ease-in-out;
+}
+.pocket-item:hover .pocket-delete-btn {
+  opacity: 1;
+}
+.pocket-delete-btn:hover {
+  background-color: var(--color-accent-error);
+  color: white;
+  transform: scale(1.1);
+}
