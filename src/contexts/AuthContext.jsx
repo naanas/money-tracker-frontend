@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import axiosClient from '../api/axiosClient';
 import { useNavigate } from 'react-router-dom';
@@ -8,31 +8,40 @@ const AuthContext = createContext();
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true); // Mulai dengan loading=true
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  // === [STATE BARU UNTUK ANIMASI SUKSES] ===
+  const [showSuccess, setShowSuccess] = useState(false);
+  // === [AKHIR STATE BARU] ===
+
   useEffect(() => {
-    // Kita HAPUS panggilan supabase.auth.getSession() yang lama.
-    // Kita HANYA mengandalkan onAuthStateChange.
-    
-    // Listener ini akan langsung berjalan saat dimuat (dengan event INITIAL_SESSION)
-    // dan juga berjalan saat login, logout, atau verifikasi.
+    // Kode listener onAuthStateChange Anda (sudah benar)
     const { data: authListener } = supabase.auth.onAuthStateChange(
       (event, session) => {
         console.log('Auth Event:', event, session);
         setSession(session);
         setUser(session?.user ?? null);
-        setLoading(false); // HANYA set loading=false di sini.
+        setLoading(false);
       }
     );
-
-    // Cleanup listener
     return () => {
       authListener.subscription.unsubscribe();
     };
-  }, []); // Hapus 'navigate' dari dependencies
+  }, []);
 
-  // Fungsi register, memanggil backend Anda
+  // === [FUNGSI BARU UNTUK MEMICU ANIMASI] ===
+  const triggerSuccessAnimation = () => {
+    setShowSuccess(true);
+    // Sembunyikan animasi setelah 1.5 detik
+    setTimeout(() => {
+      setShowSuccess(false);
+    }, 1500);
+  };
+  // === [AKHIR FUNGSI BARU] ===
+
+
+  // ... (fungsi register, login, logout tidak berubah)
   const register = async (email, password, fullName) => {
     const { data } = await axiosClient.post('/api/auth/register', {
       email,
@@ -41,27 +50,17 @@ export function AuthProvider({ children }) {
     });
     return data; 
   };
-
-  // Fungsi login, memanggil backend Anda
   const login = async (email, password) => {
     const { data } = await axiosClient.post('/api/auth/login', {
       email,
       password,
     });
-    
-    // Set sesi di Supabase client, ini akan memicu onAuthStateChange
     await supabase.auth.setSession(data.data.session);
-
-    // Kita tidak perlu set user/session di sini lagi, listener akan melakukannya.
-    // Cukup navigasi.
     navigate('/dashboard');
     return data;
   };
-
-  // Fungsi logout
   const logout = async () => {
     await supabase.auth.signOut();
-    // Listener akan otomatis mendeteksi logout dan set user/session ke null
     navigate('/login');
   };
 
@@ -72,11 +71,28 @@ export function AuthProvider({ children }) {
     register,
     login,
     logout,
+    triggerSuccessAnimation, // [BARU] Ekspor fungsi ini
   };
 
-  // Tampilkan children HANYA jika tidak loading.
-  // Ini memastikan PrivateRoute mendapat state yang sudah final.
-  return <AuthContext.Provider value={value}>{!loading && children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {!loading && children}
+
+      {/* === [ANIMASI SUKSES RENDER GLOBAL] === */}
+      {/* Tampil di atas segalanya saat showSuccess = true */}
+      {showSuccess && (
+        <div className="success-animation-overlay">
+          <div className="checkmark-wrapper">
+            <svg className="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+              <circle className="checkmark-circle" cx="26" cy="26" r="25" fill="none" />
+              <path className="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8" />
+            </svg>
+          </div>
+        </div>
+      )}
+      {/* === [AKHIR ANIMASI SUKSES] === */}
+    </AuthContext.Provider>
+  );
 }
 
 export function useAuth() {
