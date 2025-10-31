@@ -99,7 +99,7 @@ const TransactionForm = ({ categories, onTransactionAdded, onOpenCategoryModal }
           onClick={onOpenCategoryModal}
           title="Buat Kategori Baru"
         >
-          Baru +
+          - +
         </button>
       </div>
 
