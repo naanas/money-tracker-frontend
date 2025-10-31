@@ -1612,3 +1612,94 @@ button:disabled {
     max-height: 400px; /* Batasi tinggi di HP */
   }
 }
+/* ... (SEMUA CSS ANDA YANG SUDAH ADA BIARKAN DI ATAS) ... */
+
+/* === [BARU] CSS UNTUK REACT-DATEPICKER (DARK MODE) === */
+
+/* Ganti style input H2 palsu */
+.month-picker-input {
+  background-color: transparent !important;
+  border: none !important;
+  color: var(--color-text) !important;
+  font-size: 1.5rem !important;
+  font-weight: bold;
+  width: 220px;
+  text-align: center;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 8px;
+}
+.month-picker-input:hover {
+  background-color: var(--color-bg-light) !important;
+}
+.month-picker-input:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Container utama dropdown */
+.react-datepicker-popper {
+  z-index: 1001; /* Di atas modal backdrop */
+}
+.react-datepicker {
+  font-family: Inter, system-ui, sans-serif !important;
+  background-color: var(--color-bg-medium) !important;
+  border: 1px solid var(--color-border) !important;
+  border-radius: 12px !important;
+}
+.react-datepicker__triangle {
+  display: none !important; /* Sembunyikan panah default */
+}
+
+/* Header (panah & nama tahun) */
+.react-datepicker__header {
+  background-color: var(--color-bg-medium) !important;
+  border-bottom: 1px solid var(--color-border) !important;
+  padding-top: 1rem !important;
+}
+.react-datepicker__current-month,
+.react-datepicker__navigation--previous-month,
+.react-datepicker__navigation--next-month {
+  color: var(--color-text) !important;
+  font-weight: 500 !important;
+  font-size: 1rem !important;
+}
+.react-datepicker__navigation-icon::before {
+  border-color: var(--color-text) !important;
+}
+
+/* Wrapper untuk grid bulan */
+.react-datepicker__month-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  padding: 0.5rem;
+}
+
+/* Tombol bulan individual (JAN, FEB, MAR) */
+.react-datepicker__month-text {
+  display: inline-flex !important;
+  justify-content: center;
+  align-items: center;
+  width: 80px !important;
+  height: 45px !important;
+  margin: 0.5rem !important;
+  border-radius: 8px;
+  color: var(--color-text);
+  cursor: pointer;
+}
+.react-datepicker__month-text:hover {
+  background-color: var(--color-bg-light) !important;
+}
+.react-datepicker__month-text--selected {
+  background-color: var(--color-primary) !important;
+  color: white !important;
+  font-weight: bold !important;
+}
+.react-datepicker__month-text--disabled {
+  color: var(--color-text-muted) !important;
+  cursor: not-allowed;
+}
+.react-datepicker__month-text--disabled:hover {
+  background-color: transparent !important;
+}

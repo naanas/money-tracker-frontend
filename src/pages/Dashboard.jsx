@@ -3,6 +3,10 @@ import { useAuth } from '../contexts/AuthContext';
 import axiosClient from '../api/axiosClient';
 import { formatCurrency, formatMonthYear } from '../utils/format';
 
+// === [IMPORT BARU] ===
+import DatePicker from 'react-datepicker';
+// === [AKHIR IMPORT BARU] ===
+
 import TransactionForm from '../components/TransactionForm';
 import BudgetForm from '../components/BudgetForm';
 import CategoryForm from '../components/CategoryForm';
@@ -20,25 +24,17 @@ const Dashboard = () => {
   const [budgetToEdit, setBudgetToEdit] = useState(null);
 
   const fetchData = useCallback(async () => {
+    // ... (Fungsi fetchData Anda tidak berubah)
     setLoading(true); 
     setError('');
-
     const month = selectedDate.getMonth() + 1;
     const year = selectedDate.getFullYear();
-
     try {
       const [analyticsRes, transactionsRes, categoriesRes] = await Promise.all([
         axiosClient.get('/api/analytics/summary', { params: { month, year } }),
-        
-        // === [PERUBAHAN DI SINI] ===
-        // Hapus 'limit=5'. Kita ambil semua transaksi untuk bulan ini
-        // (default backend adalah 50)
         axiosClient.get('/api/transactions', { params: { month, year } }), 
-        // === [AKHIR PERUBAHAN] ===
-
         axiosClient.get('/api/categories'),
       ]);
-
       setAnalytics(analyticsRes.data.data);
       setTransactions(transactionsRes.data.data.transactions);
       setCategories(categoriesRes.data.data);
@@ -66,12 +62,11 @@ const Dashboard = () => {
   };
 
   const handleDeleteBudget = async (e, budgetId) => {
+    // ... (Fungsi handleDeleteBudget Anda tidak berubah)
     e.stopPropagation(); 
-    
     if (!window.confirm('Yakin ingin menghapus budget pocket ini?')) {
       return;
     }
-
     try {
       await axiosClient.delete(`/api/budgets/${budgetId}`);
       handleDataUpdate(); 
@@ -82,11 +77,10 @@ const Dashboard = () => {
   };
 
   const budgetPockets = useMemo(() => {
+    // ... (Fungsi useMemo Anda tidak berubah)
     if (!analytics) return [];
-    
     const budgetDetails = analytics.budget?.details || [];
     const expenses = analytics.expenses_by_category || {};
-
     const pockets = budgetDetails.map(budget => {
       const spent = expenses[budget.category_name] || 0;
       return {
@@ -96,7 +90,6 @@ const Dashboard = () => {
         progress: budget.amount > 0 ? (spent / budget.amount) * 100 : 0,
       };
     });
-
     Object.keys(expenses).forEach(categoryName => {
       if (!pockets.find(p => p.category_name === categoryName)) {
         pockets.push({
@@ -109,9 +102,7 @@ const Dashboard = () => {
         });
       }
     });
-
     return pockets;
-
   }, [analytics]);
   
   const totalBudget = analytics?.budget?.total_amount || 0;
@@ -119,10 +110,10 @@ const Dashboard = () => {
   const totalRemaining = analytics?.budget?.remaining || 0;
   const totalProgress = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
 
-
   return (
     <>
       <div className="dashboard-layout">
+        {/* ... (Sidebar Anda tidak berubah) ... */}
         <aside className="sidebar">
           <div className="sidebar-header">
             <h1>💰 Money Tracker</h1>
@@ -136,6 +127,7 @@ const Dashboard = () => {
         </aside>
 
         <main className="main-content">
+          {/* ... (Mobile header tidak berubah) ... */}
           <header className="mobile-header">
             <h1>💰 Money Tracker</h1>
             <button onClick={logout} className="logout-btn-mobile">
@@ -143,11 +135,22 @@ const Dashboard = () => {
             </button>
           </header>
 
+          {/* === [NAVIGATOR BULAN DIMODIFIKASI] === */}
           <div className="month-navigator">
             <button onClick={handlePrevMonth}>&lt;</button>
-            <h2>{formatMonthYear(selectedDate)}</h2>
+            {/* Ganti <h2> dengan <DatePicker> */}
+            <DatePicker
+              selected={selectedDate}
+              onChange={(date) => setSelectedDate(date)}
+              dateFormat="MMMM yyyy"
+              showMonthYearPicker
+              showFullMonthYearPicker
+              className="month-picker-input" // Class custom untuk styling
+              popperPlacement="bottom"
+            />
             <button onClick={handleNextMonth}>&gt;</button>
           </div>
+          {/* === [AKHIR MODIFIKASI] === */}
           
           {error && <p className="error">{error}</p>}
 
@@ -159,7 +162,9 @@ const Dashboard = () => {
           ) : (
             <div className="dashboard-grid">
               
+              {/* --- 1. Ringkasan Finansial --- */}
               <section className="card card-summary">
+                {/* [MODIFIKASI] Judul kartu dinamis */}
                 <h3>Ringkasan {formatMonthYear(selectedDate)}</h3>
                 <div className="summary-item">
                   <span>Total Pemasukan</span>
@@ -176,6 +181,7 @@ const Dashboard = () => {
                 </div>
               </section>
 
+              {/* --- 2. Budget Pockets --- */}
               <section className="card card-budget-pocket">
                 <h3>Budget Pockets</h3>
                 <div className="budget-info total">
@@ -215,7 +221,6 @@ const Dashboard = () => {
                             ✕
                           </button>
                         )}
-
                         <div className="pocket-header">
                           <span className="pocket-title">{pocket.category_name}</span>
                           <span className={`pocket-remaining ${pocket.remaining < 0 ? 'expense' : ''}`}>
@@ -242,6 +247,7 @@ const Dashboard = () => {
                 </div>
               </section>
 
+              {/* --- 3. Form Tambah Transaksi --- */}
               <section className="card card-form">
                 <h3>Tambah Transaksi Baru</h3>
                 <TransactionForm 
@@ -252,10 +258,10 @@ const Dashboard = () => {
                 />
               </section>
 
-              {/* === [KARTU TRANSAKSI DIMODIFIKASI] === */}
-              {/* Kita buat kartu ini jadi lebih tinggi dan bisa di-scroll */}
+              {/* --- 4. Daftar Transaksi --- */}
               <section className="card card-list full-height-card">
-                <h3>Transaksi Bulan Ini</h3>
+                {/* [MODIFIKASI] Judul kartu dinamis */}
+                <h3>Transaksi {formatMonthYear(selectedDate)}</h3>
                 <ul>
                   {transactions.length > 0 ? (
                     transactions.map((t) => (
@@ -275,9 +281,8 @@ const Dashboard = () => {
                   )}
                 </ul>
               </section>
-              {/* === [AKHIR MODIFIKASI] === */}
 
-              {/* ... Kartu Pengeluaran per Kategori tidak berubah ... */}
+              {/* --- 5. Pengeluaran per Kategori --- */}
               {analytics && (
                 <section className="card card-list">
                   <h3>Pengeluaran per Kategori</h3>

@@ -5,6 +5,11 @@ import './index.css';
 import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext.jsx';
 
+// === [BARIS BARU DITAMBAHKAN] ===
+// Impor CSS default untuk react-datepicker
+import 'react-datepicker/dist/react-datepicker.css';
+// === [AKHIR BARIS BARU] ===
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <BrowserRouter>
