@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
 import axiosClient from '../api/axiosClient';
 
-// Ambil onClose (fungsi untuk menutup modal) & onSuccess (fungsi untuk refresh)
 const CategoryForm = ({ onClose, onSuccess }) => {
   const [name, setName] = useState('');
   const [type, setType] = useState('expense');
   const [icon, setIcon] = useState('');
-  const [color, setColor] = useState('#FFFFFF');
+  const [color, setColor] = useState('#ffffff'); // Default putih
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -16,8 +15,7 @@ const CategoryForm = ({ onClose, onSuccess }) => {
     setError('');
 
     try {
-      // Panggil API backend yang baru kita buat
-      // Sesuai skema DB, kita kirim icon dan color
+      // Panggil API backend yang baru
       await axiosClient.post('/api/categories', {
         name,
         type,
@@ -25,10 +23,9 @@ const CategoryForm = ({ onClose, onSuccess }) => {
         color,
       });
       
-      // Berhasil!
       setLoading(false);
-      onSuccess(); // Panggil onSuccess untuk refresh daftar kategori di Dashboard
-      onClose();   // Panggil onClose untuk menutup modal
+      onSuccess(); // Refresh kategori di dashboard
+      onClose();   // Tutup modal
       
     } catch (err) {
       setError(err.response?.data?.error || 'Gagal menambah kategori');
@@ -37,10 +34,7 @@ const CategoryForm = ({ onClose, onSuccess }) => {
   };
 
   return (
-    // 'modal-backdrop' adalah overlay gelap di belakang
     <div className="modal-backdrop" onClick={onClose}>
-      {/* 'modal-content' adalah box putih di tengah */}
-      {/* e.stopPropagation() mencegah modal tertutup saat box-nya diklik */}
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <h2>Buat Kategori Baru</h2>
         <form onSubmit={handleSubmit}>

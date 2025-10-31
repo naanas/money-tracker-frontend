@@ -30,8 +30,8 @@ const AuthCallback = () => {
   }, [isVerified, navigate]);
 
   return (
-    <div className="auth-container">
-      {/* Kita tambahkan class baru 'verification-box' */}
+    <div className="auth-layout">
+      {/* Kita gunakan class .auth-form agar styling-nya konsisten */}
       <div className="auth-form verification-box">
         {!isVerified ? (
           <>

@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axiosClient from '../api/axiosClient';
 
-// [BARU] Ambil prop onOpenCategoryModal
 const TransactionForm = ({ categories, onTransactionAdded, onOpenCategoryModal }) => {
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState('');
@@ -11,10 +10,13 @@ const TransactionForm = ({ categories, onTransactionAdded, onOpenCategoryModal }
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Filter kategori berdasarkan tipe (income/expense)
-  const expenseCategories = categories.filter(c => c.type === 'expense');
-  const incomeCategories = categories.filter(c => c.type === 'income');
-  const currentCategories = type === 'expense' ? expenseCategories : incomeCategories;
+  // Filter kategori
+  const currentCategories = categories.filter(c => c.type === type);
+
+  // Reset kategori saat tipe berubah
+  useEffect(() => {
+    setCategory('');
+  }, [type]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -56,7 +58,7 @@ const TransactionForm = ({ categories, onTransactionAdded, onOpenCategoryModal }
             type="radio" 
             value="expense" 
             checked={type === 'expense'} 
-            onChange={() => { setType('expense'); setCategory(''); }}
+            onChange={() => setType('expense')}
           />
           Pengeluaran
         </label>
@@ -65,7 +67,7 @@ const TransactionForm = ({ categories, onTransactionAdded, onOpenCategoryModal }
             type="radio" 
             value="income" 
             checked={type === 'income'} 
-            onChange={() => { setType('income'); setCategory(''); }}
+            onChange={() => setType('income')}
           />
           Pemasukan
         </label>
@@ -81,28 +83,25 @@ const TransactionForm = ({ categories, onTransactionAdded, onOpenCategoryModal }
         />
       </div>
 
-      {/* === [BAGIAN KATEGORI DIMODIFIKASI] === */}
       <div className="form-group-inline">
         <div className="form-group" style={{ flexGrow: 1 }}>
           <label>Kategori</label>
           <select value={category} onChange={(e) => setCategory(e.target.value)} required>
             <option value="" disabled>Pilih Kategori</option>
             {currentCategories.map(c => (
-              // Gunakan c.id atau c.name sebagai key. c.name harus unik.
               <option key={c.id || c.name} value={c.name}>{c.name}</option>
             ))}
           </select>
         </div>
-        {/* Tombol "Baru +" untuk memanggil modal */}
         <button 
           type="button" 
           className="btn-new-category" 
           onClick={onOpenCategoryModal}
+          title="Buat Kategori Baru"
         >
           Baru +
         </button>
       </div>
-      {/* === [AKHIR MODIFIKASI] === */}
 
       <div className="form-group">
         <label>Tanggal</label>
@@ -119,7 +118,7 @@ const TransactionForm = ({ categories, onTransactionAdded, onOpenCategoryModal }
           type="text"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="Makan siang"
+          placeholder="Makan siang, Gaji, dll."
         />
       </div>
       <button type="submit" disabled={loading}>

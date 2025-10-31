@@ -28,12 +28,13 @@ const Register = () => {
   };
 
   return (
-    <div className="auth-container">
-      <form onSubmit={handleSubmit} className="auth-form">
+    // Menggunakan class dari CSS baru
+    <div className="auth-form">
+      <form onSubmit={handleSubmit}>
         <h2>Register</h2>
         {error && <p className="error">{error}</p>}
         {message && <p className="success">{message}</p>}
-        <div>
+        <div className="form-group">
           <label>Full Name</label>
           <input
             type="text"
@@ -42,7 +43,7 @@ const Register = () => {
             required
           />
         </div>
-        <div>
+        <div className="form-group">
           <label>Email</label>
           <input
             type="email"
@@ -51,7 +52,7 @@ const Register = () => {
             required
           />
         </div>
-        <div>
+        <div className="form-group">
           <label>Password</label>
           <input
             type="password"

@@ -43,7 +43,7 @@ const BudgetForm = ({ onBudgetSet }) => {
         />
         <button type="submit" disabled={loading}>Set</button>
       </div>
-      {message && <p className="success" style={{textAlign: 'center'}}>{message}</p>}
+      {message && <p className="success" style={{textAlign: 'center', marginTop: '1rem', marginBottom: '0'}}>{message}</p>}
     </form>
   );
 };

@@ -19,46 +19,47 @@ export function AuthProvider({ children }) {
       setLoading(false);
     });
 
-    // Dengarkan perubahan state auth (login, logout, DAN VERIFIKASI EMAIL)
+    // Dengarkan perubahan state auth
     const { data: authListener } = supabase.auth.onAuthStateChange(
-        (event, session) => {
-          console.log('Auth Event:', event);
-          setSession(session);
-          setUser(session?.user ?? null);
-          setLoading(false);
-          
-          // HAPUS BLOK 'IF' DARI SINI
-          // Navigasi akan diurus oleh halamannya masing-masing
-          // (AuthCallback.jsx atau Login.jsx)
+      (event, session) => {
+        console.log('Auth Event:', event);
+        setSession(session);
+        setUser(session?.user ?? null);
+        setLoading(false);
+        
+        // === PERBAIKAN: Hapus blok 'if' di bawah ini ===
+        // Navigasi akan diurus oleh halamannya masing-masing
+        // (AuthCallback.jsx atau Login.jsx)
+        /*
+        if (event === 'SIGNED_IN') {
+          navigate('/dashboard');
         }
-      );
+        */
+      }
+    );
 
     return () => {
       authListener.subscription.unsubscribe();
     };
-  }, [navigate]);
+  }, [navigate]); // Hapus navigate dari dependencies jika mau
 
   // Fungsi register, memanggil backend Anda
   const register = async (email, password, fullName) => {
-    // Memanggil API register dari backend Anda
     const { data } = await axiosClient.post('/api/auth/register', {
       email,
       password,
       full_name: fullName,
     });
-    return data; // Mengembalikan pesan "cek email"
+    return data; 
   };
 
   // Fungsi login, memanggil backend Anda
   const login = async (email, password) => {
-    // Memanggil API login dari backend Anda
     const { data } = await axiosClient.post('/api/auth/login', {
       email,
       password,
     });
     
-    // Setelah sukses, backend mengembalikan sesi Supabase
-    // Kita set sesi itu di Supabase client frontend
     await supabase.auth.setSession(data.data.session);
 
     setSession(data.data.session);

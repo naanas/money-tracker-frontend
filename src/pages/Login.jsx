@@ -24,11 +24,12 @@ const Login = () => {
   };
 
   return (
-    <div className="auth-container">
-      <form onSubmit={handleSubmit} className="auth-form">
+    // Menggunakan class dari CSS baru
+    <div className="auth-form">
+      <form onSubmit={handleSubmit}>
         <h2>Login</h2>
         {error && <p className="error">{error}</p>}
-        <div>
+        <div className="form-group">
           <label>Email</label>
           <input
             type="email"
@@ -37,7 +38,7 @@ const Login = () => {
             required
           />
         </div>
-        <div>
+        <div className="form-group">
           <label>Password</label>
           <input
             type="password"
