@@ -1012,6 +1012,24 @@ button:disabled {
     grid-column: span 2 / span 2; 
   }
 }
+.card-savings {
+  /* Atur agar memanjang jika ada ruang */
+  grid-column: span 1;
+}
+@media (min-width: 1024px) {
+  .card-savings {
+    grid-column: span 2 / span 2; 
+  }
+}
+
+/* [BARU] Gaya Form Tabungan 3 Kolom */
+.savings-form .form-group-triple {
+    grid-template-columns: 1fr; /* Jadi 1 kolom di mobile */
+    gap: 1rem;
+  }
+.savings-form .form-group-triple .form-group {
+    margin-bottom: 0;
+}
 
 .savings-form .form-group-inline {
   align-items: flex-end;
@@ -1023,7 +1041,7 @@ button:disabled {
 
 .savings-list {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: 1fr;
   gap: 1rem;
   margin-top: 1.5rem;
   max-height: 400px;

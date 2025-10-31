@@ -9,6 +9,9 @@ const SavingsGoals = ({ savingsGoals, onDataUpdate, isRefetching }) => {
   // State untuk form Bikin Target Baru
   const [name, setName] = useState('');
   const [targetAmount, setTargetAmount] = useState('');
+  // [BARU] State untuk target date
+  const [targetDate, setTargetDate] = useState(''); 
+  
   const [formError, setFormError] = useState('');
   const [formLoading, setFormLoading] = useState(false);
   
@@ -20,24 +23,33 @@ const SavingsGoals = ({ savingsGoals, onDataUpdate, isRefetching }) => {
     setFormLoading(true);
     setFormError('');
 
+    // [BARU] Validasi sederhana di client-side untuk target date
+    if (targetDate && new Date(targetDate) < new Date(new Date().setHours(0,0,0,0))) {
+      setFormError('Tanggal target tidak boleh di masa lalu.');
+      setFormLoading(false);
+      return;
+    }
+
     try {
       await axiosClient.post('/api/savings', {
         name: name,
-        target_amount: parseNumberInput(targetAmount)
+        target_amount: parseNumberInput(targetAmount),
+        target_date: targetDate || null // <-- Kirim targetDate
       });
       setName('');
       setTargetAmount('');
-      triggerSuccessAnimation(); // Tampilkan checkmark
-      await onDataUpdate(); // Refresh semua data di dashboard
+      setTargetDate(''); // <-- Reset state
+      triggerSuccessAnimation(); 
+      await onDataUpdate(); 
     } catch (err) {
       setFormError(err.response?.data?.error || err.message || 'Gagal membuat target');
     }
     setFormLoading(false);
   };
-
+  
   const handleAddFunds = async (goal) => {
     const amountString = prompt(`Berapa banyak dana yang ingin Anda tambahkan ke "${goal.name}"?\n(Ini akan membuat transaksi pengeluaran baru)`);
-    if (!amountString) return; // Dibatalkan
+    if (!amountString) return; 
 
     const amount = parseNumberInput(amountString);
     if (isNaN(amount) || amount <= 0) {
@@ -45,15 +57,15 @@ const SavingsGoals = ({ savingsGoals, onDataUpdate, isRefetching }) => {
       return;
     }
 
-    setAddFundLoading(true); // Tampilkan loading global
+    setAddFundLoading(true); 
     try {
       await axiosClient.post('/api/savings/add', {
         goal_id: goal.id,
         amount: amount,
-        date: new Date().toISOString().split('T')[0] // Tanggal hari ini
+        date: new Date().toISOString().split('T')[0] 
       });
-      triggerSuccessAnimation(); // Tampilkan checkmark
-      await onDataUpdate(); // Refresh semua data di dashboard
+      triggerSuccessAnimation(); 
+      await onDataUpdate(); 
     } catch (err) {
       alert(`Gagal menambah dana: ${err.response?.data?.error || err.message}`);
     }
@@ -65,18 +77,17 @@ const SavingsGoals = ({ savingsGoals, onDataUpdate, isRefetching }) => {
       return;
     }
 
-    setAddFundLoading(true); // Gunakan loading global
+    setAddFundLoading(true); 
     try {
       await axiosClient.delete(`/api/savings/${goal.id}`);
-      triggerSuccessAnimation(); // Tampilkan checkmark
-      await onDataUpdate(); // Refresh semua data di dashboard
+      triggerSuccessAnimation(); 
+      await onDataUpdate(); 
     } catch (err) {
       alert(`Gagal menghapus: ${err.response?.data?.error || err.message}`);
     }
     setAddFundLoading(false);
   };
 
-  // Gabungkan semua state loading
   const isLoading = formLoading || addFundLoading || isRefetching;
 
   return (
@@ -86,30 +97,43 @@ const SavingsGoals = ({ savingsGoals, onDataUpdate, isRefetching }) => {
       {/* Form untuk Bikin Target Baru */}
       <form onSubmit={handleCreateGoal} className="savings-form">
         {formError && <p className="error" style={{textAlign: 'center', margin: '0 0 1rem 0'}}>{formError}</p>}
-        <div className="form-group-inline">
-          <div className="form-group">
-            <label>Nama Target</label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Dana Liburan, Laptop, dll."
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label>Target (Rp)</label>
-            <input
-              type="text"
-              inputMode="numeric"
-              value={formatNumberInput(targetAmount)}
-              onChange={(e) => setTargetAmount(parseNumberInput(e.target.value))}
-              placeholder="0"
-              required
-              className="input-currency"
-            />
-          </div>
+        
+        {/* === [MODIFIKASI: Gunakan grid 3 kolom] === */}
+        <div className="form-group-triple"> 
+            <div className="form-group">
+                <label>Nama Target</label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Dana Liburan"
+                  required
+                />
+            </div>
+            <div className="form-group">
+                <label>Target (Rp)</label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={formatNumberInput(targetAmount)}
+                  onChange={(e) => setTargetAmount(parseNumberInput(e.target.value))}
+                  placeholder="0"
+                  required
+                  className="input-currency"
+                />
+            </div>
+            {/* [BARU] Input Tanggal Target */}
+            <div className="form-group">
+                <label>Target Tanggal (Opsional)</label>
+                <input
+                  type="date"
+                  value={targetDate}
+                  onChange={(e) => setTargetDate(e.target.value)}
+                />
+            </div>
         </div>
+        {/* === [AKHIR MODIFIKASI] === */}
+        
         <button type="submit" disabled={isLoading} style={{marginTop: '0.5rem'}}>
           {isLoading ? <div className="btn-spinner"></div> : 'Buat Target Baru'}
         </button>
@@ -123,11 +147,17 @@ const SavingsGoals = ({ savingsGoals, onDataUpdate, isRefetching }) => {
           savingsGoals.map(goal => {
             const progress = (goal.current_amount / goal.target_amount) * 100;
             const remaining = goal.target_amount - goal.current_amount;
+            
+            // [BARU] Kalkulasi hari tersisa
+            const target = goal.target_date ? new Date(goal.target_date) : null;
+            const today = new Date();
+            // setHours(0) agar perhitungannya hanya berdasarkan tanggal, bukan jam
+            const daysRemaining = target ? Math.ceil((target - today.setHours(0,0,0,0)) / (1000 * 60 * 60 * 24)) : null;
 
             return (
               <div className="savings-item" key={goal.id}>
                 <button 
-                  className="pocket-delete-btn" // Pakai style yang sama
+                  className="pocket-delete-btn" 
                   onClick={() => handleDeleteGoal(goal)}
                   title="Hapus Target Tabungan"
                 >
@@ -139,7 +169,19 @@ const SavingsGoals = ({ savingsGoals, onDataUpdate, isRefetching }) => {
                     {remaining <= 0 ? 'Tercapai!' : `${formatCurrency(remaining)} lagi`}
                   </span>
                 </div>
-                <div className="progress-bar-container small">
+                
+                {/* [BARU] Tampilkan Tanggal Target */}
+                {goal.target_date && (
+                    <div className="savings-date-info">
+                        <span style={{fontSize: '0.85em', color: daysRemaining <= 7 && daysRemaining > 0 ? 'var(--color-accent-expense)' : 'var(--color-text-muted)'}}>
+                           Target: {target.toLocaleDateString('id-ID', {day: '2-digit', month: 'short', year: 'numeric'})} 
+                           ({daysRemaining > 0 ? `${daysRemaining} hari lagi` : (daysRemaining === 0 ? 'Hari Ini!' : 'Terlewat')})
+                        </span>
+                    </div>
+                )}
+                {/* [AKHIR BARU] */}
+                
+                <div className="progress-bar-container small" style={{marginTop: goal.target_date ? '0.5rem' : '1rem'}}>
                   <div 
                     className={`progress-bar-fill ${progress >= 100 ? 'income' : ''}`}
                     style={{ width: `${Math.min(progress, 100)}%` }}
