@@ -168,6 +168,7 @@ button:disabled {
   font-weight: 500;
 }
 
+/* === HELPER & UTILITIES === */
 .error {
   color: var(--color-accent-error);
   text-align: center;
@@ -178,6 +179,9 @@ button:disabled {
   text-align: center;
   margin-bottom: 1rem;
 }
+.income { color: var(--color-accent-income); }
+.expense { color: var(--color-accent-expense); }
+
 
 /* === DASHBOARD LAYOUT === */
 .dashboard-layout {
@@ -216,7 +220,7 @@ button:disabled {
   color: white;
 }
 
-/* [BARU] Tombol Reset di Sidebar */
+/* Tombol Reset di Sidebar */
 .btn-reset-sidebar {
   background-color: transparent;
   border: 1px solid var(--color-accent-error);
@@ -229,8 +233,6 @@ button:disabled {
   background-color: var(--color-accent-expense);
   color: white;
 }
-/* [AKHIR] Tombol Reset di Sidebar */
-
 
 .main-content {
   flex: 1;
@@ -243,7 +245,7 @@ button:disabled {
   font-size: 2rem;
 }
 
-/* === HEADER MOBILE === */
+/* HEADER MOBILE */
 .mobile-header {
   display: none; 
   justify-content: space-between;
@@ -257,7 +259,6 @@ button:disabled {
   font-size: 1.25rem;
   margin: 0;
 }
-/* [BARU] Wrapper untuk tombol mobile */
 .mobile-header > div {
   display: flex;
   align-items: center;
@@ -269,7 +270,6 @@ button:disabled {
   font-size: 0.9rem;
   background-color: var(--color-accent-expense);
 }
-/* [BARU] Tombol reset mobile */
 .btn-reset-mobile {
   width: auto;
   padding: 0.4rem 0.8rem;
@@ -278,9 +278,51 @@ button:disabled {
   border: 1px solid var(--color-accent-error);
   color: var(--color-accent-error);
 }
-/* === [AKHIR] HEADER MOBILE === */
 
+/* === DASHBOARD COMPONENTS === */
 
+/* Navigator Bulan */
+.month-navigator {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  background-color: var(--color-bg-medium);
+  padding: 0.5rem;
+  border-radius: 12px;
+}
+.month-navigator h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  min-width: 200px;
+  text-align: center;
+}
+.month-navigator button {
+  width: auto;
+  font-size: 1.5rem;
+  padding: 0.25rem 1rem;
+  background-color: var(--color-bg-light);
+}
+.month-navigator button:hover {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+/* Konten Loading */
+.main-content.loading-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: calc(100vh - 100px); /* Penuhi sisa layar */
+}
+.main-content.loading-content h2 {
+  font-size: 1.5rem;
+  color: var(--color-text-muted);
+}
+
+/* Grid Dashboard */
 .dashboard-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -316,10 +358,16 @@ button:disabled {
   font-size: 1.4em;
   margin-top: 1rem;
 }
-.income { color: var(--color-accent-income); }
-.expense { color: var(--color-accent-expense); }
 
-/* Card: Budget */
+/* Card: Budget Pockets */
+.card-budget-pocket {
+  grid-column: span 1 / span 1;
+}
+@media (min-width: 1024px) {
+  .card-budget-pocket {
+    grid-column: span 2 / span 2; 
+  }
+}
 .card-budget .budget-info {
   display: flex;
   justify-content: space-between;
@@ -358,6 +406,117 @@ button:disabled {
   padding: 0 1.5rem;
   width: auto;
 }
+.budget-form .form-group-inline {
+  display: flex;
+  gap: 10px;
+}
+.budget-form .form-group-inline .btn-secondary {
+  width: auto;
+  padding: 0 1.5rem;
+  background-color: var(--color-border);
+}
+.budget-form .form-group-inline .btn-secondary:hover {
+  background-color: var(--color-bg-light);
+}
+
+/* Pocket Grid */
+.pocket-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+  margin-top: 1.5rem;
+  max-height: 300px;
+  overflow-y: auto;
+  padding-right: 10px;
+}
+.pocket-item {
+  position: relative;
+  background-color: var(--color-bg-light);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+.pocket-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  border-color: var(--color-primary);
+}
+.pocket-delete-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  font-weight: bold;
+  line-height: 1;
+  background-color: var(--color-border);
+  color: var(--color-text-muted);
+  border-radius: 50%;
+  border: none;
+  opacity: 0.5;
+  transition: all 0.2s ease-in-out;
+}
+.pocket-item:hover .pocket-delete-btn {
+  opacity: 1;
+}
+.pocket-delete-btn:hover {
+  background-color: var(--color-accent-error);
+  color: white;
+  transform: scale(1.1);
+}
+.pocket-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+.pocket-title {
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+.pocket-remaining {
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+.pocket-remaining.expense {
+  color: var(--color-accent-error);
+  font-weight: 500;
+}
+.progress-bar-container.small {
+  height: 8px;
+  margin: 0.5rem 0;
+}
+.progress-bar-fill.expense {
+  background-color: var(--color-accent-expense);
+}
+.pocket-footer {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+}
+.pocket-footer .total {
+  color: var(--color-text-muted);
+}
+.budget-details-list {
+  max-height: 150px;
+  overflow-y: auto;
+  margin-top: 1.5rem;
+  border-top: 1px solid var(--color-border);
+}
+.budget-details-list .list-item.clickable {
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+}
+.budget-details-list .list-item.clickable:hover {
+  background-color: var(--color-bg-light);
+}
 
 /* Card: Form Transaksi */
 .form-group-inline {
@@ -371,12 +530,12 @@ button:disabled {
   flex-grow: 1;
 }
 .btn-new-category {
-  height: 47px; /* Sesuaikan dengan tinggi input */
+  height: 47px;
   flex-shrink: 0;
   padding: 0 1rem;
   background-color: var(--color-bg-light);
   border: 1px solid var(--color-border);
-  width: auto; /* Jangan 100% */
+  width: auto;
 }
 .btn-new-category:hover {
   background-color: var(--color-border);
@@ -389,6 +548,7 @@ button:disabled {
   margin: 0;
 }
 .card-list .list-item {
+  position: relative; /* Untuk tombol delete */
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -398,9 +558,11 @@ button:disabled {
 .card-list .list-item:last-child {
   border-bottom: none;
 }
-.card-list .list-item-details {
+.card-list .list-item .list-item-details {
   display: flex;
   flex-direction: column;
+  padding-left: 30px; /* Ruang untuk tombol delete */
+  flex-grow: 1;
 }
 .card-list .list-item-details strong {
   font-size: 1em;
@@ -410,8 +572,50 @@ button:disabled {
   font-size: 0.85em;
   color: var(--color-text-muted);
 }
+/* Tombol Hapus Item Transaksi */
+.btn-delete-item {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  font-weight: bold;
+  line-height: 1;
+  background-color: transparent;
+  color: var(--color-text-muted);
+  border-radius: 50%;
+  border: none;
+  opacity: 0; /* Sembunyikan by default */
+  transition: all 0.2s ease-in-out;
+}
+.list-item:hover .btn-delete-item {
+  opacity: 1; /* Tampilkan saat list item di-hover */
+}
+.btn-delete-item:hover {
+  background-color: var(--color-accent-error);
+  color: white;
+}
+/* Kartu List Scrollable */
+.card-list.full-height-card {
+  grid-row: span 2; 
+  display: flex;
+  flex-direction: column;
+}
+.card-list.full-height-card ul {
+  flex-grow: 1;
+  overflow-y: auto; 
+  max-height: 600px; 
+  padding-right: 10px; 
+}
 
-/* === MODAL === */
+
+/* === MODAL & ANIMASI === */
 .modal-backdrop {
   position: fixed;
   top: 0;
@@ -424,7 +628,6 @@ button:disabled {
   align-items: center;
   z-index: 1000;
 }
-
 .modal-content {
   background-color: var(--color-bg-medium);
   padding: 2.5rem;
@@ -435,12 +638,10 @@ button:disabled {
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
   animation: modal-fade-in 0.3s ease;
 }
-
 @keyframes modal-fade-in {
   from { opacity: 0; transform: translateY(-20px); }
   to { opacity: 1; transform: translateY(0); }
 }
-
 .modal-content h2 {
   margin-top: 0;
   text-align: center;
@@ -462,7 +663,7 @@ button:disabled {
   width: auto;
 }
 
-/* === ANIMASI VERIFIKASI === */
+/* Animasi Verifikasi */
 .verification-box {
   display: flex;
   flex-direction: column;
@@ -476,7 +677,6 @@ button:disabled {
 .verification-box p {
   text-align: center;
 }
-
 .spinner {
   border: 4px solid var(--color-border);
   border-radius: 50%;
@@ -486,12 +686,10 @@ button:disabled {
   animation: spin 1s linear infinite;
   margin-bottom: 20px;
 }
-
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
-
 .checkmark-wrapper {
   width: 80px;
   height: 80px;
@@ -523,7 +721,6 @@ button:disabled {
   stroke-dashoffset: 48;
   animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
 }
-
 @keyframes stroke {
   100% { stroke-dashoffset: 0; }
 }
@@ -535,7 +732,7 @@ button:disabled {
   100% { box-shadow: inset 0px 0px 0px 40px var(--color-accent-success); }
 }
 
-/* === SHOW/HIDE PASSWORD === */
+/* Show/Hide Password */
 .password-wrapper {
   position: relative;
   display: flex;
@@ -563,7 +760,7 @@ button:disabled {
   background-color: var(--color-bg-light);
 }
 
-/* === CSS UNTUK DAFTAR KATEGORI DI MODAL === */
+/* Modal Kategori (Edit/Delete) */
 .modal-divider {
   border: none;
   border-top: 1px solid var(--color-border);
@@ -594,17 +791,15 @@ button:disabled {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  cursor: pointer; /* Menandakan bisa diklik */
+  cursor: pointer; 
   flex-grow: 1;
   padding: 0.25rem;
   border-radius: 6px;
   transition: background-color 0.2s;
 }
-
 .category-list-item .category-details:hover {
   background-color: var(--color-bg-light);
 }
-
 .category-icon {
   display: inline-flex;
   width: 28px;
@@ -641,183 +836,96 @@ button:disabled {
   border-color: var(--color-accent-expense);
 }
 
-/* === CSS UNTUK NAVIGATOR BULAN === */
-.month-navigator {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-  background-color: var(--color-bg-medium);
-  padding: 0.5rem;
-  border-radius: 12px;
-}
-.month-navigator h2 {
-  margin: 0;
-  font-size: 1.5rem;
-  min-width: 200px;
-  text-align: center;
-}
-.month-navigator button {
-  width: auto;
-  font-size: 1.5rem;
-  padding: 0.25rem 1rem;
-  background-color: var(--color-bg-light);
-}
-.month-navigator button:hover {
-  background-color: var(--color-primary);
-  border-color: var(--color-primary);
-}
-
-/* === CSS UNTUK KONTEN LOADING === */
-.main-content.loading-content {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  height: calc(100vh - 100px); /* Penuhi sisa layar */
-}
-.main-content.loading-content h2 {
-  font-size: 1.5rem;
-  color: var(--color-text-muted);
-}
-
-/* === CSS UNTUK "POCKET" BUDGET === */
-.card-budget-pocket {
-  grid-column: span 1 / span 1;
-}
-@media (min-width: 1024px) {
-  .card-budget-pocket {
-    grid-column: span 2 / span 2; 
-  }
-}
-
-.pocket-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1rem;
-  margin-top: 1.5rem;
-  max-height: 300px;
-  overflow-y: auto;
-  padding-right: 10px; /* Ruang untuk scrollbar */
-}
-
-.pocket-item {
-  position: relative; /* Untuk tombol delete */
-  background-color: var(--color-bg-light);
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  padding: 1rem;
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-}
-.pocket-item:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-  border-color: var(--color-primary);
-}
-
-.pocket-delete-btn {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 24px;
-  height: 24px;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.2rem;
-  font-weight: bold;
-  line-height: 1;
-  background-color: var(--color-border);
-  color: var(--color-text-muted);
-  border-radius: 50%;
-  border: none;
-  opacity: 0.5;
-  transition: all 0.2s ease-in-out;
-}
-.pocket-item:hover .pocket-delete-btn {
-  opacity: 1;
-}
-.pocket-delete-btn:hover {
-  background-color: var(--color-accent-error);
-  color: white;
-  transform: scale(1.1);
-}
-
-.pocket-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.75rem;
-}
-.pocket-title {
-  font-weight: 600;
-  font-size: 1.1rem;
-}
-.pocket-remaining {
-  font-size: 0.9rem;
-  color: var(--color-text-muted);
-}
-.pocket-remaining.expense {
-  color: var(--color-accent-error);
-  font-weight: 500;
-}
-
-.progress-bar-container.small {
-  height: 8px; /* Progress bar lebih kecil */
-  margin: 0.5rem 0;
-}
-.progress-bar-fill.expense {
-  background-color: var(--color-accent-expense); /* Merah jika overbudget */
-}
-
-.pocket-footer {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.9rem;
-}
-.pocket-footer .total {
-  color: var(--color-text-muted);
-}
-
-.budget-details-list {
-  max-height: 150px;
-  overflow-y: auto;
-  margin-top: 1.5rem;
-  border-top: 1px solid var(--color-border);
-}
-.budget-details-list .list-item.clickable {
-  cursor: pointer;
-  transition: background-color 0.2s ease-in-out;
-}
-.budget-details-list .list-item.clickable:hover {
-  background-color: var(--color-bg-light);
-}
-
-/* === CSS UNTUK INPUT CURRENCY === */
+/* Input Mata Uang */
 .input-currency {
   text-align: right;
   font-weight: 500;
   font-size: 1.1rem !important;
 }
 
-/* === CSS UNTUK DAFTAR TRANSAKSI YANG BISA SCROLL === */
-.card-list.full-height-card {
-  grid-row: span 2; 
+
+/* === REACT-DATEPICKER THEME (DARK) === */
+.month-picker-input {
+  background-color: transparent !important;
+  border: none !important;
+  color: var(--color-text) !important;
+  font-size: 1.5rem !important;
+  font-weight: bold;
+  width: 220px;
+  text-align: center;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 8px;
+}
+.month-picker-input:hover {
+  background-color: var(--color-bg-light) !important;
+}
+.month-picker-input:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+.react-datepicker-popper {
+  z-index: 1001;
+}
+.react-datepicker {
+  font-family: Inter, system-ui, sans-serif !important;
+  background-color: var(--color-bg-medium) !important;
+  border: 1px solid var(--color-border) !important;
+  border-radius: 12px !important;
+}
+.react-datepicker__triangle {
+  display: none !important;
+}
+.react-datepicker__header {
+  background-color: var(--color-bg-medium) !important;
+  border-bottom: 1px solid var(--color-border) !important;
+  padding-top: 1rem !important;
+}
+.react-datepicker__current-month,
+.react-datepicker__navigation--previous-month,
+.react-datepicker__navigation--next-month {
+  color: var(--color-text) !important;
+  font-weight: 500 !important;
+  font-size: 1rem !important;
+}
+.react-datepicker__navigation-icon::before {
+  border-color: var(--color-text) !important;
+}
+.react-datepicker__month-wrapper {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
+  justify-content: center;
+  padding: 0.5rem;
 }
-.card-list.full-height-card ul {
-  flex-grow: 1;
-  overflow-y: auto; 
-  max-height: 600px; 
-  padding-right: 10px; 
+.react-datepicker__month-text {
+  display: inline-flex !important;
+  justify-content: center;
+  align-items: center;
+  width: 80px !important;
+  height: 45px !important;
+  margin: 0.5rem !important;
+  border-radius: 8px;
+  color: var(--color-text);
+  cursor: pointer;
+}
+.react-datepicker__month-text:hover {
+  background-color: var(--color-bg-light) !important;
+}
+.react-datepicker__month-text--selected {
+  background-color: var(--color-primary) !important;
+  color: white !important;
+  font-weight: bold !important;
+}
+.react-datepicker__month-text--disabled {
+  color: var(--color-text-muted) !important;
+  cursor: not-allowed;
+}
+.react-datepicker__month-text--disabled:hover {
+  background-color: transparent !important;
 }
 
 
-/* === MEDIA QUERIES UNTUK MOBILE === */
+/* === MEDIA QUERIES (MOBILE) === */
 @media (max-width: 768px) {
   
   /* Layout Auth di HP */
@@ -832,7 +940,7 @@ button:disabled {
     padding: 1.5rem;
   }
   .auth-main-content {
-    display: none; /* Sembunyikan area gelap di HP */
+    display: none;
   }
 
   /* Layout Dashboard di HP */
@@ -842,20 +950,20 @@ button:disabled {
     min-height: 100vh;
   }
   .sidebar {
-    display: none; /* Sembunyikan sidebar desktop */
+    display: none;
   }
   .main-content {
     padding: 1rem;
     width: 100%;
   }
   .mobile-header {
-    display: flex; /* Tampilkan header mobile */
+    display: flex;
   }
   .main-content h2 {
     font-size: 1.75rem;
   }
   .dashboard-grid {
-    grid-template-columns: 1fr; /* Paksa 1 kolom */
+    grid-template-columns: 1fr;
     gap: 1rem;
   }
   .card {
@@ -882,13 +990,16 @@ button:disabled {
   .card-list.full-height-card ul {
     max-height: 400px; 
   }
+  .btn-delete-item {
+    opacity: 0.6; /* Selalu tampilkan di mobile */
+  }
 
   /* Kartu pocket di HP */
   .card-budget-pocket {
-    grid-column: 1 / -1; /* Ambil 1 kolom penuh */
+    grid-column: 1 / -1;
   }
   .pocket-grid {
-    grid-template-columns: 1fr; /* Paksa 1 kolom */
+    grid-template-columns: 1fr;
   }
   
   /* Navigator bulan di HP */
@@ -908,57 +1019,5 @@ button:disabled {
   /* Konten loading di HP */
   .main-content.loading-content {
     height: calc(100vh - 80px); /* Penuhi sisa layar (dikurangi header mobile) */
-  }
-}
-/* ... (SEMUA CSS ANDA YANG SUDAH ADA BIARKAN DI ATAS) ... */
-
-/* === [BARU] CSS UNTUK TOMBOL HAPUS TRANSAKSI === */
-.card-list .list-item {
-  position: relative; /* Diperlukan untuk tombol delete */
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.75rem 0;
-  border-bottom: 1px solid var(--color-border);
-}
-
-.card-list .list-item .list-item-details {
-  /* Beri ruang untuk tombol delete di kiri */
-  padding-left: 30px; 
-}
-
-.btn-delete-item {
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 24px;
-  height: 24px;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.2rem;
-  font-weight: bold;
-  line-height: 1;
-  background-color: transparent;
-  color: var(--color-text-muted);
-  border-radius: 50%;
-  border: none;
-  opacity: 0; /* Sembunyikan by default */
-  transition: all 0.2s ease-in-out;
-}
-.list-item:hover .btn-delete-item {
-  opacity: 1; /* Tampilkan saat list item di-hover */
-}
-.btn-delete-item:hover {
-  background-color: var(--color-accent-error);
-  color: white;
-}
-
-/* Penyesuaian untuk mobile */
-@media (max-width: 768px) {
-  .btn-delete-item {
-    opacity: 0.6; /* Selalu tampilkan di mobile karena tidak ada hover */
   }
 }
