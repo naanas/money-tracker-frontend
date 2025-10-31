@@ -910,3 +910,55 @@ button:disabled {
     height: calc(100vh - 80px); /* Penuhi sisa layar (dikurangi header mobile) */
   }
 }
+/* ... (SEMUA CSS ANDA YANG SUDAH ADA BIARKAN DI ATAS) ... */
+
+/* === [BARU] CSS UNTUK TOMBOL HAPUS TRANSAKSI === */
+.card-list .list-item {
+  position: relative; /* Diperlukan untuk tombol delete */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.card-list .list-item .list-item-details {
+  /* Beri ruang untuk tombol delete di kiri */
+  padding-left: 30px; 
+}
+
+.btn-delete-item {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  font-weight: bold;
+  line-height: 1;
+  background-color: transparent;
+  color: var(--color-text-muted);
+  border-radius: 50%;
+  border: none;
+  opacity: 0; /* Sembunyikan by default */
+  transition: all 0.2s ease-in-out;
+}
+.list-item:hover .btn-delete-item {
+  opacity: 1; /* Tampilkan saat list item di-hover */
+}
+.btn-delete-item:hover {
+  background-color: var(--color-accent-error);
+  color: white;
+}
+
+/* Penyesuaian untuk mobile */
+@media (max-width: 768px) {
+  .btn-delete-item {
+    opacity: 0.6; /* Selalu tampilkan di mobile karena tidak ada hover */
+  }
+}

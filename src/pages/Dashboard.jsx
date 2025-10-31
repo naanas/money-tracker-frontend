@@ -77,7 +77,24 @@ const Dashboard = () => {
     }
   };
 
-  // === FUNGSI RESET TRANSAKSI (TIDAK BERUBAH) ===
+  // === [FUNGSI BARU UNTUK HAPUS TRANSAKSI] ===
+  const handleDeleteTransaction = async (transactionId) => {
+    if (!window.confirm('Yakin ingin menghapus transaksi ini?')) {
+      return;
+    }
+
+    setError('');
+    try {
+      // Panggil endpoint DELETE /api/transactions/:id
+      await axiosClient.delete(`/api/transactions/${transactionId}`);
+      handleDataUpdate(); // Refresh semua data di dashboard
+    } catch (err) {
+      console.error("Failed to delete transaction:", err);
+      setError(err.response?.data?.error || 'Gagal menghapus transaksi');
+    }
+  };
+  // === [AKHIR FUNGSI BARU] ===
+
   const handleResetTransactions = async () => {
     setError('');
     const pass = prompt('Ini akan MENGHAPUS SEMUA data transaksi Anda.\nKetik "RESET" untuk konfirmasi:');
@@ -97,8 +114,8 @@ const Dashboard = () => {
     }
   };
 
-  // ... (useMemo & kalkulasi budget tidak berubah)
   const budgetPockets = useMemo(() => {
+    // ... (kode useMemo tidak berubah)
     if (!analytics) return [];
     const budgetDetails = analytics.budget?.details || [];
     const expenses = analytics.expenses_by_category || {};
@@ -136,30 +153,26 @@ const Dashboard = () => {
     <>
       <div className="dashboard-layout">
         <aside className="sidebar">
+          {/* ... (sidebar tidak berubah) ... */}
           <div className="sidebar-header">
             <h1>💰 Money Tracker</h1>
           </div>
-          
-          {/* HAPUS "DANGER ZONE" CARD DARI SINI */}
-
           <div className="sidebar-footer">
             <div className="user-info">{user?.email}</div>
             <button onClick={logout} className="logout-btn">
               Logout
             </button>
-            {/* === [TOMBOL RESET DESKTOP BARU] === */}
             <button onClick={handleResetTransactions} className="btn-reset-sidebar">
-              Reset Semua Data
+              Reset Semua Transaksi
             </button>
-            {/* === [AKHIR TOMBOL RESET] === */}
           </div>
         </aside>
 
         <main className="main-content">
-          {/* === [HEADER MOBILE DIMODIFIKASI] === */}
           <header className="mobile-header">
+            {/* ... (header mobile tidak berubah) ... */}
             <h1>💰 Money Tracker</h1>
-            <div> {/* [BARU] Wrapper untuk tombol */}
+            <div>
               <button onClick={handleResetTransactions} className="btn-reset-mobile" title="Reset All Data">
                 Reset
               </button>
@@ -168,7 +181,6 @@ const Dashboard = () => {
               </button>
             </div>
           </header>
-          {/* === [AKHIR MODIFIKASI HEADER] === */}
 
           <div className="month-navigator">
             {/* ... (navigator bulan tidak berubah) ... */}
@@ -197,8 +209,7 @@ const Dashboard = () => {
             analytics && !error ? (
               <div className="dashboard-grid">
                 
-                {/* ... (Semua kartu card-summary, card-budget-pocket, card-form, card-list TIDAK BERUBAH) ... */}
-                
+                {/* ... (Kartu Ringkasan tidak berubah) ... */}
                 <section className="card card-summary">
                   <h3>Ringkasan {formatMonthYear(selectedDate)}</h3>
                   <div className="summary-item">
@@ -216,6 +227,7 @@ const Dashboard = () => {
                   </div>
                 </section>
 
+                {/* ... (Kartu Budget Pockets tidak berubah) ... */}
                 <section className="card card-budget-pocket">
                   <h3>Budget Pockets</h3>
                   <div className="budget-info total">
@@ -228,7 +240,6 @@ const Dashboard = () => {
                       style={{ width: `${Math.min(totalProgress, 100)}%` }}
                     ></div>
                   </div>
-                  
                   <BudgetForm 
                     categories={categories} 
                     onBudgetSet={handleDataUpdate}
@@ -236,7 +247,6 @@ const Dashboard = () => {
                     onClearEdit={() => setBudgetToEdit(null)}
                     selectedDate={selectedDate} 
                   />
-
                   <div className="pocket-grid">
                     {budgetPockets.length > 0 ? (
                       budgetPockets.map(pocket => (
@@ -281,6 +291,7 @@ const Dashboard = () => {
                   </div>
                 </section>
 
+                {/* ... (Kartu Form Transaksi tidak berubah) ... */}
                 <section className="card card-form">
                   <h3>Tambah Transaksi Baru</h3>
                   <TransactionForm 
@@ -291,12 +302,21 @@ const Dashboard = () => {
                   />
                 </section>
 
+                {/* === [KARTU TRANSAKSI DIMODIFIKASI] === */}
                 <section className="card card-list full-height-card">
                   <h3>Transaksi {formatMonthYear(selectedDate)}</h3>
                   <ul>
                     {transactions.length > 0 ? (
                       transactions.map((t) => (
                         <li key={t.id} className="list-item">
+                          {/* [BARU] Tombol hapus transaksi */}
+                          <button 
+                            className="btn-delete-item"
+                            title="Hapus transaksi ini"
+                            onClick={() => handleDeleteTransaction(t.id)}
+                          >
+                            ✕
+                          </button>
                           <div className="list-item-details">
                             <strong>{t.description || t.category}</strong>
                             <span>{new Date(t.date).toLocaleDateString('id-ID', {day: '2-digit', month: 'short', year: 'numeric'})}</span>
@@ -312,22 +332,26 @@ const Dashboard = () => {
                     )}
                   </ul>
                 </section>
+                {/* === [AKHIR MODIFIKASI] === */}
 
-                <section className="card card-list">
-                  <h3>Pengeluaran per Kategori</h3>
-                  <ul>
-                    {Object.keys(analytics.expenses_by_category).length > 0 ? (
-                      Object.entries(analytics.expenses_by_category).map(([category, amount]) => (
-                        <li key={category} className="list-item">
-                          <span>{category}</span>
-                          <span className="expense">-{formatCurrency(amount)}</span>
-                        </li>
-                      ))
-                    ) : (
-                      <p>Belum ada pengeluaran.</p>
-                    )}
-                  </ul>
-                </section>
+                {/* ... (Kartu Pengeluaran per Kategori tidak berubah) ... */}
+                {analytics && (
+                  <section className="card card-list">
+                    <h3>Pengeluaran per Kategori</h3>
+                    <ul>
+                      {Object.keys(analytics.expenses_by_category).length > 0 ? (
+                        Object.entries(analytics.expenses_by_category).map(([category, amount]) => (
+                          <li key={category} className="list-item">
+                            <span>{category}</span>
+                            <span className="expense">-{formatCurrency(amount)}</span>
+                          </li>
+                        ))
+                      ) : (
+                        <p>Belum ada pengeluaran.</p>
+                      )}
+                    </ul>
+                  </section>
+                )}
 
               </div>
             ) : (
