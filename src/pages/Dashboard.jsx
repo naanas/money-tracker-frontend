@@ -9,6 +9,7 @@ import 'react-datepicker/dist/react-datepicker.css';
 import TransactionForm from '../components/TransactionForm';
 import BudgetForm from '../components/BudgetForm';
 import CategoryForm from '../components/CategoryForm';
+import SavingsGoals from '../components/SavingsGoals'; // <-- [BARU] Impor komponen tabungan
 
 const Dashboard = () => {
   const { user, logout, triggerSuccessAnimation } = useAuth();
@@ -17,32 +18,36 @@ const Dashboard = () => {
   const [analytics, setAnalytics] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [savingsGoals, setSavingsGoals] = useState([]); // <-- [BARU] State untuk tabungan
   
-  const [isLoading, setIsLoading] = useState(true); // Untuk loading awal (layar blank)
-  const [isRefetching, setIsRefetching] = useState(false); // Untuk loading ganti bulan/submit
+  const [isLoading, setIsLoading] = useState(true); 
+  const [isRefetching, setIsRefetching] = useState(false); 
   
   const [error, setError] = useState('');
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [budgetToEdit, setBudgetToEdit] = useState(null);
-  const isInitialMount = useRef(true); // <-- Untuk melacak load awal
+  const isInitialMount = useRef(true); 
 
   
-  // Fungsi untuk mengambil HANYA data bulanan (saat ganti bulan / submit)
+  // Fungsi untuk mengambil data bulanan + data tabungan
   const fetchDataForMonth = useCallback(async () => {
-    setIsRefetching(true); // <-- Pakai isRefetching
+    setIsRefetching(true); 
     setError('');
     
     const month = selectedDate.getMonth() + 1;
     const year = selectedDate.getFullYear();
 
     try {
-      const [analyticsRes, transactionsRes] = await Promise.all([
+      // [MODIFIKASI] Ambil juga data tabungan setiap refresh
+      const [analyticsRes, transactionsRes, savingsRes] = await Promise.all([
         axiosClient.get('/api/analytics/summary', { params: { month, year } }),
         axiosClient.get('/api/transactions', { params: { month, year } }), 
+        axiosClient.get('/api/savings'), // <-- [BARU]
       ]);
 
       setAnalytics(analyticsRes.data.data);
       setTransactions(transactionsRes.data.data.transactions);
+      setSavingsGoals(savingsRes.data.data); // <-- [BARU]
       
     } catch (err) {
       console.error("Failed to fetch dashboard data:", err);
@@ -50,35 +55,36 @@ const Dashboard = () => {
     } finally {
       setIsRefetching(false);
     }
-  }, [selectedDate]); // <-- Hanya bergantung pada selectedDate
+  }, [selectedDate]); 
 
   // === EFEK UNTUK LOAD AWAL ===
-  // (Mengambil kategori + data bulan pertama)
   useEffect(() => {
     const fetchInitialData = async () => {
-      setIsLoading(true); // <-- Pakai isLoading (layar blank)
+      setIsLoading(true); 
       setError('');
       
       const month = selectedDate.getMonth() + 1;
       const year = selectedDate.getFullYear();
 
       try {
-        // Ambil semua data awal secara paralel
-        const [categoriesRes, analyticsRes, transactionsRes] = await Promise.all([
+        // [MODIFIKASI] Ambil 4 data saat load awal
+        const [categoriesRes, analyticsRes, transactionsRes, savingsRes] = await Promise.all([
           axiosClient.get('/api/categories'),
           axiosClient.get('/api/analytics/summary', { params: { month, year } }),
           axiosClient.get('/api/transactions', { params: { month, year } }), 
+          axiosClient.get('/api/savings'), // <-- [BARU]
         ]);
 
         setCategories(categoriesRes.data.data);
         setAnalytics(analyticsRes.data.data);
         setTransactions(transactionsRes.data.data.transactions);
+        setSavingsGoals(savingsRes.data.data); // <-- [BARU]
         
       } catch (err) {
         console.error("Failed to fetch initial dashboard data:", err);
         setError(err.response?.data?.error || err.message || 'Gagal mengambil data dashboard');
       } finally {
-        setIsLoading(false); // <-- Matikan layar blank
+        setIsLoading(false); 
       }
     };
     
@@ -88,23 +94,21 @@ const Dashboard = () => {
   // === EFEK UNTUK GANTI BULAN ===
   useEffect(() => {
     if (isInitialMount.current) {
-      // Jika ini load awal, skip. fetchInitialData sudah menanganinya
       isInitialMount.current = false;
     } else {
-      // Jika BUKAN load awal (artinya selectedDate berubah), fetch data bulanan
       fetchDataForMonth();
     }
-  }, [selectedDate, fetchDataForMonth]); // <-- Hanya jalan saat selectedDate berubah
+  }, [selectedDate, fetchDataForMonth]); 
 
   // === FUNGSI UPDATE (SETELAH SUBMIT FORM) ===
   const handleDataUpdate = async () => {
+    // Fungsi ini sudah mengambil data bulanan DAN tabungan
     await fetchDataForMonth(); 
     triggerSuccessAnimation(); 
     setBudgetToEdit(null); 
     
     if (isCategoryModalOpen) {
       try {
-        // Juga refresh kategori jika modalnya terbuka
         const categoriesRes = await axiosClient.get('/api/categories');
         setCategories(categoriesRes.data.data);
       } catch (err) {
@@ -113,13 +117,13 @@ const Dashboard = () => {
     }
   };
 
+  // ... (Sisa fungsi handlePrevMonth, handleNextMonth, dll tidak berubah) ...
   const handlePrevMonth = () => {
     setSelectedDate(prevDate => new Date(prevDate.getFullYear(), prevDate.getMonth() - 1, 1));
   };
   const handleNextMonth = () => {
     setSelectedDate(prevDate => new Date(prevDate.getFullYear(), prevDate.getMonth() + 1, 1));
   };
-
   const handleDeleteBudget = async (e, budgetId) => {
     e.stopPropagation(); 
     if (!window.confirm('Yakin ingin menghapus budget pocket ini?\n\n(Ini tidak akan menghapus transaksi Anda yang sudah ada.)')) return;
@@ -132,7 +136,6 @@ const Dashboard = () => {
       setError(err.response?.data?.error || err.message || 'Gagal menghapus budget');
     }
   };
-
   const handleDeleteTransaction = async (transactionId) => {
     if (!window.confirm('Yakin ingin menghapus transaksi ini?')) return;
     setError('');
@@ -144,7 +147,6 @@ const Dashboard = () => {
       setError(err.response?.data?.error || err.message || 'Gagal menghapus transaksi');
     }
   };
-
   const handleResetTransactions = async () => {
     setError('');
     const pass = prompt('Ini akan MENGHAPUS SEMUA data transaksi Anda.\nKetik "RESET" untuk konfirmasi:');
@@ -162,7 +164,6 @@ const Dashboard = () => {
       setIsRefetching(false); 
     }
   };
-
   const budgetPockets = useMemo(() => {
     if (!analytics) return [];
     const budgetDetails = analytics.budget?.details || [];
@@ -194,12 +195,14 @@ const Dashboard = () => {
   const totalSpent = analytics?.summary?.total_expenses || 0;
   const totalRemaining = analytics?.budget?.remaining || 0;
   const totalProgress = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
+  // ... (Sisa fungsi tidak berubah) ...
 
 
   return (
     <>
       <div className="dashboard-layout">
         <aside className="sidebar">
+          {/* ... (sidebar tidak berubah) ... */}
           <div className="sidebar-header">
             <h1>💰 Money Tracker</h1>
           </div>
@@ -216,6 +219,7 @@ const Dashboard = () => {
 
         <main className="main-content">
           <header className="mobile-header">
+            {/* ... (header tidak berubah) ... */}
             <h1>💰 Money Tracker</h1>
             <div>
               <button onClick={handleResetTransactions} className="btn-reset-mobile" title="Reset All Data">
@@ -228,6 +232,7 @@ const Dashboard = () => {
           </header>
 
           <div className="month-navigator">
+            {/* ... (navigator tidak berubah) ... */}
             <button onClick={handlePrevMonth}>&lt;</button>
             <DatePicker
               selected={selectedDate}
@@ -243,13 +248,11 @@ const Dashboard = () => {
           
           {error && <p className="error" style={{textAlign: 'center', padding: '1rem', backgroundColor: 'var(--color-bg-medium)', borderRadius: '12px'}}>{error}</p>}
 
-          {/* [MODIFIKASI] Render logic. isLoading HANYA untuk layar blank awal */}
           {isLoading ? (
             <div className="loading-content">
-              {/* Kosong, sesuai permintaan user "hilangin aja" */}
+              {/* Kosong, sesuai permintaan */}
             </div>
           ) : (
-            // Setelah loading awal selesai, Tampilkan grid JIKA analytics ada
             analytics ? (
               <div className="dashboard-grid">
                 
@@ -272,9 +275,10 @@ const Dashboard = () => {
 
                 <section className="card card-budget-pocket">
                   <h3>Budget Pockets</h3>
+                  {/* ... (Isi card budget tidak berubah) ... */}
                   <div className="budget-info total">
                     <span>Total Budget: {formatCurrency(totalBudget)}</span>
-                    <span>{totalProgress.toFixed(0)}</span>
+                    <span>{totalProgress.toFixed(0)}%</span>
                   </div>
                   <div className="progress-bar-container">
                     <div 
@@ -282,7 +286,6 @@ const Dashboard = () => {
                       style={{ width: `${Math.min(totalProgress, 100)}%` }}
                     ></div>
                   </div>
-                  
                   <BudgetForm 
                     categories={categories} 
                     onBudgetSet={handleDataUpdate}
@@ -291,7 +294,6 @@ const Dashboard = () => {
                     selectedDate={selectedDate} 
                     isRefetching={isRefetching} 
                   />
-
                   <div className="pocket-grid">
                     {budgetPockets.length > 0 ? (
                       budgetPockets.map(pocket => (
@@ -346,9 +348,19 @@ const Dashboard = () => {
                     isRefetching={isRefetching} 
                   />
                 </section>
+                
+                {/* === [BARU] Tampilkan Kartu Tabungan === */}
+                <SavingsGoals 
+                  savingsGoals={savingsGoals}
+                  onDataUpdate={handleDataUpdate}
+                  isRefetching={isRefetching}
+                />
+                {/* === [AKHIR] === */}
+
 
                 <section className="card card-list full-height-card">
                   <h3>Transaksi {formatMonthYear(selectedDate)}</h3>
+                  {/* ... (Isi card transaksi tidak berubah) ... */}
                   <ul>
                     {transactions.length > 0 ? (
                       transactions.map((t) => (
@@ -379,6 +391,7 @@ const Dashboard = () => {
                 {analytics && (
                   <section className="card card-list">
                     <h3>Pengeluaran per Kategori</h3>
+                    {/* ... (Isi card pengeluaran tidak berubah) ... */}
                     <ul>
                       {Object.keys(analytics.expenses_by_category).length > 0 ? (
                         Object.entries(analytics.expenses_by_category).map(([category, amount]) => (
@@ -396,8 +409,7 @@ const Dashboard = () => {
 
               </div>
             ) : (
-              // Jika tidak loading, TAPI tidak ada analytics (pasti error)
-              error && (
+              !isLoading && error && (
                 <div style={{textAlign: 'center', color: 'var(--color-text-muted)', marginTop: '2rem'}}>
                   <p>Tidak dapat memuat data. Silakan coba lagi.</p>
                   <p><i>{error}</i></p>

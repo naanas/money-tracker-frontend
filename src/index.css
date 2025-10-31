@@ -1074,6 +1074,18 @@ button:disabled {
   .main-content.loading-content {
     height: calc(100vh - 80px); /* Penuhi sisa layar (dikurangi header mobile) */
   }
+  .card-savings {
+    grid-column: 1 / -1;
+  }
+  .savings-form .form-group-inline {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+  .savings-list {
+    grid-template-columns: 1fr;
+  }
+
 }
 .form-group input:focus,
 .form-group select:focus {
@@ -1090,4 +1102,70 @@ button:disabled {
   font-weight: 500;
   margin-top: 0.25rem;
   display: block;
+}
+
+.card-savings {
+  /* Atur agar memanjang jika ada ruang */
+  grid-column: span 1;
+}
+@media (min-width: 1024px) {
+  .card-savings {
+    grid-column: span 2 / span 2; 
+  }
+}
+
+.savings-form .form-group-inline {
+  align-items: flex-end;
+}
+.savings-form .form-group {
+  margin-bottom: 0;
+  flex: 1;
+}
+
+.savings-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+  margin-top: 1.5rem;
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 10px;
+}
+
+/* Gunakan ulang style dari .pocket-item */
+.savings-item {
+  position: relative;
+  background-color: var(--color-bg-light);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Style progress bar "income" (untuk tabungan) */
+.progress-bar-fill.income {
+  background-color: var(--color-accent-success);
+}
+
+.btn-add-funds {
+  width: 100%;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  margin-top: 1rem;
+  background-color: var(--color-bg-light);
+  border: 1px solid var(--color-border);
+  color: var(--color-accent-income);
+  font-weight: 600;
+}
+.btn-add-funds:hover {
+  background-color: var(--color-accent-success);
+  color: var(--color-bg-dark);
+  border-color: var(--color-accent-success);
+}
+.btn-add-funds:disabled {
+  background-color: var(--color-border);
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+  border-color: var(--color-border);
 }
