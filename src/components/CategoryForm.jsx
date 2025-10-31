@@ -64,14 +64,16 @@ const CategoryForm = ({ existingCategories = [], onClose, onSuccess }) => {
       onSuccess(); // Refresh daftar kategori di dashboard
       
     } catch (err) {
-      setError(err.response?.data?.error || `Gagal ${mode === 'create' ? 'menambah' : 'mengubah'} kategori`);
+      // [MODIFIKASI] Menampilkan error spesifik dari backend
+      setError(err.response?.data?.error || err.message || `Gagal ${mode === 'create' ? 'menambah' : 'mengubah'} kategori`);
       setLoading(false);
     }
   };
 
   // Fungsi delete
   const handleDelete = async (categoryId) => {
-    if (!window.confirm('Yakin ingin menghapus kategori ini? Transaksi yang sudah ada tidak akan terhapus.')) {
+    // [MODIFIKASI] Pesan konfirmasi diperbarui
+    if (!window.confirm('Yakin ingin menghapus kategori ini?\n\n(Kategori tidak dapat dihapus jika masih ada transaksi yang menggunakannya.)')) {
       return;
     }
 
@@ -84,7 +86,8 @@ const CategoryForm = ({ existingCategories = [], onClose, onSuccess }) => {
         clearForm();
       }
     } catch (err) {
-      setError(err.response?.data?.error || 'Gagal menghapus kategori');
+      // [MODIFIKASI] Menampilkan error spesifik dari backend
+      setError(err.response?.data?.error || err.message || 'Gagal menghapus kategori');
     }
   };
 
@@ -152,9 +155,8 @@ const CategoryForm = ({ existingCategories = [], onClose, onSuccess }) => {
           
           <div className="form-group-inline" style={{ marginTop: '1rem' }}>
             <button type="submit" disabled={loading} style={{width: '100%'}}>
-              {loading ? 'Menyimpan...' : (mode === 'create' ? 'Tambah Kategori' : 'Simpan Perubahan')}
+              {loading ? <div className="btn-spinner"></div> : (mode === 'create' ? 'Tambah Kategori' : 'Simpan Perubahan')}
             </button>
-            {/* Tampilkan tombol Batal jika sedang mode edit */}
             {mode === 'edit' && (
               <button 
                 type="button" 

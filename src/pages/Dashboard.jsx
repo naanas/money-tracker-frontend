@@ -18,22 +18,18 @@ const Dashboard = () => {
   const [transactions, setTransactions] = useState([]);
   const [categories, setCategories] = useState([]);
   
-  // === [MODIFIKASI LOGIC LOADING] ===
-  const [isLoading, setIsLoading] = useState(true); // Untuk loading awal (Kategori + Data Bulan Awal)
-  const [isRefetching, setIsRefetching] = useState(false); // Untuk loading ganti bulan
-  // === [AKHIR MODIFIKASI] ===
+  const [isLoading, setIsLoading] = useState(true); 
+  const [isRefetching, setIsRefetching] = useState(false); 
   
   const [error, setError] = useState('');
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [budgetToEdit, setBudgetToEdit] = useState(null);
 
-  // === [FUNGSI FETCHDATA DIMODIFIKASI] ===
-  // Fungsi ini sekarang HANYA mengambil data yang bergantung pada tanggal
   const fetchDataForMonth = useCallback(async (isInitialLoad = false) => {
     if (isInitialLoad) {
       setIsLoading(true); 
     } else {
-      setIsRefetching(true); // Spinner kecil untuk ganti bulan
+      setIsRefetching(true); 
     }
     setError('');
     
@@ -41,8 +37,6 @@ const Dashboard = () => {
     const year = selectedDate.getFullYear();
 
     try {
-      // [OPTIMASI] Kita tidak lagi mengambil kategori di sini.
-      // Kita HANYA mengambil data yang spesifik per bulan.
       const [analyticsRes, transactionsRes] = await Promise.all([
         axiosClient.get('/api/analytics/summary', { params: { month, year } }),
         axiosClient.get('/api/transactions', { params: { month, year } }), 
@@ -61,10 +55,8 @@ const Dashboard = () => {
     } else {
       setIsRefetching(false);
     }
-  }, [selectedDate]); // Hanya bergantung pada selectedDate
+  }, [selectedDate]); 
 
-  // === [HOOK BARU: HANYA UNTUK KATEGORI] ===
-  // useEffect ini hanya berjalan SATU KALI saat komponen dimuat
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -77,29 +69,21 @@ const Dashboard = () => {
     };
     
     fetchCategories();
-  }, []); // <-- Dependency array kosong, hanya jalan sekali
+  }, []); 
 
-  // === [HOOK DIMODIFIKASI: UNTUK DATA BULANAN] ===
-  // useEffect ini sekarang bergantung pada fetchDataForMonth
-  // (yang akan berubah jika selectedDate berubah)
   useEffect(() => {
-    // Saat ganti bulan (bukan load awal), kita panggil (false)
-    // Saat load awal (analytics masih null), kita panggil (true)
     if (analytics === null) {
-      fetchDataForMonth(true); // Load awal
+      fetchDataForMonth(true); 
     } else {
-      fetchDataForMonth(false); // Ganti bulan
+      fetchDataForMonth(false); 
     }
-  }, [fetchDataForMonth]); // <-- Bergantung pada fungsi yg di-memoized
+  }, [fetchDataForMonth, analytics]); // Tambahkan analytics di dependency
 
-  // === [FUNGSI UPDATE DIMODIFIKASI] ===
   const handleDataUpdate = async () => {
-    await fetchDataForMonth(false); // Panggil fetch sebagai 'bukan initial load'
+    await fetchDataForMonth(false); 
     triggerSuccessAnimation(); 
     setBudgetToEdit(null); 
     
-    // [OPTIMASI] Kita juga perlu refresh kategori jika sukses menambah kategori
-    // Cek apakah modal kategori terbuka, jika ya, refresh kategori
     if (isCategoryModalOpen) {
       try {
         const categoriesRes = await axiosClient.get('/api/categories');
@@ -109,7 +93,6 @@ const Dashboard = () => {
       }
     }
   };
-  // === [AKHIR MODIFIKASI] ===
 
   const handlePrevMonth = () => {
     setSelectedDate(prevDate => new Date(prevDate.getFullYear(), prevDate.getMonth() - 1, 1));
@@ -118,18 +101,23 @@ const Dashboard = () => {
     setSelectedDate(prevDate => new Date(prevDate.getFullYear(), prevDate.getMonth() + 1, 1));
   };
 
+  // === [MODIFIKASI PESAN KONFIRMASI] ===
   const handleDeleteBudget = async (e, budgetId) => {
     e.stopPropagation(); 
-    if (!window.confirm('PERINGATAN!\n\nYakin ingin menghapus budget pocket ini? \n\nINI JUGA AKAN MENGHAPUS SEMUA TRANSAKSI di kategori ini untuk bulan yang sama.')) return;
+    // Pesan diperbarui untuk mencerminkan perbaikan bug
+    if (!window.confirm('Yakin ingin menghapus budget pocket ini?\n\n(Ini tidak akan menghapus transaksi Anda yang sudah ada.)')) return;
+    
     setError('');
     try {
       await axiosClient.delete(`/api/budgets/${budgetId}`);
       handleDataUpdate(); 
     } catch (err) {
       console.error("Failed to delete budget:", err);
-      setError(err.response?.data?.error || 'Gagal menghapus budget');
+      // Menampilkan error spesifik dari backend
+      setError(err.response?.data?.error || err.message || 'Gagal menghapus budget');
     }
   };
+  // === [AKHIR MODIFIKASI] ===
 
   const handleDeleteTransaction = async (transactionId) => {
     if (!window.confirm('Yakin ingin menghapus transaksi ini?')) return;
@@ -139,7 +127,7 @@ const Dashboard = () => {
       handleDataUpdate(); 
     } catch (err) {
       console.error("Failed to delete transaction:", err);
-      setError(err.response?.data?.error || 'Gagal menghapus transaksi');
+      setError(err.response?.data?.error || err.message || 'Gagal menghapus transaksi');
     }
   };
 
@@ -150,18 +138,17 @@ const Dashboard = () => {
       alert('Reset dibatalkan.');
       return;
     }
-    setIsRefetching(true); // Tampilkan loading kecil
+    setIsRefetching(true); 
     try {
       await axiosClient.delete('/api/transactions/reset');
       handleDataUpdate(); 
     } catch (err) {
       console.error("Failed to reset transactions:", err);
-      setError(err.response?.data?.error || 'Gagal mereset transaksi');
+      setError(err.response?.data?.error || err.message || 'Gagal mereset transaksi');
       setIsRefetching(false); 
     }
   };
 
-  // ... (useMemo & kalkulasi budget tidak berubah)
   const budgetPockets = useMemo(() => {
     if (!analytics) return [];
     const budgetDetails = analytics.budget?.details || [];
@@ -199,7 +186,6 @@ const Dashboard = () => {
     <>
       <div className="dashboard-layout">
         <aside className="sidebar">
-          {/* ... (sidebar tidak berubah) ... */}
           <div className="sidebar-header">
             <h1>💰 Money Tracker</h1>
           </div>
@@ -216,7 +202,6 @@ const Dashboard = () => {
 
         <main className="main-content">
           <header className="mobile-header">
-            {/* ... (header mobile tidak berubah) ... */}
             <h1>💰 Money Tracker</h1>
             <div>
               <button onClick={handleResetTransactions} className="btn-reset-mobile" title="Reset All Data">
@@ -229,7 +214,6 @@ const Dashboard = () => {
           </header>
 
           <div className="month-navigator">
-            {/* ... (navigator bulan tidak berubah) ... */}
             <button onClick={handlePrevMonth}>&lt;</button>
             <DatePicker
               selected={selectedDate}
@@ -245,21 +229,13 @@ const Dashboard = () => {
           
           {error && <p className="error" style={{textAlign: 'center', padding: '1rem', backgroundColor: 'var(--color-bg-medium)', borderRadius: '12px'}}>{error}</p>}
 
-          {/* === [BLOK LOADING DIMODIFIKASI] === */}
-          {/* Kita gunakan isLoading (hanya untuk load awal) */}
           {isLoading ? (
             <div className="loading-content">
-              {/* Dihapus sesuai permintaan
-              <div className="spinner"></div>
-              <h2>Loading Data...</h2>
-              */}
+              {/* Kosong, sesuai permintaan */}
             </div>
           ) : (
-            // Tampilkan grid jika sudah tidak loading awal
             analytics ? (
               <div className="dashboard-grid">
-                
-                {/* --- Kartu-kartu --- */}
                 
                 <section className="card card-summary">
                   <h3>Ringkasan {formatMonthYear(selectedDate)}</h3>
@@ -313,7 +289,7 @@ const Dashboard = () => {
                             <button 
                               className="pocket-delete-btn"
                               onClick={(e) => handleDeleteBudget(e, pocket.id)}
-                              title="Hapus Budget & Transaksi Terkait"
+                              title="Hapus Budget Ini"
                             >
                               ✕
                             </button>
@@ -418,7 +394,7 @@ const Dashboard = () => {
         <CategoryForm 
           existingCategories={categories}
           onClose={() => setIsCategoryModalOpen(false)}
-          onSuccess={handleDataUpdate} // handleDataUpdate akan memicu animasi sukses
+          onSuccess={handleDataUpdate} 
         />
       )}
     </>
