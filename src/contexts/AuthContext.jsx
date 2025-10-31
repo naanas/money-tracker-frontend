@@ -21,19 +21,17 @@ export function AuthProvider({ children }) {
 
     // Dengarkan perubahan state auth (login, logout, DAN VERIFIKASI EMAIL)
     const { data: authListener } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        console.log('Auth Event:', event);
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
-        
-        // Jika user baru saja SIGNED_IN (termasuk dari callback),
-        // arahkan ke dashboard
-        if (event === 'SIGNED_IN') {
-          navigate('/dashboard');
+        (event, session) => {
+          console.log('Auth Event:', event);
+          setSession(session);
+          setUser(session?.user ?? null);
+          setLoading(false);
+          
+          // HAPUS BLOK 'IF' DARI SINI
+          // Navigasi akan diurus oleh halamannya masing-masing
+          // (AuthCallback.jsx atau Login.jsx)
         }
-      }
-    );
+      );
 
     return () => {
       authListener.subscription.unsubscribe();
