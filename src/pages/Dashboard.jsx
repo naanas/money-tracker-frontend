@@ -43,18 +43,14 @@ const Dashboard = () => {
     fetchData();
   };
 
-  // === [BLOK LOADING DIMODIFIKASI] ===
-  // Ini yang akan tampil setelah login, sebelum data siap
   if (loading) {
     return (
       <div className="dashboard-layout">
-        {/* Tampilkan sidebar kosong agar layout tidak 'loncat' */}
         <aside className="sidebar">
            <div className="sidebar-header">
              <h1>💰 Money Tracker</h1>
            </div>
         </aside>
-        {/* Tampilkan spinner di tengah konten */}
         <main className="main-content loading-content">
           <div className="spinner"></div>
           <h2>Loading Dashboard...</h2>
@@ -62,13 +58,17 @@ const Dashboard = () => {
       </div>
     );
   }
-  // === [AKHIR BLOK LOADING] ===
 
-  // Menghitung data budget
-  const budgetAmount = analytics?.budget?.amount || 0;
+  // === [MODIFIKASI LOGIKA BUDGET] ===
+  // Ambil total_amount dari struktur analytics baru
+  const budgetAmount = analytics?.budget?.total_amount || 0;
   const budgetSpent = analytics?.summary?.total_expenses || 0;
   const budgetRemaining = analytics?.budget?.remaining || 0;
   const budgetProgress = budgetAmount > 0 ? (budgetSpent / budgetAmount) * 100 : 0;
+  // Ambil detail sub-budget
+  const budgetDetails = analytics?.budget?.details || [];
+  // === [AKHIR MODIFIKASI] ===
+
 
   return (
     <>
@@ -99,7 +99,7 @@ const Dashboard = () => {
           {error && <p className="error">{error}</p>}
           
           <div className="dashboard-grid">
-            {/* --- 1. Ringkasan Finansial --- */}
+            {/* --- 1. Ringkasan Finansial (Tidak berubah) --- */}
             {analytics && (
               <section className="card card-summary">
                 <h3>Ringkasan Bulan Ini</h3>
@@ -119,29 +119,54 @@ const Dashboard = () => {
               </section>
             )}
 
-            {/* --- 2. Ringkasan Budget --- */}
-            {analytics && (
-              <section className="card card-budget">
-                <h3>Budget Bulan Ini</h3>
-                <div className="budget-info">
-                  <span>Terpakai: {formatCurrency(budgetSpent)}</span>
-                  <span>Sisa: {formatCurrency(budgetRemaining)}</span>
-                </div>
-                <div className="progress-bar-container">
-                  <div 
-                    className="progress-bar-fill" 
-                    style={{ width: `${Math.min(budgetProgress, 100)}%` }}
-                  ></div>
-                </div>
-                <div className="budget-info total">
-                  <span>Total Budget: {formatCurrency(budgetAmount)}</span>
-                  <span>{budgetProgress.toFixed(0)}%</span>
-                </div>
-                <BudgetForm onBudgetSet={handleDataUpdate} />
-              </section>
-            )}
+            {/* === [KARTU BUDGET DIROMBAK TOTAL] === */}
+            <section className="card card-budget">
+              <h3>Budget Bulan Ini</h3>
+              
+              {/* --- Progress Bar Total --- */}
+              <div className="budget-info">
+                <span>Terpakai: {formatCurrency(budgetSpent)}</span>
+                <span>Sisa: {formatCurrency(budgetRemaining)}</span>
+              </div>
+              <div className="progress-bar-container">
+                <div 
+                  className="progress-bar-fill" 
+                  style={{ width: `${Math.min(budgetProgress, 100)}%` }}
+                ></div>
+              </div>
+              <div className="budget-info total">
+                <span>Total Budget: {formatCurrency(budgetAmount)}</span>
+                <span>{budgetProgress.toFixed(0)}%</span>
+              </div>
+              
+              <hr className="modal-divider" />
 
-            {/* --- 3. Form Tambah Transaksi --- */}
+              {/* --- Form Input Sub-Budget --- */}
+              <BudgetForm 
+                categories={categories} 
+                onBudgetSet={handleDataUpdate} 
+              />
+              
+              {/* --- Daftar Sub-Budget yang Sudah Ditetapkan --- */}
+              <div className="budget-details-list">
+                {budgetDetails.length > 0 ? (
+                  budgetDetails.map(budget => (
+                    <div className="list-item" key={budget.category_name}>
+                      <span>{budget.category_name}</span>
+                      <span style={{fontWeight: 500}}>{formatCurrency(budget.amount)}</span>
+                    </div>
+                  ))
+                ) : (
+                  <p style={{textAlign: 'center', fontSize: '0.9em', color: 'var(--color-text-muted)'}}>
+                    Belum ada budget per kategori.
+                  </p>
+                )}
+              </div>
+            </section>
+            {/* === [AKHIR ROMBAKAN KARTU BUDGET] === */}
+
+
+            {/* --- 3. Form Tambah Transaksi (Tidak berubah) --- */}
             <section className="card card-form">
               <h3>Tambah Transaksi Baru</h3>
               <TransactionForm 
@@ -151,7 +176,7 @@ const Dashboard = () => {
               />
             </section>
 
-            {/* --- 4. Transaksi Terakhir --- */}
+            {/* --- 4. Transaksi Terakhir (Tidak berubah) --- */}
             <section className="card card-list">
               <h3>5 Transaksi Terakhir</h3>
               <ul>
@@ -174,7 +199,7 @@ const Dashboard = () => {
               </ul>
             </section>
 
-            {/* --- 5. Pengeluaran per Kategori --- */}
+            {/* --- 5. Pengeluaran per Kategori (Tidak berubah) --- */}
             {analytics && (
               <section className="card card-list">
                 <h3>Pengeluaran per Kategori</h3>
@@ -197,7 +222,7 @@ const Dashboard = () => {
         </main>
       </div>
 
-      {/* === MODAL KATEGORI (di luar layout) === */}
+      {/* === MODAL KATEGORI (Tidak berubah) === */}
       {isCategoryModalOpen && (
         <CategoryForm 
           existingCategories={categories}

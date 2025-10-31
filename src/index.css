@@ -1337,3 +1337,20 @@ button:disabled {
     color: var(--color-text-muted);
   }
 }
+
+/* === [BARU] CSS UNTUK DAFTAR DETAIL BUDGET === */
+.budget-details-list {
+  max-height: 150px;
+  overflow-y: auto;
+  margin-top: 1.5rem;
+  border-top: 1px solid var(--color-border);
+}
+
+/* Menggunakan ulang style .list-item dari daftar transaksi */
+.budget-details-list .list-item {
+  padding: 0.5rem 0.25rem;
+  font-size: 0.9em;
+}
+.budget-details-list .list-item:first-child {
+  padding-top: 1rem;
+}
