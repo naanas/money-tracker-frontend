@@ -43,17 +43,28 @@ const Dashboard = () => {
     fetchData();
   };
 
+  // === [BLOK LOADING DIMODIFIKASI] ===
+  // Ini yang akan tampil setelah login, sebelum data siap
   if (loading) {
     return (
       <div className="dashboard-layout">
-        <aside className="sidebar"></aside>
-        <main className="main-content">
+        {/* Tampilkan sidebar kosong agar layout tidak 'loncat' */}
+        <aside className="sidebar">
+           <div className="sidebar-header">
+             <h1>💰 Money Tracker</h1>
+           </div>
+        </aside>
+        {/* Tampilkan spinner di tengah konten */}
+        <main className="main-content loading-content">
+          <div className="spinner"></div>
           <h2>Loading Dashboard...</h2>
         </main>
       </div>
     );
   }
+  // === [AKHIR BLOK LOADING] ===
 
+  // Menghitung data budget
   const budgetAmount = analytics?.budget?.amount || 0;
   const budgetSpent = analytics?.summary?.total_expenses || 0;
   const budgetRemaining = analytics?.budget?.remaining || 0;
@@ -186,13 +197,12 @@ const Dashboard = () => {
         </main>
       </div>
 
-      {/* === [MODAL KATEGORI DIMODIFIKASI] === */}
+      {/* === MODAL KATEGORI (di luar layout) === */}
       {isCategoryModalOpen && (
         <CategoryForm 
-          // [BARU] Kirim daftar kategori ke modal
           existingCategories={categories}
           onClose={() => setIsCategoryModalOpen(false)}
-          onSuccess={handleDataUpdate} // Refresh data setelah kategori baru dibuat/dihapus
+          onSuccess={handleDataUpdate}
         />
       )}
     </>
