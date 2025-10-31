@@ -9,7 +9,7 @@ import 'react-datepicker/dist/react-datepicker.css';
 import TransactionForm from '../components/TransactionForm';
 import BudgetForm from '../components/BudgetForm';
 import CategoryForm from '../components/CategoryForm';
-import SavingsGoals from '../components/SavingsGoals'; // <-- Impor SavingsGoals
+import SavingsGoals from '../components/SavingsGoals'; 
 
 const Dashboard = () => {
   const { user, logout, triggerSuccessAnimation } = useAuth();
@@ -18,7 +18,7 @@ const Dashboard = () => {
   const [analytics, setAnalytics] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [savingsGoals, setSavingsGoals] = useState([]); // State tabungan
+  const [savingsGoals, setSavingsGoals] = useState([]); 
   
   const [isLoading, setIsLoading] = useState(true); 
   const [isRefetching, setIsRefetching] = useState(false); 
@@ -29,18 +29,20 @@ const Dashboard = () => {
   const isInitialMount = useRef(true); 
 
   
+  // Fungsi untuk mengambil data bulanan + data tabungan
   const fetchDataForMonth = useCallback(async () => {
     setIsRefetching(true); 
     setError('');
     
     const month = selectedDate.getMonth() + 1;
     const year = selectedDate.getFullYear();
+    const params = { month, year }; // <-- Parameter untuk filtering
 
     try {
       const [analyticsRes, transactionsRes, savingsRes] = await Promise.all([
-        axiosClient.get('/api/analytics/summary', { params: { month, year } }),
-        axiosClient.get('/api/transactions', { params: { month, year } }), 
-        axiosClient.get('/api/savings'), 
+        axiosClient.get('/api/analytics/summary', { params }),
+        axiosClient.get('/api/transactions', { params }), 
+        axiosClient.get('/api/savings', { params }), // <-- [MODIFIKASI] Mengirim params
       ]);
 
       setAnalytics(analyticsRes.data.data);
@@ -63,13 +65,14 @@ const Dashboard = () => {
       
       const month = selectedDate.getMonth() + 1;
       const year = selectedDate.getFullYear();
+      const params = { month, year }; // <-- Parameter untuk filtering
 
       try {
         const [categoriesRes, analyticsRes, transactionsRes, savingsRes] = await Promise.all([
           axiosClient.get('/api/categories'),
-          axiosClient.get('/api/analytics/summary', { params: { month, year } }),
-          axiosClient.get('/api/transactions', { params: { month, year } }), 
-          axiosClient.get('/api/savings'), 
+          axiosClient.get('/api/analytics/summary', { params }),
+          axiosClient.get('/api/transactions', { params }), 
+          axiosClient.get('/api/savings', { params }), // <-- [MODIFIKASI] Mengirim params
         ]);
 
         setCategories(categoriesRes.data.data);
@@ -113,11 +116,9 @@ const Dashboard = () => {
     }
   };
 
-  // === [BARU] Hitung Total Dana yang Sudah Ditabung (Current Amount) ===
   const totalSavingsCurrent = useMemo(() => {
     return savingsGoals.reduce((sum, goal) => sum + parseFloat(goal.current_amount), 0);
   }, [savingsGoals]);
-  // === [AKHIR BARU] ===
 
   const handlePrevMonth = () => {
     setSelectedDate(prevDate => new Date(prevDate.getFullYear(), prevDate.getMonth() - 1, 1));
@@ -257,7 +258,6 @@ const Dashboard = () => {
             analytics ? (
               <div className="dashboard-grid">
                 
-                {/* === [KARTU SUMMARY DIMODIFIKASI] === */}
                 <section className="card card-summary">
                   <h3>Ringkasan {formatMonthYear(selectedDate)}</h3>
                   <div className="summary-item">
@@ -269,7 +269,6 @@ const Dashboard = () => {
                     <span className="expense">{formatCurrency(analytics.summary.total_expenses)}</span>
                   </div>
                   
-                  {/* Tampilkan Total Dana Tabungan Saat Ini */}
                   <div className="summary-item total-savings">
                     <span>Total Dana Tabungan</span>
                     <span className="income">{formatCurrency(totalSavingsCurrent)}</span>
@@ -281,7 +280,6 @@ const Dashboard = () => {
                     <span>{formatCurrency(analytics.summary.balance)}</span>
                   </div>
                 </section>
-                {/* === [AKHIR MODIFIKASI KARTU SUMMARY] === */}
 
                 <section className="card card-budget-pocket">
                   <h3>Budget Pockets</h3>
