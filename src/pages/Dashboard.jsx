@@ -66,7 +66,6 @@ const Dashboard = () => {
   };
 
   const handleDeleteBudget = async (e, budgetId) => {
-    // ... (fungsi ini tidak berubah)
     e.stopPropagation(); 
     if (!window.confirm('Yakin ingin menghapus budget pocket ini?')) return;
     try {
@@ -78,10 +77,9 @@ const Dashboard = () => {
     }
   };
 
-  // === [FUNGSI BARU UNTUK RESET TRANSAKSI] ===
+  // === FUNGSI RESET TRANSAKSI (TIDAK BERUBAH) ===
   const handleResetTransactions = async () => {
     setError('');
-    // Konfirmasi ganda
     const pass = prompt('Ini akan MENGHAPUS SEMUA data transaksi Anda.\nKetik "RESET" untuk konfirmasi:');
     if (pass !== 'RESET') {
       alert('Reset dibatalkan.');
@@ -91,15 +89,13 @@ const Dashboard = () => {
     setLoading(true);
     try {
       await axiosClient.delete('/api/transactions/reset');
-      handleDataUpdate(); // Refresh data, semua akan jadi 0
+      handleDataUpdate(); 
     } catch (err) {
       console.error("Failed to reset transactions:", err);
       setError(err.response?.data?.error || 'Gagal mereset transaksi');
-      setLoading(false); // Tetap loading false jika error
+      setLoading(false); 
     }
-    // setLoading(false) sudah di-handle oleh fetchData()
   };
-  // === [AKHIR FUNGSI BARU] ===
 
   // ... (useMemo & kalkulasi budget tidak berubah)
   const budgetPockets = useMemo(() => {
@@ -140,37 +136,39 @@ const Dashboard = () => {
     <>
       <div className="dashboard-layout">
         <aside className="sidebar">
-          {/* ... (sidebar header tidak berubah) ... */}
           <div className="sidebar-header">
             <h1>💰 Money Tracker</h1>
           </div>
           
-          {/* === [KARTU RESET BARU DI SIDEBAR] === */}
-          <div className="card-danger-zone">
-            <h3>Danger Zone</h3>
-            <p>Aksi ini tidak bisa dibatalkan. Ini akan menghapus semua data transaksi Anda.</p>
-            <button onClick={handleResetTransactions} className="logout-btn">
-              Reset Semua Transaksi
-            </button>
-          </div>
-          {/* === [AKHIR KARTU RESET] === */}
+          {/* HAPUS "DANGER ZONE" CARD DARI SINI */}
 
           <div className="sidebar-footer">
             <div className="user-info">{user?.email}</div>
             <button onClick={logout} className="logout-btn">
               Logout
             </button>
+            {/* === [TOMBOL RESET DESKTOP BARU] === */}
+            <button onClick={handleResetTransactions} className="btn-reset-sidebar">
+              Reset Semua Data
+            </button>
+            {/* === [AKHIR TOMBOL RESET] === */}
           </div>
         </aside>
 
         <main className="main-content">
+          {/* === [HEADER MOBILE DIMODIFIKASI] === */}
           <header className="mobile-header">
-            {/* ... (mobile header tidak berubah) ... */}
             <h1>💰 Money Tracker</h1>
-            <button onClick={logout} className="logout-btn-mobile">
-              Logout
-            </button>
+            <div> {/* [BARU] Wrapper untuk tombol */}
+              <button onClick={handleResetTransactions} className="btn-reset-mobile" title="Reset All Data">
+                Reset
+              </button>
+              <button onClick={logout} className="logout-btn-mobile">
+                Logout
+              </button>
+            </div>
           </header>
+          {/* === [AKHIR MODIFIKASI HEADER] === */}
 
           <div className="month-navigator">
             {/* ... (navigator bulan tidak berubah) ... */}
@@ -198,9 +196,9 @@ const Dashboard = () => {
           ) : (
             analytics && !error ? (
               <div className="dashboard-grid">
+                
                 {/* ... (Semua kartu card-summary, card-budget-pocket, card-form, card-list TIDAK BERUBAH) ... */}
                 
-                {/* --- 1. Ringkasan Finansial --- */}
                 <section className="card card-summary">
                   <h3>Ringkasan {formatMonthYear(selectedDate)}</h3>
                   <div className="summary-item">
@@ -218,7 +216,6 @@ const Dashboard = () => {
                   </div>
                 </section>
 
-                {/* --- 2. Budget Pockets --- */}
                 <section className="card card-budget-pocket">
                   <h3>Budget Pockets</h3>
                   <div className="budget-info total">
@@ -284,7 +281,6 @@ const Dashboard = () => {
                   </div>
                 </section>
 
-                {/* --- 3. Form Tambah Transaksi --- */}
                 <section className="card card-form">
                   <h3>Tambah Transaksi Baru</h3>
                   <TransactionForm 
@@ -295,7 +291,6 @@ const Dashboard = () => {
                   />
                 </section>
 
-                {/* --- 4. Daftar Transaksi --- */}
                 <section className="card card-list full-height-card">
                   <h3>Transaksi {formatMonthYear(selectedDate)}</h3>
                   <ul>
@@ -318,24 +313,21 @@ const Dashboard = () => {
                   </ul>
                 </section>
 
-                {/* --- 5. Pengeluaran per Kategori --- */}
-                {analytics && (
-                  <section className="card card-list">
-                    <h3>Pengeluaran per Kategori</h3>
-                    <ul>
-                      {Object.keys(analytics.expenses_by_category).length > 0 ? (
-                        Object.entries(analytics.expenses_by_category).map(([category, amount]) => (
-                          <li key={category} className="list-item">
-                            <span>{category}</span>
-                            <span className="expense">-{formatCurrency(amount)}</span>
-                          </li>
-                        ))
-                      ) : (
-                        <p>Belum ada pengeluaran.</p>
-                      )}
-                    </ul>
-                  </section>
-                )}
+                <section className="card card-list">
+                  <h3>Pengeluaran per Kategori</h3>
+                  <ul>
+                    {Object.keys(analytics.expenses_by_category).length > 0 ? (
+                      Object.entries(analytics.expenses_by_category).map(([category, amount]) => (
+                        <li key={category} className="list-item">
+                          <span>{category}</span>
+                          <span className="expense">-{formatCurrency(amount)}</span>
+                        </li>
+                      ))
+                    ) : (
+                      <p>Belum ada pengeluaran.</p>
+                    )}
+                  </ul>
+                </section>
 
               </div>
             ) : (
