@@ -3,8 +3,8 @@ import { useAuth } from '../contexts/AuthContext';
 import axiosClient from '../api/axiosClient';
 import { formatCurrency, formatMonthYear } from '../utils/format';
 
-import DatePicker from 'react-datepicker'; // Pastikan Anda sudah install ini
-import 'react-datepicker/dist/react-datepicker.css'; // Pastikan ini di-import di main.jsx
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 
 import TransactionForm from '../components/TransactionForm';
 import BudgetForm from '../components/BudgetForm';
@@ -14,7 +14,7 @@ const Dashboard = () => {
   const { user, logout } = useAuth();
   const [selectedDate, setSelectedDate] = useState(new Date());
   
-  const [analytics, setAnalytics] = useState(null); // Mulai dengan null
+  const [analytics, setAnalytics] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -25,7 +25,6 @@ const Dashboard = () => {
   const fetchData = useCallback(async () => {
     setLoading(true); 
     setError('');
-    // [PERBAIKAN] Reset analytics ke null setiap kali fetch baru
     setAnalytics(null);
     setTransactions([]);
 
@@ -33,11 +32,9 @@ const Dashboard = () => {
     const year = selectedDate.getFullYear();
 
     try {
-      // Kita butuh kategori dulu untuk form
       const categoriesRes = await axiosClient.get('/api/categories');
       setCategories(categoriesRes.data.data);
 
-      // Lalu ambil data sisanya
       const [analyticsRes, transactionsRes] = await Promise.all([
         axiosClient.get('/api/analytics/summary', { params: { month, year } }),
         axiosClient.get('/api/transactions', { params: { month, year } }), 
@@ -47,7 +44,6 @@ const Dashboard = () => {
       setTransactions(transactionsRes.data.data.transactions);
     } catch (err) {
       console.error("Failed to fetch dashboard data:", err);
-      // [PERBAIKAN] Tampilkan error CORS-nya jika ada
       setError(err.response?.data?.error || err.message || 'Gagal mengambil data dashboard');
     }
     setLoading(false);
@@ -62,7 +58,6 @@ const Dashboard = () => {
     setBudgetToEdit(null); 
   };
 
-  // ... (fungsi handlePrevMonth, handleNextMonth, handleDeleteBudget tidak berubah)
   const handlePrevMonth = () => {
     setSelectedDate(prevDate => new Date(prevDate.getFullYear(), prevDate.getMonth() - 1, 1));
   };
@@ -71,6 +66,7 @@ const Dashboard = () => {
   };
 
   const handleDeleteBudget = async (e, budgetId) => {
+    // ... (fungsi ini tidak berubah)
     e.stopPropagation(); 
     if (!window.confirm('Yakin ingin menghapus budget pocket ini?')) return;
     try {
@@ -82,7 +78,30 @@ const Dashboard = () => {
     }
   };
 
-  // ... (useMemo dan kalkulasi budget tidak berubah, SUDAH AMAN)
+  // === [FUNGSI BARU UNTUK RESET TRANSAKSI] ===
+  const handleResetTransactions = async () => {
+    setError('');
+    // Konfirmasi ganda
+    const pass = prompt('Ini akan MENGHAPUS SEMUA data transaksi Anda.\nKetik "RESET" untuk konfirmasi:');
+    if (pass !== 'RESET') {
+      alert('Reset dibatalkan.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await axiosClient.delete('/api/transactions/reset');
+      handleDataUpdate(); // Refresh data, semua akan jadi 0
+    } catch (err) {
+      console.error("Failed to reset transactions:", err);
+      setError(err.response?.data?.error || 'Gagal mereset transaksi');
+      setLoading(false); // Tetap loading false jika error
+    }
+    // setLoading(false) sudah di-handle oleh fetchData()
+  };
+  // === [AKHIR FUNGSI BARU] ===
+
+  // ... (useMemo & kalkulasi budget tidak berubah)
   const budgetPockets = useMemo(() => {
     if (!analytics) return [];
     const budgetDetails = analytics.budget?.details || [];
@@ -121,10 +140,21 @@ const Dashboard = () => {
     <>
       <div className="dashboard-layout">
         <aside className="sidebar">
-          {/* ... (sidebar tidak berubah) ... */}
+          {/* ... (sidebar header tidak berubah) ... */}
           <div className="sidebar-header">
             <h1>💰 Money Tracker</h1>
           </div>
+          
+          {/* === [KARTU RESET BARU DI SIDEBAR] === */}
+          <div className="card-danger-zone">
+            <h3>Danger Zone</h3>
+            <p>Aksi ini tidak bisa dibatalkan. Ini akan menghapus semua data transaksi Anda.</p>
+            <button onClick={handleResetTransactions} className="logout-btn">
+              Reset Semua Transaksi
+            </button>
+          </div>
+          {/* === [AKHIR KARTU RESET] === */}
+
           <div className="sidebar-footer">
             <div className="user-info">{user?.email}</div>
             <button onClick={logout} className="logout-btn">
@@ -157,20 +187,20 @@ const Dashboard = () => {
             <button onClick={handleNextMonth}>&gt;</button>
           </div>
           
-          {/* Tampilkan error di atas, BUKAN di dalam grid */}
           {error && <p className="error" style={{textAlign: 'center', padding: '1rem', backgroundColor: 'var(--color-bg-medium)', borderRadius: '12px'}}>{error}</p>}
 
           {loading ? (
             <div className="loading-content">
+              {/* ... (loading spinner tidak berubah) ... */}
               <div className="spinner"></div>
               <h2>Loading Data...</h2>
             </div>
           ) : (
-            // [PERBAIKAN] Tambahkan wrapper ini!
-            // Hanya render grid jika analytics SUDAH ADA dan tidak error
             analytics && !error ? (
               <div className="dashboard-grid">
+                {/* ... (Semua kartu card-summary, card-budget-pocket, card-form, card-list TIDAK BERUBAH) ... */}
                 
+                {/* --- 1. Ringkasan Finansial --- */}
                 <section className="card card-summary">
                   <h3>Ringkasan {formatMonthYear(selectedDate)}</h3>
                   <div className="summary-item">
@@ -188,6 +218,7 @@ const Dashboard = () => {
                   </div>
                 </section>
 
+                {/* --- 2. Budget Pockets --- */}
                 <section className="card card-budget-pocket">
                   <h3>Budget Pockets</h3>
                   <div className="budget-info total">
@@ -253,6 +284,7 @@ const Dashboard = () => {
                   </div>
                 </section>
 
+                {/* --- 3. Form Tambah Transaksi --- */}
                 <section className="card card-form">
                   <h3>Tambah Transaksi Baru</h3>
                   <TransactionForm 
@@ -263,6 +295,7 @@ const Dashboard = () => {
                   />
                 </section>
 
+                {/* --- 4. Daftar Transaksi --- */}
                 <section className="card card-list full-height-card">
                   <h3>Transaksi {formatMonthYear(selectedDate)}</h3>
                   <ul>
@@ -285,24 +318,27 @@ const Dashboard = () => {
                   </ul>
                 </section>
 
-                <section className="card card-list">
-                  <h3>Pengeluaran per Kategori</h3>
-                  <ul>
-                    {Object.keys(analytics.expenses_by_category).length > 0 ? (
-                      Object.entries(analytics.expenses_by_category).map(([category, amount]) => (
-                        <li key={category} className="list-item">
-                          <span>{category}</span>
-                          <span className="expense">-{formatCurrency(amount)}</span>
-                        </li>
-                      ))
-                    ) : (
-                      <p>Belum ada pengeluaran.</p>
-                    )}
-                  </ul>
-                </section>
+                {/* --- 5. Pengeluaran per Kategori --- */}
+                {analytics && (
+                  <section className="card card-list">
+                    <h3>Pengeluaran per Kategori</h3>
+                    <ul>
+                      {Object.keys(analytics.expenses_by_category).length > 0 ? (
+                        Object.entries(analytics.expenses_by_category).map(([category, amount]) => (
+                          <li key={category} className="list-item">
+                            <span>{category}</span>
+                            <span className="expense">-{formatCurrency(amount)}</span>
+                          </li>
+                        ))
+                      ) : (
+                        <p>Belum ada pengeluaran.</p>
+                      )}
+                    </ul>
+                  </section>
+                )}
+
               </div>
             ) : (
-              // Tampilkan ini jika tidak loading TAPI analytics masih null (karena error)
               !loading && error && (
                 <div style={{textAlign: 'center', color: 'var(--color-text-muted)', marginTop: '2rem'}}>
                   <p>Tidak dapat memuat data. Silakan coba lagi.</p>

@@ -1703,3 +1703,43 @@ button:disabled {
 .react-datepicker__month-text--disabled:hover {
   background-color: transparent !important;
 }
+/* ... (SEMUA CSS ANDA YANG SUDAH ADA BIARKAN DI ATAS) ... */
+
+/* === [BARU] CSS UNTUK DANGER ZONE DI SIDEBAR === */
+.card-danger-zone {
+  background-color: var(--color-bg-light);
+  border: 1px solid var(--color-accent-error);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-top: auto; /* Mendorong ini ke atas footer */
+  margin-bottom: 2rem;
+}
+.card-danger-zone h3 {
+  color: var(--color-accent-error);
+  margin-top: 0;
+  text-align: center;
+}
+.card-danger-zone p {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  text-align: center;
+  margin-bottom: 1rem;
+}
+.card-danger-zone button {
+  /* Menggunakan style yang sama dengan logout-btn */
+  background-color: var(--color-accent-expense);
+  color: white;
+  width: 100%;
+}
+
+/* Penyesuaian untuk Mobile */
+@media (max-width: 768px) {
+  .card-danger-zone {
+    display: none; /* Sembunyikan danger zone di sidebar mobile */
+  }
+  
+  /* Pindahkan footer ke bawah */
+  .sidebar-footer {
+    margin-top: auto; 
+  }
+}
