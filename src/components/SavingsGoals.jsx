@@ -23,6 +23,15 @@ const SavingsGoals = ({ savingsGoals, onDataUpdate, isRefetching }) => {
     setFormLoading(true);
     setFormError('');
 
+    const finalTargetAmount = parseNumberInput(targetAmount); // <-- Perbaikan: Ambil angka mentah dari input
+
+    // Validasi target amount
+    if (isNaN(parseFloat(finalTargetAmount)) || parseFloat(finalTargetAmount) <= 0) {
+        setFormError('Target jumlah harus angka positif.');
+        setFormLoading(false);
+        return;
+    }
+
     // [BARU] Validasi sederhana di client-side untuk target date
     if (targetDate && new Date(targetDate) < new Date(new Date().setHours(0,0,0,0))) {
       setFormError('Tanggal target tidak boleh di masa lalu.');
@@ -33,7 +42,7 @@ const SavingsGoals = ({ savingsGoals, onDataUpdate, isRefetching }) => {
     try {
       await axiosClient.post('/api/savings', {
         name: name,
-        target_amount: parseNumberInput(targetAmount),
+        target_amount: finalTargetAmount, // <-- Kirim angka mentah
         target_date: targetDate || null // <-- Kirim targetDate
       });
       setName('');
@@ -116,7 +125,7 @@ const SavingsGoals = ({ savingsGoals, onDataUpdate, isRefetching }) => {
                   type="text"
                   inputMode="numeric"
                   value={formatNumberInput(targetAmount)}
-                  onChange={(e) => setTargetAmount(parseNumberInput(e.target.value))}
+                  onChange={(e) => setTargetAmount(e.target.value)}
                   placeholder="0"
                   required
                   className="input-currency"
