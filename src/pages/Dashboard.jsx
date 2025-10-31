@@ -11,7 +11,7 @@ import BudgetForm from '../components/BudgetForm';
 import CategoryForm from '../components/CategoryForm';
 
 const Dashboard = () => {
-  // [MODIFIKASI] Ambil fungsi triggerSuccessAnimation dari context
+  // [MODIFIKASI] Ambil fungsi triggerSuccessAnimation
   const { user, logout, triggerSuccessAnimation } = useAuth();
   const [selectedDate, setSelectedDate] = useState(new Date());
   
@@ -20,32 +20,32 @@ const Dashboard = () => {
   const [categories, setCategories] = useState([]);
   
   // === [MODIFIKASI LOGIC LOADING] ===
-  // Kita bedakan loading awal (true) dengan loading update (false)
-  const [isLoading, setIsLoading] = useState(true);
-  // State baru untuk loading kecil (misal di tombol) saat refresh
-  const [isRefetching, setIsRefetching] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // Untuk loading awal
+  const [isRefetching, setIsRefetching] = useState(false); // Untuk loading update
   // === [AKHIR MODIFIKASI] ===
   
   const [error, setError] = useState('');
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [budgetToEdit, setBudgetToEdit] = useState(null);
 
+  // === [FUNGSI FETCHDATA DIMODIFIKASI] ===
   const fetchData = useCallback(async (isInitialLoad = false) => {
-    // [MODIFIKASI] Hanya set loading=true jika ini load awal
     if (isInitialLoad) {
-      setIsLoading(true);
+      setIsLoading(true); // Spinner besar HANYA untuk load awal
     } else {
-      // Jika ini refresh, set state refetching
-      setIsRefetching(true);
+      setIsRefetching(true); // Spinner kecil untuk update
     }
     setError('');
-    setAnalytics(null);
-    setTransactions([]);
+    
+    // Jangan reset state di sini agar UI tidak berkedip
+    // setAnalytics(null);
+    // setTransactions([]);
 
     const month = selectedDate.getMonth() + 1;
     const year = selectedDate.getFullYear();
 
     try {
+      // Kita butuh kategori dulu untuk form
       const categoriesRes = await axiosClient.get('/api/categories');
       setCategories(categoriesRes.data.data);
 
@@ -57,34 +57,33 @@ const Dashboard = () => {
       setAnalytics(analyticsRes.data.data);
       setTransactions(transactionsRes.data.data.transactions);
       
-      // [BARU] Panggil animasi sukses HANYA jika load awal
-      if (isInitialLoad) {
-        triggerSuccessAnimation();
-      }
+      // [DIHAPUS] Jangan panggil animasi sukses di sini
+      // if (isInitialLoad) {
+      //   triggerSuccessAnimation(); 
+      // }
 
     } catch (err) {
       console.error("Failed to fetch dashboard data:", err);
       setError(err.response?.data?.error || err.message || 'Gagal mengambil data dashboard');
     }
-    // [MODIFIKASI] Set loading yang sesuai
+    
+    // Set loading false di akhir
     if (isInitialLoad) {
       setIsLoading(false);
     } else {
       setIsRefetching(false);
     }
-  }, [selectedDate, triggerSuccessAnimation]); // Tambahkan triggerSuccessAnimation di dependencies
+  }, [selectedDate]); 
 
   useEffect(() => {
-    // [MODIFIKASI] Kirim 'true' untuk menandakan ini load awal
-    fetchData(true);
+    fetchData(true); // Panggil sebagai initial load
   }, [fetchData]);
 
   // === [FUNGSI UPDATE DIMODIFIKASI] ===
+  // Ini adalah fungsi yang dipanggil SETELAH aksi (create, delete, update)
   const handleDataUpdate = async () => {
-    // Panggil fetchData (bukan load awal)
-    await fetchData(false);
-    // Panggil animasi sukses SETELAH data di-refresh
-    triggerSuccessAnimation();
+    await fetchData(false); // Panggil fetch sebagai 'bukan initial load'
+    triggerSuccessAnimation(); // Tampilkan checkmark SETELAH data di-refresh
     setBudgetToEdit(null); 
   };
   // === [AKHIR MODIFIKASI] ===
@@ -96,13 +95,9 @@ const Dashboard = () => {
     setSelectedDate(prevDate => new Date(prevDate.getFullYear(), prevDate.getMonth() + 1, 1));
   };
 
-  // ... (handleDeleteBudget, handleDeleteTransaction, handleResetTransactions tidak berubah)
-  // ... (Mereka sudah memanggil handleDataUpdate, jadi animasi akan otomatis jalan)
   const handleDeleteBudget = async (e, budgetId) => {
     e.stopPropagation(); 
-    if (!window.confirm('PERINGATAN!\n\nYakin ingin menghapus budget pocket ini? \n\nINI JUGA AKAN MENGHAPUS SEMUA TRANSAKSI di kategori ini untuk bulan yang sama.')) {
-      return;
-    }
+    if (!window.confirm('PERINGATAN!\n\nYakin ingin menghapus budget pocket ini? \n\nINI JUGA AKAN MENGHAPUS SEMUA TRANSAKSI di kategori ini untuk bulan yang sama.')) return;
     setError('');
     try {
       await axiosClient.delete(`/api/budgets/${budgetId}`);
@@ -112,10 +107,9 @@ const Dashboard = () => {
       setError(err.response?.data?.error || 'Gagal menghapus budget');
     }
   };
+
   const handleDeleteTransaction = async (transactionId) => {
-    if (!window.confirm('Yakin ingin menghapus transaksi ini?')) {
-      return;
-    }
+    if (!window.confirm('Yakin ingin menghapus transaksi ini?')) return;
     setError('');
     try {
       await axiosClient.delete(`/api/transactions/${transactionId}`);
@@ -125,6 +119,7 @@ const Dashboard = () => {
       setError(err.response?.data?.error || 'Gagal menghapus transaksi');
     }
   };
+
   const handleResetTransactions = async () => {
     setError('');
     const pass = prompt('Ini akan MENGHAPUS SEMUA data transaksi Anda.\nKetik "RESET" untuk konfirmasi:');
@@ -132,8 +127,7 @@ const Dashboard = () => {
       alert('Reset dibatalkan.');
       return;
     }
-    // [MODIFIKASI] Set refetching, bukan loading utama
-    setIsRefetching(true);
+    setIsRefetching(true); // Tampilkan loading kecil
     try {
       await axiosClient.delete('/api/transactions/reset');
       handleDataUpdate(); 
@@ -237,7 +231,7 @@ const Dashboard = () => {
             </div>
           ) : (
             // Tampilkan grid jika sudah tidak loading awal
-            analytics && !error ? (
+            analytics ? (
               <div className="dashboard-grid">
                 
                 {/* --- Kartu-kartu --- */}
@@ -385,7 +379,7 @@ const Dashboard = () => {
 
               </div>
             ) : (
-              !loading && error && (
+              !isLoading && error && (
                 <div style={{textAlign: 'center', color: 'var(--color-text-muted)', marginTop: '2rem'}}>
                   <p>Tidak dapat memuat data. Silakan coba lagi.</p>
                 </div>

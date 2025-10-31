@@ -8,21 +8,22 @@ const AuthContext = createContext();
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true); 
   const navigate = useNavigate();
 
   // === [STATE BARU UNTUK ANIMASI SUKSES] ===
   const [showSuccess, setShowSuccess] = useState(false);
+  const [successTimeoutId, setSuccessTimeoutId] = useState(null);
   // === [AKHIR STATE BARU] ===
 
   useEffect(() => {
-    // Kode listener onAuthStateChange Anda (sudah benar)
+    // Listener ini sudah benar (dari perbaikan sebelumnya)
     const { data: authListener } = supabase.auth.onAuthStateChange(
       (event, session) => {
         console.log('Auth Event:', event, session);
         setSession(session);
         setUser(session?.user ?? null);
-        setLoading(false);
+        setLoading(false); 
       }
     );
     return () => {
@@ -32,11 +33,19 @@ export function AuthProvider({ children }) {
 
   // === [FUNGSI BARU UNTUK MEMICU ANIMASI] ===
   const triggerSuccessAnimation = () => {
+    // Jika animasi sedang berjalan, reset timernya
+    if (successTimeoutId) {
+      clearTimeout(successTimeoutId);
+    }
+    
     setShowSuccess(true);
+    
     // Sembunyikan animasi setelah 1.5 detik
-    setTimeout(() => {
+    const newTimeoutId = setTimeout(() => {
       setShowSuccess(false);
-    }, 1500);
+      setSuccessTimeoutId(null);
+    }, 1500); // 1.5 detik
+    setSuccessTimeoutId(newTimeoutId);
   };
   // === [AKHIR FUNGSI BARU] ===
 

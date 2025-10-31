@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import axiosClient from '../api/axiosClient';
 import { formatNumberInput, parseNumberInput } from '../utils/format';
 
-const BudgetForm = ({ categories, onBudgetSet, selectedDate, budgetToEdit, onClearEdit }) => {
+// [MODIFIKASI] Ambil prop 'isRefetching'
+const BudgetForm = ({ categories, onBudgetSet, selectedDate, budgetToEdit, onClearEdit, isRefetching }) => {
   const [amount, setAmount] = useState('');
   const [categoryName, setCategoryName] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false); // State loading untuk form ini sendiri
   const [message, setMessage] = useState('');
 
   const expenseCategories = categories.filter(c => c.type === 'expense');
@@ -32,31 +33,25 @@ const BudgetForm = ({ categories, onBudgetSet, selectedDate, budgetToEdit, onCle
 
     const month = selectedDate.getMonth() + 1;
     const year = selectedDate.getFullYear();
-
-    // === [MODIFIKASI LOGIKA RESET] ===
-    // Jika amount kosong atau 0, kirim 0. Ini akan me-reset/menghapus budget.
     const finalAmount = parseFloat(amount) || 0;
-    // === [AKHIR MODIFIKASI] ===
 
     try {
       await axiosClient.post('/api/budgets', {
-        amount: finalAmount, // Kirim 0 jika dikosongkan
+        amount: finalAmount, 
         month: month,
         year: year,
         category_name: categoryName 
       });
 
-      // [MODIFIKASI] Pesan yang lebih jelas
       let successMessage = 'Budget disimpan!';
       if (finalAmount === 0 && budgetToEdit) {
-        successMessage = 'Budget direset!';
+        successMessage = 'Budget direset ke Rp 0!';
       } else if (budgetToEdit) {
         successMessage = 'Budget diubah!';
       }
 
       setMessage(successMessage);
-      onBudgetSet(); // Refresh dashboard
-      // onClearEdit() akan dipanggil dari dashboard
+      onBudgetSet(); // Ini akan memicu refresh + animasi sukses
       
       setTimeout(() => setMessage(''), 2000); 
     } catch (err) {
@@ -85,28 +80,28 @@ const BudgetForm = ({ categories, onBudgetSet, selectedDate, budgetToEdit, onCle
       </div>
       
       <div className="form-group">
-        <label>Jumlah Budget (Isi 0 untuk reset/hapus)</label>
+        <label>Jumlah Budget (Isi 0 atau kosongkan untuk reset)</label>
         <input
           type="text" 
           inputMode="numeric"
           value={formatNumberInput(amount)} 
           onChange={(e) => setAmount(parseNumberInput(e.target.value))} 
           placeholder="0"
-          // [MODIFIKASI] Hapus 'required' agar bisa dikosongkan
           className="input-currency" 
         />
       </div>
 
+      {/* [MODIFIKASI] Tombol submit sekarang tahu state loading global */}
       <div className="form-group-inline" style={{ marginTop: '1rem' }}>
-        <button type="submit" disabled={loading} style={{width: '100%'}}>
-          {loading ? 'Menyimpan...' : (budgetToEdit ? 'Ubah Budget' : 'Atur Budget')}
+        <button type="submit" disabled={loading || isRefetching} style={{width: '100%'}}>
+          {loading || isRefetching ? 'Menyimpan...' : (budgetToEdit ? 'Ubah Budget' : 'Atur Budget')}
         </button>
         {budgetToEdit && (
           <button 
             type="button" 
             className="btn-secondary" 
             onClick={onClearEdit}
-            disabled={loading}
+            disabled={loading || isRefetching}
           >
             Batal
           </button>
