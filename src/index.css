@@ -1,3 +1,5 @@
+/* naanas/money-tracker-frontend/money-tracker-frontend-0ee08000468d6773fb0e7a2a42ba716f486ab211/src/index.css */
+
 /* === ROOT & VARIABLE === */
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
@@ -111,6 +113,15 @@ body {
   outline: none;
   border-color: var(--color-primary);
   box-shadow: 0 0 0 2px var(--color-primary);
+}
+
+/* Style untuk teks error validasi di bawah input */
+.form-group .error-text {
+  color: var(--color-accent-error);
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin-top: 0.25rem;
+  display: block;
 }
 
 .form-group-radio {
@@ -349,9 +360,20 @@ button:disabled {
   margin-bottom: 0.75rem;
   font-size: 1.1em;
 }
+
+/* [BARU] Style untuk Total Dana Tabungan */
+.card-summary .summary-item.total-savings {
+  margin-top: 1rem;
+  border-top: 1px solid var(--color-border);
+  padding-top: 0.75rem;
+  font-weight: 500;
+  font-size: 1.1em;
+}
+/* [AKHIR BARU] */
+
 .card-summary hr {
   border-color: var(--color-border);
-  margin: 1rem 0;
+  margin: 0.75rem 0; /* Dimodifikasi */
 }
 .card-summary .summary-item.total {
   font-weight: bold;
@@ -688,7 +710,6 @@ button:disabled {
   100% { transform: rotate(360deg); }
 }
 
-/* === [KODE BARU DITAMBAHKAN] === */
 /* Spinner untuk di dalam tombol */
 .btn-spinner {
   width: 20px;
@@ -700,6 +721,8 @@ button:disabled {
   border-top-color: #ffffff; /* Warna top spinner putih */
   animation: spin 1s linear infinite;
 }
+/* Akhir Spinner Tombol */
+
 .checkmark-wrapper {
   width: 80px;
   height: 80px;
@@ -978,6 +1001,73 @@ button:disabled {
 }
 /* === [AKHIR] ANIMASI SUKSES GLOBAL === */
 
+/* === [KODE BARU UNTUK KARTU TABUNGAN] === */
+
+.card-savings {
+  /* Atur agar memanjang jika ada ruang */
+  grid-column: span 1;
+}
+@media (min-width: 1024px) {
+  .card-savings {
+    grid-column: span 2 / span 2; 
+  }
+}
+
+.savings-form .form-group-inline {
+  align-items: flex-end;
+}
+.savings-form .form-group {
+  margin-bottom: 0;
+  flex: 1;
+}
+
+.savings-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+  margin-top: 1.5rem;
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 10px;
+}
+
+/* Gunakan ulang style dari .pocket-item */
+.savings-item {
+  position: relative;
+  background-color: var(--color-bg-light);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Style progress bar "income" (untuk tabungan) */
+.progress-bar-fill.income {
+  background-color: var(--color-accent-success);
+}
+
+.btn-add-funds {
+  width: 100%;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  margin-top: 1rem;
+  background-color: var(--color-bg-light);
+  border: 1px solid var(--color-border);
+  color: var(--color-accent-income);
+  font-weight: 600;
+}
+.btn-add-funds:hover {
+  background-color: var(--color-accent-success);
+  color: var(--color-bg-dark);
+  border-color: var(--color-accent-success);
+}
+.btn-add-funds:disabled {
+  background-color: var(--color-border);
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+  border-color: var(--color-border);
+}
 
 /* === MEDIA QUERIES (MOBILE) === */
 @media (max-width: 768px) {
@@ -1074,6 +1164,8 @@ button:disabled {
   .main-content.loading-content {
     height: calc(100vh - 80px); /* Penuhi sisa layar (dikurangi header mobile) */
   }
+
+  /* Style tabungan di HP */
   .card-savings {
     grid-column: 1 / -1;
   }
@@ -1085,87 +1177,4 @@ button:disabled {
   .savings-list {
     grid-template-columns: 1fr;
   }
-
-}
-.form-group input:focus,
-.form-group select:focus {
-  outline: none;
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 2px var(--color-primary);
-}
-
-/* === [KODE BARU DITAMBAHKAN] === */
-/* Style untuk teks error validasi di bawah input */
-.form-group .error-text {
-  color: var(--color-accent-error);
-  font-size: 0.85rem;
-  font-weight: 500;
-  margin-top: 0.25rem;
-  display: block;
-}
-
-.card-savings {
-  /* Atur agar memanjang jika ada ruang */
-  grid-column: span 1;
-}
-@media (min-width: 1024px) {
-  .card-savings {
-    grid-column: span 2 / span 2; 
-  }
-}
-
-.savings-form .form-group-inline {
-  align-items: flex-end;
-}
-.savings-form .form-group {
-  margin-bottom: 0;
-  flex: 1;
-}
-
-.savings-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1rem;
-  margin-top: 1.5rem;
-  max-height: 400px;
-  overflow-y: auto;
-  padding-right: 10px;
-}
-
-/* Gunakan ulang style dari .pocket-item */
-.savings-item {
-  position: relative;
-  background-color: var(--color-bg-light);
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  padding: 1rem;
-  display: flex;
-  flex-direction: column;
-}
-
-/* Style progress bar "income" (untuk tabungan) */
-.progress-bar-fill.income {
-  background-color: var(--color-accent-success);
-}
-
-.btn-add-funds {
-  width: 100%;
-  padding: 0.5rem 1rem;
-  font-size: 0.9rem;
-  margin-top: 1rem;
-  background-color: var(--color-bg-light);
-  border: 1px solid var(--color-border);
-  color: var(--color-accent-income);
-  font-weight: 600;
-}
-.btn-add-funds:hover {
-  background-color: var(--color-accent-success);
-  color: var(--color-bg-dark);
-  border-color: var(--color-accent-success);
-}
-.btn-add-funds:disabled {
-  background-color: var(--color-border);
-  color: var(--color-text-muted);
-  cursor: not-allowed;
-  border-color: var(--color-border);
 }

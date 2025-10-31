@@ -9,7 +9,7 @@ import 'react-datepicker/dist/react-datepicker.css';
 import TransactionForm from '../components/TransactionForm';
 import BudgetForm from '../components/BudgetForm';
 import CategoryForm from '../components/CategoryForm';
-import SavingsGoals from '../components/SavingsGoals'; // <-- [BARU] Impor komponen tabungan
+import SavingsGoals from '../components/SavingsGoals'; // <-- Impor SavingsGoals
 
 const Dashboard = () => {
   const { user, logout, triggerSuccessAnimation } = useAuth();
@@ -18,7 +18,7 @@ const Dashboard = () => {
   const [analytics, setAnalytics] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [savingsGoals, setSavingsGoals] = useState([]); // <-- [BARU] State untuk tabungan
+  const [savingsGoals, setSavingsGoals] = useState([]); // State tabungan
   
   const [isLoading, setIsLoading] = useState(true); 
   const [isRefetching, setIsRefetching] = useState(false); 
@@ -29,7 +29,6 @@ const Dashboard = () => {
   const isInitialMount = useRef(true); 
 
   
-  // Fungsi untuk mengambil data bulanan + data tabungan
   const fetchDataForMonth = useCallback(async () => {
     setIsRefetching(true); 
     setError('');
@@ -38,16 +37,15 @@ const Dashboard = () => {
     const year = selectedDate.getFullYear();
 
     try {
-      // [MODIFIKASI] Ambil juga data tabungan setiap refresh
       const [analyticsRes, transactionsRes, savingsRes] = await Promise.all([
         axiosClient.get('/api/analytics/summary', { params: { month, year } }),
         axiosClient.get('/api/transactions', { params: { month, year } }), 
-        axiosClient.get('/api/savings'), // <-- [BARU]
+        axiosClient.get('/api/savings'), 
       ]);
 
       setAnalytics(analyticsRes.data.data);
       setTransactions(transactionsRes.data.data.transactions);
-      setSavingsGoals(savingsRes.data.data); // <-- [BARU]
+      setSavingsGoals(savingsRes.data.data); 
       
     } catch (err) {
       console.error("Failed to fetch dashboard data:", err);
@@ -57,7 +55,7 @@ const Dashboard = () => {
     }
   }, [selectedDate]); 
 
-  // === EFEK UNTUK LOAD AWAL ===
+  // EFEK UNTUK LOAD AWAL 
   useEffect(() => {
     const fetchInitialData = async () => {
       setIsLoading(true); 
@@ -67,18 +65,17 @@ const Dashboard = () => {
       const year = selectedDate.getFullYear();
 
       try {
-        // [MODIFIKASI] Ambil 4 data saat load awal
         const [categoriesRes, analyticsRes, transactionsRes, savingsRes] = await Promise.all([
           axiosClient.get('/api/categories'),
           axiosClient.get('/api/analytics/summary', { params: { month, year } }),
           axiosClient.get('/api/transactions', { params: { month, year } }), 
-          axiosClient.get('/api/savings'), // <-- [BARU]
+          axiosClient.get('/api/savings'), 
         ]);
 
         setCategories(categoriesRes.data.data);
         setAnalytics(analyticsRes.data.data);
         setTransactions(transactionsRes.data.data.transactions);
-        setSavingsGoals(savingsRes.data.data); // <-- [BARU]
+        setSavingsGoals(savingsRes.data.data); 
         
       } catch (err) {
         console.error("Failed to fetch initial dashboard data:", err);
@@ -89,9 +86,9 @@ const Dashboard = () => {
     };
     
     fetchInitialData();
-  }, []); // <-- Dependency kosong, HANYA untuk load awal
+  }, []); 
 
-  // === EFEK UNTUK GANTI BULAN ===
+  // EFEK UNTUK GANTI BULAN
   useEffect(() => {
     if (isInitialMount.current) {
       isInitialMount.current = false;
@@ -100,9 +97,8 @@ const Dashboard = () => {
     }
   }, [selectedDate, fetchDataForMonth]); 
 
-  // === FUNGSI UPDATE (SETELAH SUBMIT FORM) ===
+  // FUNGSI UPDATE (SETELAH SUBMIT FORM)
   const handleDataUpdate = async () => {
-    // Fungsi ini sudah mengambil data bulanan DAN tabungan
     await fetchDataForMonth(); 
     triggerSuccessAnimation(); 
     setBudgetToEdit(null); 
@@ -117,13 +113,19 @@ const Dashboard = () => {
     }
   };
 
-  // ... (Sisa fungsi handlePrevMonth, handleNextMonth, dll tidak berubah) ...
+  // === [BARU] Hitung Total Dana yang Sudah Ditabung (Current Amount) ===
+  const totalSavingsCurrent = useMemo(() => {
+    return savingsGoals.reduce((sum, goal) => sum + parseFloat(goal.current_amount), 0);
+  }, [savingsGoals]);
+  // === [AKHIR BARU] ===
+
   const handlePrevMonth = () => {
     setSelectedDate(prevDate => new Date(prevDate.getFullYear(), prevDate.getMonth() - 1, 1));
   };
   const handleNextMonth = () => {
     setSelectedDate(prevDate => new Date(prevDate.getFullYear(), prevDate.getMonth() + 1, 1));
   };
+
   const handleDeleteBudget = async (e, budgetId) => {
     e.stopPropagation(); 
     if (!window.confirm('Yakin ingin menghapus budget pocket ini?\n\n(Ini tidak akan menghapus transaksi Anda yang sudah ada.)')) return;
@@ -136,6 +138,7 @@ const Dashboard = () => {
       setError(err.response?.data?.error || err.message || 'Gagal menghapus budget');
     }
   };
+
   const handleDeleteTransaction = async (transactionId) => {
     if (!window.confirm('Yakin ingin menghapus transaksi ini?')) return;
     setError('');
@@ -147,6 +150,7 @@ const Dashboard = () => {
       setError(err.response?.data?.error || err.message || 'Gagal menghapus transaksi');
     }
   };
+
   const handleResetTransactions = async () => {
     setError('');
     const pass = prompt('Ini akan MENGHAPUS SEMUA data transaksi Anda.\nKetik "RESET" untuk konfirmasi:');
@@ -164,6 +168,7 @@ const Dashboard = () => {
       setIsRefetching(false); 
     }
   };
+
   const budgetPockets = useMemo(() => {
     if (!analytics) return [];
     const budgetDetails = analytics.budget?.details || [];
@@ -195,14 +200,12 @@ const Dashboard = () => {
   const totalSpent = analytics?.summary?.total_expenses || 0;
   const totalRemaining = analytics?.budget?.remaining || 0;
   const totalProgress = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
-  // ... (Sisa fungsi tidak berubah) ...
 
 
   return (
     <>
       <div className="dashboard-layout">
         <aside className="sidebar">
-          {/* ... (sidebar tidak berubah) ... */}
           <div className="sidebar-header">
             <h1>💰 Money Tracker</h1>
           </div>
@@ -219,7 +222,6 @@ const Dashboard = () => {
 
         <main className="main-content">
           <header className="mobile-header">
-            {/* ... (header tidak berubah) ... */}
             <h1>💰 Money Tracker</h1>
             <div>
               <button onClick={handleResetTransactions} className="btn-reset-mobile" title="Reset All Data">
@@ -232,7 +234,6 @@ const Dashboard = () => {
           </header>
 
           <div className="month-navigator">
-            {/* ... (navigator tidak berubah) ... */}
             <button onClick={handlePrevMonth}>&lt;</button>
             <DatePicker
               selected={selectedDate}
@@ -250,12 +251,13 @@ const Dashboard = () => {
 
           {isLoading ? (
             <div className="loading-content">
-              {/* Kosong, sesuai permintaan */}
+              {/* Kosong */}
             </div>
           ) : (
             analytics ? (
               <div className="dashboard-grid">
                 
+                {/* === [KARTU SUMMARY DIMODIFIKASI] === */}
                 <section className="card card-summary">
                   <h3>Ringkasan {formatMonthYear(selectedDate)}</h3>
                   <div className="summary-item">
@@ -266,16 +268,23 @@ const Dashboard = () => {
                     <span>Total Pengeluaran</span>
                     <span className="expense">{formatCurrency(analytics.summary.total_expenses)}</span>
                   </div>
+                  
+                  {/* Tampilkan Total Dana Tabungan Saat Ini */}
+                  <div className="summary-item total-savings">
+                    <span>Total Dana Tabungan</span>
+                    <span className="income">{formatCurrency(totalSavingsCurrent)}</span>
+                  </div>
+                  
                   <hr />
                   <div className="summary-item total">
                     <span>Saldo</span>
                     <span>{formatCurrency(analytics.summary.balance)}</span>
                   </div>
                 </section>
+                {/* === [AKHIR MODIFIKASI KARTU SUMMARY] === */}
 
                 <section className="card card-budget-pocket">
                   <h3>Budget Pockets</h3>
-                  {/* ... (Isi card budget tidak berubah) ... */}
                   <div className="budget-info total">
                     <span>Total Budget: {formatCurrency(totalBudget)}</span>
                     <span>{totalProgress.toFixed(0)}%</span>
@@ -286,6 +295,7 @@ const Dashboard = () => {
                       style={{ width: `${Math.min(totalProgress, 100)}%` }}
                     ></div>
                   </div>
+                  
                   <BudgetForm 
                     categories={categories} 
                     onBudgetSet={handleDataUpdate}
@@ -294,6 +304,7 @@ const Dashboard = () => {
                     selectedDate={selectedDate} 
                     isRefetching={isRefetching} 
                   />
+
                   <div className="pocket-grid">
                     {budgetPockets.length > 0 ? (
                       budgetPockets.map(pocket => (
@@ -349,18 +360,14 @@ const Dashboard = () => {
                   />
                 </section>
                 
-                {/* === [BARU] Tampilkan Kartu Tabungan === */}
                 <SavingsGoals 
                   savingsGoals={savingsGoals}
                   onDataUpdate={handleDataUpdate}
                   isRefetching={isRefetching}
                 />
-                {/* === [AKHIR] === */}
-
 
                 <section className="card card-list full-height-card">
                   <h3>Transaksi {formatMonthYear(selectedDate)}</h3>
-                  {/* ... (Isi card transaksi tidak berubah) ... */}
                   <ul>
                     {transactions.length > 0 ? (
                       transactions.map((t) => (
@@ -391,7 +398,6 @@ const Dashboard = () => {
                 {analytics && (
                   <section className="card card-list">
                     <h3>Pengeluaran per Kategori</h3>
-                    {/* ... (Isi card pengeluaran tidak berubah) ... */}
                     <ul>
                       {Object.keys(analytics.expenses_by_category).length > 0 ? (
                         Object.entries(analytics.expenses_by_category).map(([category, amount]) => (
