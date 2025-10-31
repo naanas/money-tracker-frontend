@@ -63,7 +63,6 @@ const Dashboard = () => {
     <>
       <div className="dashboard-layout">
         {/* === SIDEBAR (DESKTOP) === */}
-        {/* Ini akan otomatis disembunyikan di HP oleh CSS baru */}
         <aside className="sidebar">
           <div className="sidebar-header">
             <h1>💰 Money Tracker</h1>
@@ -78,9 +77,6 @@ const Dashboard = () => {
 
         {/* === KONTEN UTAMA === */}
         <main className="main-content">
-
-          {/* === HEADER (MOBILE) === */}
-          {/* Header ini hanya akan muncul di HP (diatur oleh CSS) */}
           <header className="mobile-header">
             <h1>💰 Money Tracker</h1>
             <button onClick={logout} className="logout-btn-mobile">
@@ -190,11 +186,13 @@ const Dashboard = () => {
         </main>
       </div>
 
-      {/* === MODAL KATEGORI (di luar layout) === */}
+      {/* === [MODAL KATEGORI DIMODIFIKASI] === */}
       {isCategoryModalOpen && (
         <CategoryForm 
+          // [BARU] Kirim daftar kategori ke modal
+          existingCategories={categories}
           onClose={() => setIsCategoryModalOpen(false)}
-          onSuccess={handleDataUpdate} // Refresh data setelah kategori baru dibuat
+          onSuccess={handleDataUpdate} // Refresh data setelah kategori baru dibuat/dihapus
         />
       )}
     </>
