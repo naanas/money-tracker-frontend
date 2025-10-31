@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import axiosClient from '../api/axiosClient';
 import { formatCurrency, formatMonthYear } from '../utils/format';
@@ -18,19 +18,18 @@ const Dashboard = () => {
   const [transactions, setTransactions] = useState([]);
   const [categories, setCategories] = useState([]);
   
-  const [isLoading, setIsLoading] = useState(true); 
-  const [isRefetching, setIsRefetching] = useState(false); 
+  const [isLoading, setIsLoading] = useState(true); // Untuk loading awal (layar blank)
+  const [isRefetching, setIsRefetching] = useState(false); // Untuk loading ganti bulan/submit
   
   const [error, setError] = useState('');
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [budgetToEdit, setBudgetToEdit] = useState(null);
+  const isInitialMount = useRef(true); // <-- Untuk melacak load awal
 
-  const fetchDataForMonth = useCallback(async (isInitialLoad = false) => {
-    if (isInitialLoad) {
-      setIsLoading(true); 
-    } else {
-      setIsRefetching(true); 
-    }
+  
+  // Fungsi untuk mengambil HANYA data bulanan (saat ganti bulan / submit)
+  const fetchDataForMonth = useCallback(async () => {
+    setIsRefetching(true); // <-- Pakai isRefetching
     setError('');
     
     const month = selectedDate.getMonth() + 1;
@@ -48,44 +47,64 @@ const Dashboard = () => {
     } catch (err) {
       console.error("Failed to fetch dashboard data:", err);
       setError(err.response?.data?.error || err.message || 'Gagal mengambil data dashboard');
-    }
-    
-    if (isInitialLoad) {
-      setIsLoading(false);
-    } else {
+    } finally {
       setIsRefetching(false);
     }
-  }, [selectedDate]); 
+  }, [selectedDate]); // <-- Hanya bergantung pada selectedDate
 
+  // === EFEK UNTUK LOAD AWAL ===
+  // (Mengambil kategori + data bulan pertama)
   useEffect(() => {
-    const fetchCategories = async () => {
+    const fetchInitialData = async () => {
+      setIsLoading(true); // <-- Pakai isLoading (layar blank)
+      setError('');
+      
+      const month = selectedDate.getMonth() + 1;
+      const year = selectedDate.getFullYear();
+
       try {
-        const categoriesRes = await axiosClient.get('/api/categories');
+        // Ambil semua data awal secara paralel
+        const [categoriesRes, analyticsRes, transactionsRes] = await Promise.all([
+          axiosClient.get('/api/categories'),
+          axiosClient.get('/api/analytics/summary', { params: { month, year } }),
+          axiosClient.get('/api/transactions', { params: { month, year } }), 
+        ]);
+
         setCategories(categoriesRes.data.data);
+        setAnalytics(analyticsRes.data.data);
+        setTransactions(transactionsRes.data.data.transactions);
+        
       } catch (err) {
-        console.error("Failed to fetch categories:", err);
-        setError(err.response?.data?.error || 'Gagal mengambil kategori');
+        console.error("Failed to fetch initial dashboard data:", err);
+        setError(err.response?.data?.error || err.message || 'Gagal mengambil data dashboard');
+      } finally {
+        setIsLoading(false); // <-- Matikan layar blank
       }
     };
     
-    fetchCategories();
-  }, []); 
+    fetchInitialData();
+  }, []); // <-- Dependency kosong, HANYA untuk load awal
 
+  // === EFEK UNTUK GANTI BULAN ===
   useEffect(() => {
-    if (analytics === null) {
-      fetchDataForMonth(true); 
+    if (isInitialMount.current) {
+      // Jika ini load awal, skip. fetchInitialData sudah menanganinya
+      isInitialMount.current = false;
     } else {
-      fetchDataForMonth(false); 
+      // Jika BUKAN load awal (artinya selectedDate berubah), fetch data bulanan
+      fetchDataForMonth();
     }
-  }, [fetchDataForMonth, analytics]); // Tambahkan analytics di dependency
+  }, [selectedDate, fetchDataForMonth]); // <-- Hanya jalan saat selectedDate berubah
 
+  // === FUNGSI UPDATE (SETELAH SUBMIT FORM) ===
   const handleDataUpdate = async () => {
-    await fetchDataForMonth(false); 
+    await fetchDataForMonth(); 
     triggerSuccessAnimation(); 
     setBudgetToEdit(null); 
     
     if (isCategoryModalOpen) {
       try {
+        // Juga refresh kategori jika modalnya terbuka
         const categoriesRes = await axiosClient.get('/api/categories');
         setCategories(categoriesRes.data.data);
       } catch (err) {
@@ -101,23 +120,18 @@ const Dashboard = () => {
     setSelectedDate(prevDate => new Date(prevDate.getFullYear(), prevDate.getMonth() + 1, 1));
   };
 
-  // === [MODIFIKASI PESAN KONFIRMASI] ===
   const handleDeleteBudget = async (e, budgetId) => {
     e.stopPropagation(); 
-    // Pesan diperbarui untuk mencerminkan perbaikan bug
     if (!window.confirm('Yakin ingin menghapus budget pocket ini?\n\n(Ini tidak akan menghapus transaksi Anda yang sudah ada.)')) return;
-    
     setError('');
     try {
       await axiosClient.delete(`/api/budgets/${budgetId}`);
       handleDataUpdate(); 
     } catch (err) {
       console.error("Failed to delete budget:", err);
-      // Menampilkan error spesifik dari backend
       setError(err.response?.data?.error || err.message || 'Gagal menghapus budget');
     }
   };
-  // === [AKHIR MODIFIKASI] ===
 
   const handleDeleteTransaction = async (transactionId) => {
     if (!window.confirm('Yakin ingin menghapus transaksi ini?')) return;
@@ -229,11 +243,13 @@ const Dashboard = () => {
           
           {error && <p className="error" style={{textAlign: 'center', padding: '1rem', backgroundColor: 'var(--color-bg-medium)', borderRadius: '12px'}}>{error}</p>}
 
+          {/* [MODIFIKASI] Render logic. isLoading HANYA untuk layar blank awal */}
           {isLoading ? (
             <div className="loading-content">
-              {/* Kosong, sesuai permintaan */}
+              {/* Kosong, sesuai permintaan user "hilangin aja" */}
             </div>
           ) : (
+            // Setelah loading awal selesai, Tampilkan grid JIKA analytics ada
             analytics ? (
               <div className="dashboard-grid">
                 
@@ -258,7 +274,7 @@ const Dashboard = () => {
                   <h3>Budget Pockets</h3>
                   <div className="budget-info total">
                     <span>Total Budget: {formatCurrency(totalBudget)}</span>
-                    <span>{totalProgress.toFixed(0)}%</span>
+                    <span>{totalProgress.toFixed(0)}</span>
                   </div>
                   <div className="progress-bar-container">
                     <div 
@@ -380,9 +396,11 @@ const Dashboard = () => {
 
               </div>
             ) : (
-              !isLoading && error && (
+              // Jika tidak loading, TAPI tidak ada analytics (pasti error)
+              error && (
                 <div style={{textAlign: 'center', color: 'var(--color-text-muted)', marginTop: '2rem'}}>
                   <p>Tidak dapat memuat data. Silakan coba lagi.</p>
+                  <p><i>{error}</i></p>
                 </div>
               )
             )
