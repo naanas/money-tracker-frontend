@@ -122,9 +122,10 @@ const Dashboard = () => {
     setBudgetToEdit(null); 
   };
 
+  // [MODIFIKASI] Total Savings hanya dari goals yang ditampilkan di bulan ini
   const totalSavingsCurrent = useMemo(() => {
-    return allSavingsGoals.reduce((sum, goal) => sum + parseFloat(goal.current_amount), 0);
-  }, [allSavingsGoals]);
+    return filteredSavingsGoals.reduce((sum, goal) => sum + parseFloat(goal.current_amount), 0);
+  }, [filteredSavingsGoals]); // Dependency diubah
 
   const handlePrevMonth = () => {
     setSelectedDate(prevDate => new Date(prevDate.getFullYear(), prevDate.getMonth() - 1, 1));
@@ -182,10 +183,12 @@ const Dashboard = () => {
   
   // [LOGIKA FILTERING SAVINGS GOALS SESUAI PERMINTAAN]
   const filteredSavingsGoals = useMemo(() => {
+    const goals = allSavingsGoals;
+
     // Ambil tanggal awal bulan yang dipilih
     const selectedMonthStart = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
     
-    return allSavingsGoals.filter(goal => {
+    return goals.filter(goal => {
       // 1. Goals tanpa target_date (ongoing) selalu ditampilkan
       if (!goal.target_date) return true;
       
@@ -193,31 +196,22 @@ const Dashboard = () => {
       // Buat tanggal yang hanya berisi bulan dan tahun target (set ke awal bulan target)
       const targetMonthStart = new Date(targetDate.getFullYear(), targetDate.getMonth(), 1);
 
-      // Permintaan 1: HIDE jika bulan yang dipilih SUDAH melewati bulan target.
-      // Jika awal bulan yang dipilih > awal bulan target, maka goal sudah terlewat.
+      // Cek apakah bulan yang dipilih JAUH SEBELUM bulan goal dibuat
+      // Jika bulan yang dipilih lebih kecil dari bulan target, TAMPILKAN
+      // Ini memastikan goal yang akan datang tetap terlihat
+      // Jika goal dibuat di Nov 2025 (target_date), maka di Oct 2025 tetap tampil
       if (selectedMonthStart > targetMonthStart) {
+        // HIDE jika bulan yang dipilih SUDAH melewati bulan target.
         return false;
       }
       
-      // Permintaan 2: HIDE jika bulan yang dipilih JAUH SEBELUM bulan target.
-      // Ini diinterpretasikan sebagai: goal hanya tampil di bulan target dan bulan sebelumnya (sampai tak terhingga)
-      // Logika di atas (selectedMonthStart > targetMonthStart) sudah cukup menangani HIDE setelah bulan target.
-      // Jika Anda benar-benar ingin menyembunyikan jika JAUH SEBELUM bulan target (target date adalah Jan 2026, dan saya melihat Jan 2024), 
-      // Anda harus menentukan batas awal. Namun, karena Anda hanya menyebutkan "backmonth", 
-      // saya akan menganggap filter di atas (HIDE setelah target) sudah cukup dan akan membuat goal 
-      // yang akan datang tetap terlihat di bulan-bulan sebelumnya.
-      
-      // Jika Anda bersikeras HIDE sebelum bulan target:
-      // if (selectedMonthStart < targetMonthStart) {
-      //   return false; // Hapus baris ini jika goal harus muncul di bulan-bulan persiapan
-      // }
-
+      // TAMPILKAN jika bulan yang dipilih adalah bulan yang sama atau bulan sebelumnya
       return true; 
     });
 
   }, [allSavingsGoals, selectedDate]);
   
-  // ... (budgetPockets, totalBudget, totalSpent, totalRemaining, totalProgress remains unchanged)
+  // ... (budgetPockets calculation remains unchanged)
 
   const budgetPockets = useMemo(() => {
     if (!analytics) return [];
@@ -309,9 +303,9 @@ const Dashboard = () => {
 
           {/* [MODIFIKASI] Hanya tampilkan spinner untuk initial load */}
           {isLoading ? (
-            <div className="loading-content">
-               <div className="spinner"></div>
-               <h2>Memuat data awal...</h2>
+            <div >
+               <div></div>
+               <h2></h2>
             </div>
           ) : (
             analytics ? (
@@ -332,6 +326,7 @@ const Dashboard = () => {
                     </div>
                     
                     <div className="summary-item total-savings">
+                      {/* [MODIFIKASI] Menggunakan totalSavingsCurrent yang sudah difilter */}
                       <span>Total Dana Tabungan</span>
                       <span className="income">{formatCurrency(totalSavingsCurrent)}</span>
                     </div>
