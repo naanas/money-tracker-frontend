@@ -1585,3 +1585,30 @@ button:disabled {
   color: white;
   transform: scale(1.1);
 }
+/* ... (SEMUA CSS ANDA YANG SUDAH ADA BIARKAN DI ATAS) ... */
+
+/* === [BARU] CSS UNTUK DAFTAR TRANSAKSI YANG BISA SCROLL === */
+
+.card-list.full-height-card {
+  /* Biarkan kartu ini tumbuh tinggi */
+  grid-row: span 2; 
+  display: flex;
+  flex-direction: column;
+}
+
+.card-list.full-height-card ul {
+  flex-grow: 1;
+  overflow-y: auto; /* Tambahkan scroll jika daftar terlalu panjang */
+  max-height: 600px; /* Batas tinggi maksimum */
+  padding-right: 10px; /* Ruang untuk scrollbar */
+}
+
+/* Penyesuaian untuk mobile */
+@media (max-width: 768px) {
+  .card-list.full-height-card {
+    grid-row: auto; /* Kembalikan ke normal di HP */
+  }
+  .card-list.full-height-card ul {
+    max-height: 400px; /* Batasi tinggi di HP */
+  }
+}

@@ -29,7 +29,13 @@ const Dashboard = () => {
     try {
       const [analyticsRes, transactionsRes, categoriesRes] = await Promise.all([
         axiosClient.get('/api/analytics/summary', { params: { month, year } }),
-        axiosClient.get('/api/transactions', { params: { limit: 5, month, year } }),
+        
+        // === [PERUBAHAN DI SINI] ===
+        // Hapus 'limit=5'. Kita ambil semua transaksi untuk bulan ini
+        // (default backend adalah 50)
+        axiosClient.get('/api/transactions', { params: { month, year } }), 
+        // === [AKHIR PERUBAHAN] ===
+
         axiosClient.get('/api/categories'),
       ]);
 
@@ -59,9 +65,8 @@ const Dashboard = () => {
     setSelectedDate(prevDate => new Date(prevDate.getFullYear(), prevDate.getMonth() + 1, 1));
   };
 
-  // === [FUNGSI BARU UNTUK HAPUS BUDGET] ===
   const handleDeleteBudget = async (e, budgetId) => {
-    e.stopPropagation(); // Hentikan event agar tidak memicu onClick edit
+    e.stopPropagation(); 
     
     if (!window.confirm('Yakin ingin menghapus budget pocket ini?')) {
       return;
@@ -69,13 +74,12 @@ const Dashboard = () => {
 
     try {
       await axiosClient.delete(`/api/budgets/${budgetId}`);
-      handleDataUpdate(); // Refresh data
+      handleDataUpdate(); 
     } catch (err) {
       console.error("Failed to delete budget:", err);
       setError(err.response?.data?.error || 'Gagal menghapus budget');
     }
   };
-  // === [AKHIR FUNGSI BARU] ===
 
   const budgetPockets = useMemo(() => {
     if (!analytics) return [];
@@ -86,7 +90,7 @@ const Dashboard = () => {
     const pockets = budgetDetails.map(budget => {
       const spent = expenses[budget.category_name] || 0;
       return {
-        ...budget, // Ini akan punya 'id' asli dari database
+        ...budget,
         spent: spent,
         remaining: budget.amount - spent,
         progress: budget.amount > 0 ? (spent / budget.amount) * 100 : 0,
@@ -96,7 +100,7 @@ const Dashboard = () => {
     Object.keys(expenses).forEach(categoryName => {
       if (!pockets.find(p => p.category_name === categoryName)) {
         pockets.push({
-          id: `virtual-${categoryName}`, // ID virtual untuk pocket "overbudget"
+          id: `virtual-${categoryName}`, 
           category_name: categoryName,
           amount: 0, 
           spent: expenses[categoryName],
@@ -199,12 +203,9 @@ const Dashboard = () => {
                       <div 
                         className="pocket-item" 
                         key={pocket.id || pocket.category_name} 
-                        // [MODIFIKASI] Hanya bisa edit jika BUKAN virtual pocket
                         onClick={() => pocket.id.startsWith('virtual-') ? null : setBudgetToEdit(pocket)}
                         title={pocket.id.startsWith('virtual-') ? "Kategori ini tidak di-budget" : "Klik untuk edit"}
                       >
-                        {/* === [TOMBOL 'X' BARU DITAMBAHKAN] === */}
-                        {/* Tampilkan tombol HANYA jika pocket ini ada di database (bukan virtual) */}
                         {!pocket.id.startsWith('virtual-') && (
                           <button 
                             className="pocket-delete-btn"
@@ -214,7 +215,6 @@ const Dashboard = () => {
                             ✕
                           </button>
                         )}
-                        {/* === [AKHIR TOMBOL 'X'] === */}
 
                         <div className="pocket-header">
                           <span className="pocket-title">{pocket.category_name}</span>
@@ -252,8 +252,10 @@ const Dashboard = () => {
                 />
               </section>
 
-              <section className="card card-list">
-                <h3>Transaksi {formatMonthYear(selectedDate)}</h3>
+              {/* === [KARTU TRANSAKSI DIMODIFIKASI] === */}
+              {/* Kita buat kartu ini jadi lebih tinggi dan bisa di-scroll */}
+              <section className="card card-list full-height-card">
+                <h3>Transaksi Bulan Ini</h3>
                 <ul>
                   {transactions.length > 0 ? (
                     transactions.map((t) => (
@@ -273,6 +275,26 @@ const Dashboard = () => {
                   )}
                 </ul>
               </section>
+              {/* === [AKHIR MODIFIKASI] === */}
+
+              {/* ... Kartu Pengeluaran per Kategori tidak berubah ... */}
+              {analytics && (
+                <section className="card card-list">
+                  <h3>Pengeluaran per Kategori</h3>
+                  <ul>
+                    {Object.keys(analytics.expenses_by_category).length > 0 ? (
+                      Object.entries(analytics.expenses_by_category).map(([category, amount]) => (
+                        <li key={category} className="list-item">
+                          <span>{category}</span>
+                          <span className="expense">-{formatCurrency(amount)}</span>
+                        </li>
+                      ))
+                    ) : (
+                      <p>Belum ada pengeluaran.</p>
+                    )}
+                  </ul>
+                </section>
+              )}
 
             </div>
           )}
