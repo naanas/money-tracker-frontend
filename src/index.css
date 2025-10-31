@@ -1075,3 +1075,19 @@ button:disabled {
     height: calc(100vh - 80px); /* Penuhi sisa layar (dikurangi header mobile) */
   }
 }
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary);
+}
+
+/* === [KODE BARU DITAMBAHKAN] === */
+/* Style untuk teks error validasi di bawah input */
+.form-group .error-text {
+  color: var(--color-accent-error);
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin-top: 0.25rem;
+  display: block;
+}
