@@ -28,6 +28,9 @@ const Dashboard = () => {
   const [budgetToEdit, setBudgetToEdit] = useState(null);
   const isInitialMount = useRef(true); 
 
+  // Kategori yang harus dikecualikan dari Budget/Analisis Pengeluaran
+  const EXCLUDED_CATEGORY = 'Tabungan';
+
   // FUNGSI UNTUK MENGAMBIL KATEGORI SECARA TERPISAH
   const fetchCategories = useCallback(async () => {
     try {
@@ -114,7 +117,6 @@ const Dashboard = () => {
 
   // FUNGSI UPDATE (SETELAH SUBMIT FORM)
   const handleDataUpdate = async () => {
-    // Jalankan refresh data tanpa menampilkan loading overlay
     await fetchDataForMonth(); 
     await fetchCategories();
     
@@ -137,44 +139,14 @@ const Dashboard = () => {
       const targetMonthStart = new Date(targetDate.getFullYear(), targetDate.getMonth(), 1);
 
       // HIDE jika bulan yang dipilih sudah melewati bulan target.
-      // Misal: Target Nov 2025 (1 Nov 2025). Jika selectedDate = Dec 2025 (1 Dec 2025). 1 Dec > 1 Nov -> HIDE.
       if (selectedMonthStart > targetMonthStart) {
         return false;
       }
       
-      // HIDE jika bulan yang dipilih JAUH SEBELUM bulan target.
-      // Jika bulan yang dipilih < bulan target, goal belum "aktif" di dashboard.
-      // Misal: Target Nov 2025. Jika selectedDate = Jan 2025. 1 Jan < 1 Nov -> HIDE.
-      // [PERBAIKAN LOGIKA] Filter ini harusnya kebalikannya dari permintaan sebelumnya. 
-      // Tapi untuk kasus di screenshot (Oktober 2025, Target 30 Nov 2025), Oct HARUS menampilkan Nov.
-      // Jika Anda ingin Oct TIDAK menampilkan Nov, maka gunakan logika di bawah ini (yang membatasi tampilan ke bulan target atau sesudahnya):
-      
-      // if (selectedMonthStart < targetMonthStart) {
-      //    // Ini akan menyembunyikan Nov di bulan Oct. Tapi ini melanggar permintaan Anda di prompt sebelumnya.
-      //    // Mari kita asumsikan yang Anda maksud adalah tidak menampilkan di bulan-bulan yang sangat jauh sebelum target.
-      // }
-      
-      // Berdasarkan screenshot, masalahnya adalah di bulan OKTOBER (sebelum target NOV), data terlihat *minus*.
-      // Untuk tampilan, mari kita batasi goals hanya ditampilkan di bulan target atau bulan sebelumnya.
-      
-      // Ambil tanggal awal bulan sebelumnya dari bulan target
-      const targetPrevMonthStart = new Date(targetDate.getFullYear(), targetDate.getMonth() - 1, 1);
-
-      // Tampilkan goal jika:
-      // a) Bulan yang dipilih SAMA dengan bulan target, ATAU
-      // b) Bulan yang dipilih SAMA dengan bulan sebelum bulan target (misal: Oct untuk Nov)
-      // JIKA SELECTED DATE ADALAH SEPTEMBER (2 bulan sebelum NOV) -> HIDE
-      // Ini terlalu rumit dan harusnya cukup yang pertama. Karena Anda melihat di Oktober (sebelum target Nov), dan data muncul.
-      
-      // MAKA, kita asumsikan rulesnya: TAMPILKAN hanya jika bulan yang dipilih TIDAK melebihi bulan target, 
-      // dan tidak lebih dari 1-2 bulan sebelumnya (untuk menghindari tampilan di tahun lalu).
-      
-      // Karena kasus Anda adalah Oktober (muncul) -> November (target), dan Anda ingin Oktober tidak muncul.
-      // Rules baru: Goal hanya tampil jika bulan yang dipilih SAMA dengan bulan target atau sesudahnya (sampai terlewat).
+      // HIDE jika bulan yang dipilih SEBELUM bulan target (Kasus Oct (selected) vs Nov (target) -> Hide)
       if (selectedMonthStart < targetMonthStart) {
-        return false; // HIDE jika bulan yang dipilih SEBELUM bulan target
+        return false; 
       }
-
 
       return true; 
     });
@@ -239,10 +211,23 @@ const Dashboard = () => {
     }
   };
   
+  // [LOGIKA BUDGET POCKETS DIMODIFIKASI UNTUK MENGECUALIKAN KATEGORI TABUNGAN]
   const budgetPockets = useMemo(() => {
     if (!analytics) return [];
-    const budgetDetails = analytics.budget?.details || [];
-    const expenses = analytics.expenses_by_category || {};
+    
+    // Filter Budget Details: Kecualikan kategori Tabungan
+    const budgetDetails = (analytics.budget?.details || []).filter(
+        b => b.category_name !== EXCLUDED_CATEGORY
+    );
+    
+    // Filter Expenses: Kecualikan pengeluaran Tabungan
+    const rawExpenses = analytics.expenses_by_category || {};
+    const expenses = Object.keys(rawExpenses).reduce((acc, key) => {
+        if (key !== EXCLUDED_CATEGORY) {
+            acc[key] = rawExpenses[key];
+        }
+        return acc;
+    }, {});
     
     // 1. Ambil budget yang sudah di-set
     const pockets = budgetDetails.map(budget => {
@@ -274,10 +259,28 @@ const Dashboard = () => {
     return pockets;
   }, [analytics]);
 
-  const totalBudget = analytics?.budget?.total_amount || 0;
-  const totalSpent = analytics?.summary?.total_expenses || 0;
+  // [LOGIKA RINGKASAN DIMODIFIKASI UNTUK MENGECUALIKAN KATEGORI TABUNGAN]
+  const totalExpensesFiltered = useMemo(() => {
+    if (!analytics) return 0;
+    const expenses = analytics.expenses_by_category || {};
+    
+    // Jumlahkan semua pengeluaran KECUALI 'Tabungan'
+    return Object.keys(expenses).reduce((sum, key) => {
+        if (key !== EXCLUDED_CATEGORY) {
+            return sum + parseFloat(expenses[key]);
+        }
+        return sum;
+    }, 0);
+  }, [analytics]);
+  
+  const totalIncome = analytics?.summary?.total_income || 0;
+  const totalBudget = analytics?.budget?.total_amount || 0; // Total budget masih sama
+  const totalSpent = totalExpensesFiltered; // Gunakan total yang sudah difilter
   const totalRemaining = totalBudget - totalSpent; 
   const totalProgress = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
+  
+  // Saldo total juga harus menggunakan totalExpensesFiltered
+  const currentBalance = totalIncome - totalSpent;
 
 
   return (
@@ -327,16 +330,14 @@ const Dashboard = () => {
           
           {error && <p className="error" style={{textAlign: 'center', padding: '1rem', backgroundColor: 'var(--color-bg-medium)', borderRadius: '12px'}}>{error}</p>}
 
-          {/* [MODIFIKASI] Hapus tampilan spinner/teks saat initial load */}
+          {/* HILANGKAN SPINNER DAN TEKS LOADING PADA INITIAL LOAD */}
           {isLoading ? (
-            // Tampilkan div kosong/minimal saat loading awal
             <div className="loading-content">
-               {/* Kosong */}
+               {/* Halaman kosong saat loading awal, menghilangkan spinner */}
             </div>
           ) : (
             analytics ? (
               // Konten ditampilkan meskipun isRefetching (silent update)
-              // Menggunakan style inline untuk menghilangkan loading visual yang mengganggu.
               <div className="dashboard-grid" style={{ opacity: isRefetching ? 0.8 : 1, transition: 'opacity 0.3s' }}>
                 
                 <> 
@@ -344,11 +345,12 @@ const Dashboard = () => {
                     <h3>Ringkasan {formatMonthYear(selectedDate)}</h3>
                     <div className="summary-item">
                       <span>Total Pemasukan</span>
-                      <span className="income">{formatCurrency(analytics.summary.total_income)}</span>
+                      <span className="income">{formatCurrency(totalIncome)}</span>
                     </div>
                     <div className="summary-item">
+                      {/* [MODIFIKASI] Gunakan totalSpent yang sudah difilter */}
                       <span>Total Pengeluaran</span>
-                      <span className="expense">{formatCurrency(analytics.summary.total_expenses)}</span>
+                      <span className="expense">{formatCurrency(totalSpent)}</span>
                     </div>
                     
                     <div className="summary-item total-savings">
@@ -358,8 +360,9 @@ const Dashboard = () => {
                     
                     <hr />
                     <div className="summary-item total">
+                      {/* [MODIFIKASI] Gunakan currentBalance yang sudah difilter */}
                       <span>Saldo</span>
-                      <span>{formatCurrency(analytics.summary.balance)}</span>
+                      <span>{formatCurrency(currentBalance)}</span>
                     </div>
                   </section>
 
@@ -457,7 +460,10 @@ const Dashboard = () => {
                     <h3>Transaksi {formatMonthYear(selectedDate)}</h3>
                     <ul>
                       {transactions.length > 0 ? (
-                        transactions.map((t) => (
+                        transactions
+                            // [MODIFIKASI] Filter transaksi untuk tidak menampilkan 'Transfer ke tabungan'
+                            .filter(t => t.category !== EXCLUDED_CATEGORY)
+                            .map((t) => (
                           <li key={t.id} className="list-item">
                             <button 
                               className="btn-delete-item"
@@ -486,16 +492,21 @@ const Dashboard = () => {
                     <section className="card card-list">
                       <h3>Pengeluaran per Kategori</h3>
                       <ul>
-                        {Object.keys(analytics.expenses_by_category).length > 0 ? (
-                          Object.entries(analytics.expenses_by_category).map(([category, amount]) => (
-                            <li key={category} className="list-item">
-                              <span>{category}</span>
-                              <span className="expense">-{formatCurrency(amount)}</span>
-                            </li>
-                          ))
-                        ) : (
-                          <p>Belum ada pengeluaran.</p>
-                        )}
+                        {/* [MODIFIKASI] Filter expenses_by_category untuk tidak menampilkan 'Tabungan' */}
+                        {Object.keys(analytics.expenses_by_category)
+                            .filter(category => category !== EXCLUDED_CATEGORY)
+                            .length > 0 ? (
+                            Object.entries(analytics.expenses_by_category)
+                                .filter(([category]) => category !== EXCLUDED_CATEGORY)
+                                .map(([category, amount]) => (
+                                    <li key={category} className="list-item">
+                                        <span>{category}</span>
+                                        <span className="expense">-{formatCurrency(amount)}</span>
+                                    </li>
+                                ))
+                          ) : (
+                            <p>Belum ada pengeluaran.</p>
+                          )}
                       </ul>
                     </section>
                   )}
