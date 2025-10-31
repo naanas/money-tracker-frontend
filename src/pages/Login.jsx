@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false); // [BARU] State untuk toggle
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
@@ -24,7 +25,6 @@ const Login = () => {
   };
 
   return (
-    // Hapus <div className="auth-form"> dari sini
     <form onSubmit={handleSubmit}>
       <h2>Login</h2>
       {error && <p className="error">{error}</p>}
@@ -37,15 +37,29 @@ const Login = () => {
           required
         />
       </div>
+      
+      {/* === [INPUT PASSWORD DIMODIFIKASI] === */}
       <div className="form-group">
         <label>Password</label>
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
+        <div className="password-wrapper">
+          <input
+            type={showPassword ? 'text' : 'password'} // [BARU] Jenis input dinamis
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+          {/* [BARU] Tombol untuk toggle password */}
+          <button 
+            type="button" 
+            className="password-toggle-btn" 
+            onClick={() => setShowPassword(!showPassword)}
+          >
+            {showPassword ? 'Hide' : 'Show'}
+          </button>
+        </div>
       </div>
+      {/* === [AKHIR MODIFIKASI] === */}
+      
       <button type="submit" disabled={loading}>
         {loading ? 'Logging in...' : 'Login'}
       </button>

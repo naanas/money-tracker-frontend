@@ -480,3 +480,39 @@ button:disabled {
 @keyframes fill {
   100% { box-shadow: inset 0px 0px 0px 40px var(--color-accent-success); }
 }
+
+/* Wrapper untuk input dan tombol */
+.password-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* Pastikan input di dalam wrapper tetap 100% */
+.password-wrapper input {
+  width: 100%;
+  padding-right: 60px; /* Beri ruang untuk tombol */
+}
+
+/* Tombol toggle */
+.password-toggle-btn {
+  position: absolute;
+  right: 5px; /* Posisi di dalam input */
+  top: 50%;
+  transform: translateY(-50%);
+  
+  /* Styling tombol */
+  width: auto; /* Jangan 100% */
+  padding: 0.25rem 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  background-color: var(--color-border);
+  color: var(--color-text);
+  border: none;
+  cursor: pointer;
+  height: 30px;
+}
+
+.password-toggle-btn:hover {
+  background-color: var(--color-bg-light);
+}
