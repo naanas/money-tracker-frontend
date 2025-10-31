@@ -35,10 +35,9 @@ const Dashboard = () => {
       setCategories(categoriesRes.data.data);
     } catch (err) {
       console.error("Failed to re-fetch categories:", err);
-      // Biarkan error di-handle oleh fungsi utama jika ini adalah bagian dari load awal
     }
   }, []);
-  
+
   // Fungsi untuk mengambil data bulanan + data tabungan
   const fetchDataForMonth = useCallback(async () => {
     setIsRefetching(true); 
@@ -52,7 +51,7 @@ const Dashboard = () => {
       const [analyticsRes, transactionsRes, savingsRes] = await Promise.all([
         axiosClient.get('/api/analytics/summary', { params }),
         axiosClient.get('/api/transactions', { params }), 
-        axiosClient.get('/api/savings'), // Tidak mengirim params agar semua goal ditampilkan
+        axiosClient.get('/api/savings'), // Tidak mengirim params
       ]);
 
       setAnalytics(analyticsRes.data.data);
@@ -112,9 +111,7 @@ const Dashboard = () => {
 
   // FUNGSI UPDATE (SETELAH SUBMIT FORM)
   const handleDataUpdate = async () => {
-    // Refresh data bulanan dan tabungan
     await fetchDataForMonth(); 
-    // Refresh daftar kategori
     await fetchCategories();
     
     triggerSuccessAnimation(); 
@@ -178,6 +175,45 @@ const Dashboard = () => {
       setIsRefetching(false); 
     }
   };
+  
+  // [BARU] Filter Savings Goals berdasarkan bulan yang dipilih
+  const filteredSavingsGoals = useMemo(() => {
+    const goals = savingsGoals;
+
+    const selectedYear = selectedDate.getFullYear();
+    const selectedMonth = selectedDate.getMonth(); // 0-indexed
+    
+    // Fungsi untuk mengecek apakah bulan yang dipilih SUDAH MELEWATI bulan target
+    const isAfterTargetMonth = (targetDateString) => {
+        if (!targetDateString) return false;
+        
+        const targetDate = new Date(targetDateString);
+        const targetYear = targetDate.getFullYear();
+        const targetMonth = targetDate.getMonth();
+        
+        // Cek jika bulan yang dipilih (selectedDate) berada setelah bulan target
+        if (selectedYear > targetYear) return true;
+        if (selectedYear === targetYear && selectedMonth > targetMonth) return true;
+        
+        return false;
+    }
+
+    // Filter goals: Hanya tampilkan goal yang bulan yang dipilih BELUM melewati bulan target
+    // Goal tanpa target_date akan selalu ditampilkan
+    return goals.filter(goal => {
+      // Jika tidak ada target_date, selalu tampilkan (ongoing)
+      if (!goal.target_date) return true;
+      
+      // Hilangkan goal jika bulan yang dipilih SUDAH MELEWATI bulan target.
+      if (isAfterTargetMonth(goal.target_date)) {
+        return false;
+      }
+      return true;
+    });
+
+  }, [savingsGoals, selectedDate]);
+  
+  // ... (budgetPockets calculation remains unchanged)
 
   const budgetPockets = useMemo(() => {
     if (!analytics) return [];
@@ -213,10 +249,9 @@ const Dashboard = () => {
 
     return pockets;
   }, [analytics]);
-  
+
   const totalBudget = analytics?.budget?.total_amount || 0;
   const totalSpent = analytics?.summary?.total_expenses || 0;
-  // Perbaikan: Total remaining harus dihitung ulang di frontend
   const totalRemaining = totalBudget - totalSpent; 
   const totalProgress = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
 
@@ -268,174 +303,180 @@ const Dashboard = () => {
           
           {error && <p className="error" style={{textAlign: 'center', padding: '1rem', backgroundColor: 'var(--color-bg-medium)', borderRadius: '12px'}}>{error}</p>}
 
-          {isLoading || isRefetching ? (
+          {/* [MODIFIKASI] Hanya tampilkan spinner untuk initial load */}
+          {isLoading ? (
             <div className="loading-content">
                <div className="spinner"></div>
-               <h2>{isLoading ? 'Memuat data...' : 'Memperbarui data...'}</h2>
+               <h2>Memuat data awal...</h2>
             </div>
           ) : (
             analytics ? (
+              // Konten ditampilkan meskipun isRefetching (silent update)
               <div className="dashboard-grid">
                 
-                <section className="card card-summary">
-                  <h3>Ringkasan {formatMonthYear(selectedDate)}</h3>
-                  <div className="summary-item">
-                    <span>Total Pemasukan</span>
-                    <span className="income">{formatCurrency(analytics.summary.total_income)}</span>
-                  </div>
-                  <div className="summary-item">
-                    <span>Total Pengeluaran</span>
-                    <span className="expense">{formatCurrency(analytics.summary.total_expenses)}</span>
-                  </div>
+                {/* [MODIFIKASI] Atur opacity saat fetching untuk indikasi silent loading */}
+                <div style={{ opacity: isRefetching ? 0.6 : 1, transition: 'opacity 0.3s' }}>
                   
-                  <div className="summary-item total-savings">
-                    <span>Total Dana Tabungan</span>
-                    <span className="income">{formatCurrency(totalSavingsCurrent)}</span>
-                  </div>
-                  
-                  <hr />
-                  <div className="summary-item total">
-                    <span>Saldo</span>
-                    <span>{formatCurrency(analytics.summary.balance)}</span>
-                  </div>
-                </section>
+                  <section className="card card-summary">
+                    <h3>Ringkasan {formatMonthYear(selectedDate)}</h3>
+                    <div className="summary-item">
+                      <span>Total Pemasukan</span>
+                      <span className="income">{formatCurrency(analytics.summary.total_income)}</span>
+                    </div>
+                    <div className="summary-item">
+                      <span>Total Pengeluaran</span>
+                      <span className="expense">{formatCurrency(analytics.summary.total_expenses)}</span>
+                    </div>
+                    
+                    <div className="summary-item total-savings">
+                      <span>Total Dana Tabungan</span>
+                      <span className="income">{formatCurrency(totalSavingsCurrent)}</span>
+                    </div>
+                    
+                    <hr />
+                    <div className="summary-item total">
+                      <span>Saldo</span>
+                      <span>{formatCurrency(analytics.summary.balance)}</span>
+                    </div>
+                  </section>
 
-                <section className="card card-budget-pocket">
-                  <h3>Budget Pockets</h3>
-                  <div className="budget-info total">
-                    <span>Total Budget: {formatCurrency(totalBudget)}</span>
-                    <span>{totalProgress.toFixed(0)}%</span>
-                  </div>
-                  <div className="progress-bar-container">
-                    <div 
-                      className="progress-bar-fill" 
-                      style={{ 
-                        width: `${Math.min(totalProgress, 100)}%`,
-                        backgroundColor: totalRemaining < 0 ? 'var(--color-accent-expense)' : 'var(--color-primary)'
-                      }} 
-                    ></div>
-                  </div>
-                  <div className="pocket-footer" style={{marginTop: '0.25rem'}}>
-                      <span className="expense">{formatCurrency(totalSpent)}</span>
-                      <span className="total"> / {formatCurrency(totalBudget)}</span>
-                  </div>
+                  <section className="card card-budget-pocket">
+                    <h3>Budget Pockets</h3>
+                    <div className="budget-info total">
+                      <span>Total Budget: {formatCurrency(totalBudget)}</span>
+                      <span>{totalProgress.toFixed(0)}%</span>
+                    </div>
+                    <div className="progress-bar-container">
+                      <div 
+                        className="progress-bar-fill" 
+                        style={{ 
+                          width: `${Math.min(totalProgress, 100)}%`,
+                          backgroundColor: totalRemaining < 0 ? 'var(--color-accent-expense)' : 'var(--color-primary)'
+                        }} 
+                      ></div>
+                    </div>
+                    <div className="pocket-footer" style={{marginTop: '0.25rem'}}>
+                        <span className="expense">{formatCurrency(totalSpent)}</span>
+                        <span className="total"> / {formatCurrency(totalBudget)}</span>
+                    </div>
+                    
+                    <BudgetForm 
+                      categories={categories} 
+                      onBudgetSet={handleDataUpdate}
+                      budgetToEdit={budgetToEdit}
+                      onClearEdit={() => setBudgetToEdit(null)}
+                      selectedDate={selectedDate} 
+                      isRefetching={isRefetching} 
+                    />
+
+                    <div className="pocket-grid">
+                      {budgetPockets.length > 0 ? (
+                        budgetPockets.map(pocket => (
+                          <div 
+                            className="pocket-item" 
+                            key={pocket.id || pocket.category_name} 
+                            onClick={() => pocket.id.startsWith('virtual-') ? null : setBudgetToEdit(pocket)}
+                            title={pocket.id.startsWith('virtual-') ? "Kategori ini tidak di-budget" : "Klik untuk edit"}
+                          >
+                            {!pocket.id.startsWith('virtual-') && (
+                              <button 
+                                className="pocket-delete-btn"
+                                onClick={(e) => handleDeleteBudget(e, pocket.id)}
+                                title="Hapus Budget Ini"
+                              >
+                                ✕
+                              </button>
+                            )}
+                            <div className="pocket-header">
+                              <span className="pocket-title">{pocket.category_name}</span>
+                              <span className={`pocket-remaining ${pocket.remaining < 0 ? 'expense' : ''}`}>
+                                {pocket.remaining < 0 ? 'Over!' : `${formatCurrency(pocket.remaining)} sisa`}
+                              </span>
+                            </div>
+                            <div className="progress-bar-container small">
+                              <div 
+                                className={`progress-bar-fill ${pocket.progress > 100 ? 'expense' : ''}`}
+                                style={{ width: `${Math.min(pocket.progress, 100)}%` }}
+                              ></div>
+                            </div>
+                            <div className="pocket-footer">
+                              <span className="expense">{formatCurrency(pocket.spent)}</span>
+                              <span className="total"> / {formatCurrency(pocket.amount)}</span>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <p style={{textAlign: 'center', fontSize: '0.9em', color: 'var(--color-text-muted)', gridColumn: '1 / -1'}}>
+                          Belum ada budget per kategori.
+                        </p>
+                      )}
+                    </div>
+                  </section>
+
+                  <section className="card card-form">
+                    <h3>Tambah Transaksi Baru</h3>
+                    <TransactionForm 
+                      categories={categories} 
+                      onTransactionAdded={handleDataUpdate} 
+                      onOpenCategoryModal={() => setIsCategoryModalOpen(true)}
+                      selectedDate={selectedDate}
+                      isRefetching={isRefetching} 
+                    />
+                  </section>
                   
-                  <BudgetForm 
-                    categories={categories} 
-                    onBudgetSet={handleDataUpdate}
-                    budgetToEdit={budgetToEdit}
-                    onClearEdit={() => setBudgetToEdit(null)}
-                    selectedDate={selectedDate} 
-                    isRefetching={isRefetching} 
+                  <SavingsGoals 
+                    savingsGoals={filteredSavingsGoals} // Menggunakan filtered goals
+                    onDataUpdate={handleDataUpdate}
+                    isRefetching={isRefetching}
                   />
 
-                  <div className="pocket-grid">
-                    {budgetPockets.length > 0 ? (
-                      budgetPockets.map(pocket => (
-                        <div 
-                          className="pocket-item" 
-                          key={pocket.id || pocket.category_name} 
-                          onClick={() => pocket.id.startsWith('virtual-') ? null : setBudgetToEdit(pocket)}
-                          title={pocket.id.startsWith('virtual-') ? "Kategori ini tidak di-budget" : "Klik untuk edit"}
-                        >
-                          {!pocket.id.startsWith('virtual-') && (
+                  <section className="card card-list full-height-card">
+                    <h3>Transaksi {formatMonthYear(selectedDate)}</h3>
+                    <ul>
+                      {transactions.length > 0 ? (
+                        transactions.map((t) => (
+                          <li key={t.id} className="list-item">
                             <button 
-                              className="pocket-delete-btn"
-                              onClick={(e) => handleDeleteBudget(e, pocket.id)}
-                              title="Hapus Budget Ini"
+                              className="btn-delete-item"
+                              title="Hapus transaksi ini"
+                              onClick={() => handleDeleteTransaction(t.id)}
                             >
                               ✕
                             </button>
-                          )}
-                          <div className="pocket-header">
-                            <span className="pocket-title">{pocket.category_name}</span>
-                            <span className={`pocket-remaining ${pocket.remaining < 0 ? 'expense' : ''}`}>
-                              {pocket.remaining < 0 ? 'Over!' : `${formatCurrency(pocket.remaining)} sisa`}
+                            <div className="list-item-details">
+                              <strong>{t.description || t.category}</strong>
+                              <span>{new Date(t.date).toLocaleDateString('id-ID', {day: '2-digit', month: 'short', year: 'numeric'})}</span>
+                            </div>
+                            <span className={t.type}>
+                              {t.type === 'expense' ? '-' : '+'}
+                              {formatCurrency(t.amount)}
                             </span>
-                          </div>
-                          <div className="progress-bar-container small">
-                            <div 
-                              className={`progress-bar-fill ${pocket.progress > 100 ? 'expense' : ''}`}
-                              style={{ width: `${Math.min(pocket.progress, 100)}%` }}
-                            ></div>
-                          </div>
-                          <div className="pocket-footer">
-                            <span className="expense">{formatCurrency(pocket.spent)}</span>
-                            <span className="total"> / {formatCurrency(pocket.amount)}</span>
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <p style={{textAlign: 'center', fontSize: '0.9em', color: 'var(--color-text-muted)', gridColumn: '1 / -1'}}>
-                        Belum ada budget per kategori.
-                      </p>
-                    )}
-                  </div>
-                </section>
-
-                <section className="card card-form">
-                  <h3>Tambah Transaksi Baru</h3>
-                  <TransactionForm 
-                    categories={categories} 
-                    onTransactionAdded={handleDataUpdate} 
-                    onOpenCategoryModal={() => setIsCategoryModalOpen(true)}
-                    selectedDate={selectedDate}
-                    isRefetching={isRefetching} 
-                  />
-                </section>
-                
-                <SavingsGoals 
-                  savingsGoals={savingsGoals}
-                  onDataUpdate={handleDataUpdate}
-                  isRefetching={isRefetching}
-                />
-
-                <section className="card card-list full-height-card">
-                  <h3>Transaksi {formatMonthYear(selectedDate)}</h3>
-                  <ul>
-                    {transactions.length > 0 ? (
-                      transactions.map((t) => (
-                        <li key={t.id} className="list-item">
-                          <button 
-                            className="btn-delete-item"
-                            title="Hapus transaksi ini"
-                            onClick={() => handleDeleteTransaction(t.id)}
-                          >
-                            ✕
-                          </button>
-                          <div className="list-item-details">
-                            <strong>{t.description || t.category}</strong>
-                            <span>{new Date(t.date).toLocaleDateString('id-ID', {day: '2-digit', month: 'short', year: 'numeric'})}</span>
-                          </div>
-                          <span className={t.type}>
-                            {t.type === 'expense' ? '-' : '+'}
-                            {formatCurrency(t.amount)}
-                          </span>
-                        </li>
-                      ))
-                    ) : (
-                      <p>Belum ada transaksi di bulan ini.</p>
-                    )}
-                  </ul>
-                </section>
-
-                {analytics && (
-                  <section className="card card-list">
-                    <h3>Pengeluaran per Kategori</h3>
-                    <ul>
-                      {Object.keys(analytics.expenses_by_category).length > 0 ? (
-                        Object.entries(analytics.expenses_by_category).map(([category, amount]) => (
-                          <li key={category} className="list-item">
-                            <span>{category}</span>
-                            <span className="expense">-{formatCurrency(amount)}</span>
                           </li>
                         ))
                       ) : (
-                        <p>Belum ada pengeluaran.</p>
+                        <p>Belum ada transaksi di bulan ini.</p>
                       )}
                     </ul>
                   </section>
-                )}
+
+                  {analytics && (
+                    <section className="card card-list">
+                      <h3>Pengeluaran per Kategori</h3>
+                      <ul>
+                        {Object.keys(analytics.expenses_by_category).length > 0 ? (
+                          Object.entries(analytics.expenses_by_category).map(([category, amount]) => (
+                            <li key={category} className="list-item">
+                              <span>{category}</span>
+                              <span className="expense">-{formatCurrency(amount)}</span>
+                            </li>
+                          ))
+                        ) : (
+                          <p>Belum ada pengeluaran.</p>
+                        )}
+                      </ul>
+                    </section>
+                  )}
+                </div>
 
               </div>
             ) : (

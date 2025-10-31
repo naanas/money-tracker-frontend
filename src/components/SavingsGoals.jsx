@@ -23,7 +23,7 @@ const SavingsGoals = ({ savingsGoals, onDataUpdate, isRefetching }) => {
     setFormLoading(true);
     setFormError('');
 
-    const finalTargetAmount = parseNumberInput(targetAmount); // <-- Perbaikan: Ambil angka mentah dari input
+    const finalTargetAmount = parseNumberInput(targetAmount);
 
     // Validasi target amount
     if (isNaN(parseFloat(finalTargetAmount)) || parseFloat(finalTargetAmount) <= 0) {
@@ -31,19 +31,24 @@ const SavingsGoals = ({ savingsGoals, onDataUpdate, isRefetching }) => {
         setFormLoading(false);
         return;
     }
-
+    
     // [BARU] Validasi sederhana di client-side untuk target date
-    if (targetDate && new Date(targetDate) < new Date(new Date().setHours(0,0,0,0))) {
-      setFormError('Tanggal target tidak boleh di masa lalu.');
-      setFormLoading(false);
-      return;
+    if (targetDate) {
+        const dateOnly = new Date(targetDate).toISOString().split('T')[0];
+        const todayOnly = new Date().toISOString().split('T')[0];
+        
+        if (new Date(dateOnly) < new Date(todayOnly)) {
+          setFormError('Tanggal target tidak boleh di masa lalu.');
+          setFormLoading(false);
+          return;
+        }
     }
 
     try {
       await axiosClient.post('/api/savings', {
         name: name,
-        target_amount: finalTargetAmount, // <-- Kirim angka mentah
-        target_date: targetDate || null // <-- Kirim targetDate
+        target_amount: finalTargetAmount,
+        target_date: targetDate || null
       });
       setName('');
       setTargetAmount('');
@@ -161,7 +166,20 @@ const SavingsGoals = ({ savingsGoals, onDataUpdate, isRefetching }) => {
             const target = goal.target_date ? new Date(goal.target_date) : null;
             const today = new Date();
             // setHours(0) agar perhitungannya hanya berdasarkan tanggal, bukan jam
-            const daysRemaining = target ? Math.ceil((target - today.setHours(0,0,0,0)) / (1000 * 60 * 60 * 24)) : null;
+            const diffInDays = target ? Math.ceil((target - today.setHours(0,0,0,0)) / (1000 * 60 * 60 * 24)) : null;
+
+            let daysRemainingText = '';
+            if (target) {
+                if (remaining <= 0) {
+                    daysRemainingText = 'Tercapai!'; // Abaikan hari jika sudah tercapai
+                } else if (diffInDays > 0) {
+                    daysRemainingText = `${diffInDays} hari lagi`;
+                } else if (diffInDays === 0) {
+                    daysRemainingText = 'Hari Ini!';
+                } else {
+                    daysRemainingText = 'Terlewat';
+                }
+            }
 
             return (
               <div className="savings-item" key={goal.id}>
@@ -175,6 +193,7 @@ const SavingsGoals = ({ savingsGoals, onDataUpdate, isRefetching }) => {
                 <div className="pocket-header">
                   <span className="pocket-title">{goal.name}</span>
                   <span className={`pocket-remaining ${remaining <= 0 ? 'income' : ''}`}>
+                    {/* [Perbaikan] Memastikan tidak minus dengan menampilkan 'Tercapai!' */}
                     {remaining <= 0 ? 'Tercapai!' : `${formatCurrency(remaining)} lagi`}
                   </span>
                 </div>
@@ -182,9 +201,9 @@ const SavingsGoals = ({ savingsGoals, onDataUpdate, isRefetching }) => {
                 {/* [BARU] Tampilkan Tanggal Target */}
                 {goal.target_date && (
                     <div className="savings-date-info">
-                        <span style={{fontSize: '0.85em', color: daysRemaining <= 7 && daysRemaining > 0 ? 'var(--color-accent-expense)' : 'var(--color-text-muted)'}}>
+                        <span style={{fontSize: '0.85em', color: diffInDays <= 7 && diffInDays > 0 ? 'var(--color-accent-expense)' : 'var(--color-text-muted)'}}>
                            Target: {target.toLocaleDateString('id-ID', {day: '2-digit', month: 'short', year: 'numeric'})} 
-                           ({daysRemaining > 0 ? `${daysRemaining} hari lagi` : (daysRemaining === 0 ? 'Hari Ini!' : 'Terlewat')})
+                           ({daysRemainingText})
                         </span>
                     </div>
                 )}
