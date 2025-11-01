@@ -1365,3 +1365,36 @@ button:disabled {
     grid-template-columns: 1fr;
   }
 }
+
+/* ... (CSS Anda yang sudah ada) ... */
+
+/* === [BARU] CSS UNTUK OCR LOADING OVERLAY === */
+.ocr-loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(30, 30, 30, 0.85);
+  backdrop-filter: blur(2px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+  border-radius: 12px;
+  color: var(--color-text);
+}
+
+.ocr-loading-overlay .btn-spinner {
+  width: 30px;
+  height: 30px;
+  border-width: 4px;
+}
+
+.ocr-loading-overlay p {
+  margin-top: 1rem;
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}

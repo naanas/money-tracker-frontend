@@ -1,14 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import axiosClient from '../api/axiosClient';
-import { formatNumberInput, parseNumberInput } from '../utils/format';
+// naanas/money-tracker-frontend/src/components/TransactionForm.jsx
 
-// [MODIFIKASI] Ambil 'accounts'
+import React, { useState, useEffect, useRef } from 'react';
+import axiosClient from '../api/axiosClient';
+// [MODIFIKASI] Impor Tesseract dan parser
+import { createWorker } from 'tesseract.js';
+import { formatNumberInput, parseNumberInput, parseReceiptText } from '../utils/format';
+
 const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCategoryModal, selectedDate, isRefetching }) => {
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState('');
   const [type, setType] = useState('expense');
   const [description, setDescription] = useState('');
-  const [accountId, setAccountId] = useState(''); // [BARU]
+  const [accountId, setAccountId] = useState(''); 
   
   const getInitialDate = () => {
     const today = new Date();
@@ -19,11 +22,15 @@ const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCateg
 
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  
+  // === [KODE BARU UNTUK OCR] ===
+  const [isOcrLoading, setIsOcrLoading] = useState(false);
+  const [ocrStatus, setOcrStatus] = useState(''); // Untuk menampilkan progres
+  const fileInputRef = useRef(null);
+  // === [AKHIR KODE BARU] ===
 
-  // [MODIFIKASI] Filter kategori, kecualikan 'Transfer'
   const currentCategories = categories.filter(c => c.type === type && c.name !== 'Transfer');
 
-  // Set akun default
   useEffect(() => {
     if (!accountId && accounts.length > 0) {
       setAccountId(accounts[0].id);
@@ -38,13 +45,67 @@ const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCateg
     setCategory('');
   }, [type]);
 
+  // === [FUNGSI BARU UNTUK OCR] ===
+  const handleScanClick = () => {
+    fileInputRef.current.click();
+  };
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setIsOcrLoading(true);
+    setError('');
+
+    try {
+      setOcrStatus('Memuat mesin OCR...');
+      const worker = await createWorker({
+        logger: m => {
+          if (m.status === 'recognizing text') {
+            setOcrStatus(`Membaca gambar... (${Math.round(m.progress * 100)}%)`);
+          }
+        },
+      });
+
+      setOcrStatus('Memuat bahasa (INA)...');
+      await worker.loadLanguage('ind'); // Bahasa Indonesia
+      await worker.initialize('ind');
+
+      setOcrStatus('Mengenali teks...');
+      const { data: { text } } = await worker.recognize(file);
+      
+      setOcrStatus('Memproses hasil...');
+      // Panggil parser kita
+      const parsedData = parseReceiptText(text);
+
+      // Isi form
+      setAmount(parsedData.amount.toString());
+      setDescription(parsedData.description);
+      setType('expense'); // Nota biasanya pengeluaran
+
+      await worker.terminate();
+      setOcrStatus('');
+
+    } catch (err) {
+      console.error(err);
+      setError('Gagal memindai nota. Coba lagi.');
+      setOcrStatus('');
+    }
+    
+    setIsOcrLoading(false);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+  // === [AKHIR FUNGSI BARU] ===
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!category && currentCategories.length > 0) {
       setError('Pilih kategori');
       return;
     }
-    if (!accountId) { // [BARU] Validasi akun
+    if (!accountId) { 
       setError('Pilih akun');
       return;
     }
@@ -59,7 +120,7 @@ const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCateg
         type,
         description,
         date,
-        account_id: accountId, // [BARU] Kirim account_id
+        account_id: accountId, 
       });
       
       setAmount('');
@@ -73,13 +134,39 @@ const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCateg
     setLoading(false);
   };
   
-  const isLoading = loading || isRefetching;
+  const isLoading = loading || isRefetching || isOcrLoading;
 
   return (
-    <form onSubmit={handleSubmit} className="transaction-form">
+    <form onSubmit={handleSubmit} className="transaction-form" style={{ position: 'relative' }}>
+      {/* [MODIFIKASI] Tampilkan overlay loading OCR dengan status */}
+      {isOcrLoading && (
+        <div className="ocr-loading-overlay">
+          <div className="btn-spinner"></div>
+          <p>{ocrStatus || 'Memindai Nota...'}</p>
+        </div>
+      )}
+
+      {/* === [UI BARU UNTUK OCR] === */}
+      <input
+        type="file"
+        accept="image/*"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        style={{ display: 'none' }}
+      />
+      <button 
+        type="button" 
+        className="btn-secondary" 
+        onClick={handleScanClick}
+        disabled={isLoading}
+        style={{ marginBottom: '1rem', background: 'var(--color-bg-light)' }}
+      >
+        📸 Pindai Nota (Gratis)
+      </button>
+      {/* === [AKHIR UI BARU] === */}
+
       {error && <p className="error">{error}</p>}
       <div className="form-group-radio">
-        {/* ... (Radio button tidak berubah) ... */}
          <label>
           <input 
             type="radio" 
@@ -100,7 +187,6 @@ const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCateg
         </label>
       </div>
 
-      {/* [BARU] Form Group Akun & Jumlah */}
       <div className="form-group-inline">
         <div className="form-group" style={{ flex: 2 }}>
             <label>Akun</label>
