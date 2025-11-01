@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import axiosClient from '../api/axiosClient';
+// [MODIFIKASI] Impor Tesseract dan parser
 import { createWorker } from 'tesseract.js';
 import { formatNumberInput, parseNumberInput, parseReceiptText } from '../utils/format';
 
@@ -17,7 +18,7 @@ const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCateg
     const targetDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), today.getDate());
     return targetDate.toISOString().split('T')[0];
   };
-  const [date, setDate] = useState(getInitialDate());
+  const [date, setDate] = useState(getInitialDate);
 
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -44,26 +45,27 @@ const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCateg
     setCategory('');
   }, [type]);
 
-  // === [FUNGSI DIPERBAIKI] ===
-  // Kita siapkan worker saat komponen dimuat
+  // === [FUNGSI DIPERBAIKI LAGI UNTUK V5] ===
+  // Inisialisasi worker Tesseract.js v5+
   const initializeWorker = async () => {
     try {
-      setOcrStatus('Memuat mesin OCR...');
+      setOcrStatus('Memuat mesin OCR & bahasa...');
       
-      // [PERBAIKAN DI SINI]
-      // Kita 'await createWorker()' untuk mendapatkan instance worker-nya
-      workerRef.current = await createWorker();
+      // [PERBAIKAN] Langsung buat worker dengan bahasa 'ind' (Indonesia)
+      // Ini sudah termasuk 'load' dan 'initialize'
+      workerRef.current = await createWorker('ind', 1, { // '1' adalah oem (opsional)
+        logger: m => {
+          if (m.status === 'loading language model' || m.status === 'initializing tesseract' || m.status === 'loading tesseract core') {
+            setOcrStatus(`Inisialisasi... (${Math.round(m.progress * 100)}%)`);
+          }
+        }
+      });
       
-      // Baru kita bisa panggil .load() pada instance tersebut
-      await workerRef.current.load();
-      setOcrStatus('Memuat bahasa (INA)...');
-      await workerRef.current.loadLanguage('ind');
-      await workerRef.current.initialize('ind');
       setOcrStatus(''); // Siap
     } catch (err) {
       console.error("Gagal inisialisasi worker OCR", err);
       setError("Gagal memuat fitur OCR. Coba refresh.");
-      setOcrStatus(''); // Hapus status loading jika error
+      setOcrStatus('');
     }
   };
 
@@ -73,10 +75,10 @@ const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCateg
     return () => {
       workerRef.current?.terminate();
     }
-  }, []); 
+  }, []); // <-- Array kosong, hanya jalan sekali
 
   const handleScanClick = () => {
-    if (!workerRef.current || ocrStatus.includes('Memuat')) {
+    if (!workerRef.current || ocrStatus.includes('Memuat') || ocrStatus.includes('Inisialisasi')) {
       alert("Mesin OCR sedang disiapkan... Harap tunggu sebentar.");
       return;
     }
@@ -104,8 +106,9 @@ const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCateg
       const { data: { text } } = await job;
       
       setOcrStatus('Memproses hasil...');
-      const parsedData = parseReceiptText(text);
+      const parsedData = parseReceiptText(text); // Panggil parser kita
 
+      // Isi form
       setAmount(parsedData.amount.toString());
       setDescription(parsedData.description);
       setType('expense'); 
@@ -160,11 +163,12 @@ const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCateg
     setLoading(false);
   };
   
-  const isLoading = loading || isRefetching || isOcrLoading || ocrStatus.includes('Memuat');
+  const isLoading = loading || isRefetching || isOcrLoading || ocrStatus.includes('Memuat') || ocrStatus.includes('Inisialisasi');
 
   return (
     <form onSubmit={handleSubmit} className="transaction-form" style={{ position: 'relative' }}>
-      {(isOcrLoading || ocrStatus.includes('Memuat')) && (
+      {/* Tampilkan overlay saat loading OCR ATAU inisialisasi */}
+      {(isOcrLoading || ocrStatus.includes('Memuat') || ocrStatus.includes('Inisialisasi')) && (
         <div className="ocr-loading-overlay">
           <div className="btn-spinner"></div>
           <p>{ocrStatus || 'Memindai Nota...'}</p>
