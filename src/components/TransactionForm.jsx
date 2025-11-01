@@ -45,18 +45,21 @@ const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCateg
     setCategory('');
   }, [type]);
 
-  // === [FUNGSI DIPERBAIKI LAGI UNTUK V5] ===
+  // === [FUNGSI DIPERBAIKI] ===
   // Inisialisasi worker Tesseract.js v5+
   const initializeWorker = async () => {
     try {
       setOcrStatus('Memuat mesin OCR & bahasa...');
       
-      // [PERBAIKAN] Langsung buat worker dengan bahasa 'ind' (Indonesia)
-      // Ini sudah termasuk 'load' dan 'initialize'
-      workerRef.current = await createWorker('ind', 1, { // '1' adalah oem (opsional)
+      workerRef.current = await createWorker('ind', 1, {
         logger: m => {
+          // [PERBAIKAN DI SINI]
+          // Logger ini menangani SEMUA progres
           if (m.status === 'loading language model' || m.status === 'initializing tesseract' || m.status === 'loading tesseract core') {
             setOcrStatus(`Inisialisasi... (${Math.round(m.progress * 100)}%)`);
+          } else if (m.status === 'recognizing text') {
+            // Tambahkan ini untuk progres pemindaian
+            setOcrStatus(`Membaca gambar... (${Math.round(m.progress * 100)}%)`);
           }
         }
       });
@@ -75,7 +78,7 @@ const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCateg
     return () => {
       workerRef.current?.terminate();
     }
-  }, []); // <-- Array kosong, hanya jalan sekali
+  }, []); 
 
   const handleScanClick = () => {
     if (!workerRef.current || ocrStatus.includes('Memuat') || ocrStatus.includes('Inisialisasi')) {
@@ -93,17 +96,11 @@ const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCateg
     setError('');
 
     try {
-      setOcrStatus('Mengenali teks...');
+      // Logger akan otomatis menampilkan status "Membaca gambar..."
       
-      const job = workerRef.current.recognize(file);
-
-      job.progress(m => {
-        if (m.status === 'recognizing text') {
-          setOcrStatus(`Membaca gambar... (${Math.round(m.progress * 100)}%)`);
-        }
-      });
-
-      const { data: { text } } = await job;
+      // [PERBAIKAN] Hapus baris .progress() yang error
+      // Langsung await hasilnya
+      const { data: { text } } = await workerRef.current.recognize(file);
       
       setOcrStatus('Memproses hasil...');
       const parsedData = parseReceiptText(text); // Panggil parser kita
@@ -167,7 +164,6 @@ const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCateg
 
   return (
     <form onSubmit={handleSubmit} className="transaction-form" style={{ position: 'relative' }}>
-      {/* Tampilkan overlay saat loading OCR ATAU inisialisasi */}
       {(isOcrLoading || ocrStatus.includes('Memuat') || ocrStatus.includes('Inisialisasi')) && (
         <div className="ocr-loading-overlay">
           <div className="btn-spinner"></div>
