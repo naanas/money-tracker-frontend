@@ -43,83 +43,93 @@ export const formatMonthYear = (date) => {
   });
 };
 
-// === [FUNGSI PARSER YANG DIPERBAIKI] ===
+// === [FUNGSI PARSER YANG DIPERBAIKI TOTAL] ===
+
+/**
+ * Helper untuk membersihkan string angka.
+ * Ini akan menghapus semua titik dan koma.
+ * "75,400" -> "75400"
+ * "100.500" -> "100500"
+ */
+const cleanNumberString = (numStr) => {
+  if (!numStr) return '';
+  return numStr.replace(/[.,]/g, '');
+};
 
 /**
  * Fungsi untuk mengekstrak data dari teks nota.
- * Versi ini lebih canggih untuk menghindari kesalahan baca.
+ * Versi ini jauh lebih canggih untuk menghindari kesalahan baca.
  */
 export const parseReceiptText = (text) => {
   let amount = 0;
   let description = 'Nota Terbaca'; // Default
+  const lines = text.split('\n');
 
   try {
-    // 1. Coba cari kata "TOTAL", "JUMLAH", atau "TAGIHAN"
-    // Regex ini mencari TOTAL, diikuti spasi/titikdua, diikuti Rp (opsional), lalu angka
-    const totalRegex = /\b(TOTAL|JUMLAH|TAGIHAN)\b[\s:Rp.]*([\d\.,]+)/i;
-    const match = text.match(totalRegex);
-
-    if (match && match[2]) {
-      // Ditemukan kata TOTAL. Ini prioritas utama.
-      // "75,400" -> "75400" (menghapus titik ribuan)
-      // "75.400" -> "75400"
-      const amountString = match[2].replace(/\./g, '').replace(',', '.');
-      amount = parseFloat(amountString);
-      
-    } else {
-      // 2. [STRATEGI CADANGAN] Jika "TOTAL" tidak ditemukan.
-      // Cari angka terbesar yang BUKAN nomor telepon atau ID.
-      
-      const amountRegex = /([\d\.,]+)/g;
-      let allNumbers = text.match(amountRegex) || [];
-      let maxAmount = 0;
-      
-      allNumbers.forEach(numStr => {
-        // Bersihkan angka
-        const cleanedNumStr = numStr.replace(/[.,]/g, '');
-
-        // [PERBAIKAN] Jangan ambil angka yang terlalu panjang (kemungkinan no. telp)
-        // atau terlalu kecil.
-        if (cleanedNumStr.length > 9 || cleanedNumStr.length < 3) { 
-          return; // Skip (contoh: "0811..." atau "44" atau "1")
-        }
-
-        const num = parseFloat(cleanedNumStr);
-        
-        // Cek apakah angka ini ada di baris "TUNAI" atau "KEMBALI"
-        // Jika iya, JANGAN gunakan sebagai total.
-        // Regex: (TUNAI|KEMBALI|DPP|PPN|HEMAT) [spasi/titikdua/Rp] [angka]
-        const lineRegex = new RegExp(`(TUNAI|KEMBALI|DPP|PPN|HEMAT)[\s:Rp.]*${numStr.replace('.', '\\.')}`, "i");
-        if (text.match(lineRegex)) {
-          return; // Skip, ini bukan total belanja
-        }
-        
-        if (num > maxAmount) {
-          maxAmount = num;
-        }
-      });
-      
-      // 3. [CADANGAN KEDUA] Jika maxAmount masih 0, coba cari "HARGA JUAL"
-      if (maxAmount === 0) {
-         const hargaJualRegex = /\b(HARGA JUAL)\b[\s:Rp.]*([\d\.,]+)/i;
-         const jualMatch = text.match(hargaJualRegex);
-         if (jualMatch && jualMatch[2]) {
-           // Hapus titik ribuan
-           maxAmount = parseFloat(jualMatch[2].replace(/\./g, '').replace(',', '.'));
-         }
-      }
-      
-      amount = maxAmount;
-    }
-
-    // 4. Coba ambil baris pertama sebagai deskripsi/nama toko
-    const lines = text.split('\n');
+    // 1. Dapatkan Deskripsi (baris pertama, bersihkan dari no telp)
     if (lines.length > 0 && lines[0].trim() !== '') {
-      const firstLine = lines[0].trim();
-      
-      // [PERBAIKAN] Hapus nomor telepon (10-13 digit) dari deskripsi
-      description = firstLine.replace(/\b\d{10,13}\b/g, '').trim();
+      description = lines[0].trim()
+        .replace(/\b\d{10,13}\b/g, '') // Hapus no telp 10-13 digit
+        .trim();
     }
+
+    // 2. Cari TOTAL (Prioritas 1)
+    // Regex: (TOTAL|JUMLAH|TAGIHAN) [spasi/titikdua] [Rp opsional] [ANGKA]
+    const totalRegex = /\b(TOTAL|JUMLAH|TAGIHAN)\b\s*[:\s]*\s*Rp?\s*([\d.,]+)/i;
+    const totalMatch = text.match(totalRegex);
+    if (totalMatch && totalMatch[2]) {
+      const amountStr = cleanNumberString(totalMatch[2]); // "75,400" -> "75400"
+      amount = parseFloat(amountStr);
+      return { amount: amount, description: description.substring(0, 50) };
+    }
+
+    // 3. Cari HARGA JUAL (Prioritas 2)
+    const hargaJualRegex = /\b(HARGA JUAL)\b\s*[:\s]*\s*Rp?\s*([\d.,]+)/i;
+    const jualMatch = text.match(hargaJualRegex);
+    if (jualMatch && jualMatch[2]) {
+      const amountStr = cleanNumberString(jualMatch[2]); // "77,400" -> "77400"
+      amount = parseFloat(amountStr);
+      return { amount: amount, description: description.substring(0, 50) };
+    }
+
+    // 4. Fallback: Cari angka terbesar (Prioritas 3)
+    let maxAmount = 0;
+    const amountRegex = /([\d.,]+)/g;
+    let allNumbers = text.match(amountRegex) || [];
+    
+    // Kata kunci di baris yang harus diabaikan
+    const ignoreKeywords = /(TUNAI|KEMBALI|DPP|PPN|HEMAT|KCNG|AYAM|0811|811333)/i;
+
+    allNumbers.forEach(numStr => {
+      const cleanedNumStr = cleanNumberString(numStr); // "75,400" -> "75400", "0811..." -> "0811..."
+
+      // Filter 1: Bukan nomor telepon (terlalu panjang)
+      if (cleanedNumStr.length >= 10) { 
+        return; // Skip
+      }
+      // Filter 2: Bukan angka item (terlalu kecil)
+      if (cleanedNumStr.length < 4) { // Anggap total minimal 1.000
+        return;
+      }
+
+      // Filter 3: Cek seluruh baris tempat angka ini ditemukan
+      try {
+        const lineRegex = new RegExp(`.*${numStr.replace('.', '\\.').replace(',', ',')}.*`, "i");
+        const lineMatch = text.match(lineRegex);
+        if (lineMatch && lineMatch[0].match(ignoreKeywords)) {
+          return; // Skip baris yang mengandung TUNAI, KEMBALI, PPN, atau bagian dari no telp
+        }
+      } catch (e) {
+        // Abaikan error regex jika numStr mengandung karakter aneh
+      }
+
+      const num = parseFloat(cleanedNumStr);
+      if (num > maxAmount) {
+        maxAmount = num;
+      }
+    });
+
+    amount = maxAmount;
 
     return {
       amount: amount || 0,
