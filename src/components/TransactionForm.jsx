@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import axiosClient from '../api/axiosClient';
-// [MODIFIKASI] Impor Tesseract dan parser
 import { createWorker } from 'tesseract.js';
 import { formatNumberInput, parseNumberInput, parseReceiptText } from '../utils/format';
 
@@ -13,12 +12,14 @@ const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCateg
   const [description, setDescription] = useState('');
   const [accountId, setAccountId] = useState(''); 
   
+  // === [MODIFIKASI] ===
+  // Fungsi ini sekarang HANYA mengembalikan tanggal hari ini.
   const getInitialDate = () => {
     const today = new Date();
-    const targetDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), today.getDate());
-    return targetDate.toISOString().split('T')[0];
+    return today.toISOString().split('T')[0];
   };
   const [date, setDate] = useState(getInitialDate);
+  // === [AKHIR MODIFIKASI] ===
 
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -37,34 +38,32 @@ const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCateg
     }
   }, [accounts, accountId]);
 
-  useEffect(() => {
-    setDate(getInitialDate());
-  }, [selectedDate]);
+  // === [MODIFIKASI] ===
+  // Hapus useEffect yang memantau selectedDate
+  // useEffect(() => {
+  //   setDate(getInitialDate());
+  // }, [selectedDate]);
+  // === [AKHIR MODIFIKASI] ===
 
   useEffect(() => {
     setCategory('');
   }, [type]);
 
-  // === [FUNGSI DIPERBAIKI] ===
-  // Inisialisasi worker Tesseract.js v5+
   const initializeWorker = async () => {
     try {
       setOcrStatus('Memuat mesin OCR & bahasa...');
       
       workerRef.current = await createWorker('ind', 1, {
         logger: m => {
-          // [PERBAIKAN DI SINI]
-          // Logger ini menangani SEMUA progres
           if (m.status === 'loading language model' || m.status === 'initializing tesseract' || m.status === 'loading tesseract core') {
             setOcrStatus(`Inisialisasi... (${Math.round(m.progress * 100)}%)`);
           } else if (m.status === 'recognizing text') {
-            // Tambahkan ini untuk progres pemindaian
             setOcrStatus(`Membaca gambar... (${Math.round(m.progress * 100)}%)`);
           }
         }
       });
       
-      setOcrStatus(''); // Siap
+      setOcrStatus(''); 
     } catch (err) {
       console.error("Gagal inisialisasi worker OCR", err);
       setError("Gagal memuat fitur OCR. Coba refresh.");
@@ -96,16 +95,11 @@ const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCateg
     setError('');
 
     try {
-      // Logger akan otomatis menampilkan status "Membaca gambar..."
-      
-      // [PERBAIKAN] Hapus baris .progress() yang error
-      // Langsung await hasilnya
       const { data: { text } } = await workerRef.current.recognize(file);
       
       setOcrStatus('Memproses hasil...');
-      const parsedData = parseReceiptText(text); // Panggil parser kita
+      const parsedData = parseReceiptText(text); 
 
-      // Isi form
       setAmount(parsedData.amount.toString());
       setDescription(parsedData.description);
       setType('expense'); 
@@ -123,7 +117,6 @@ const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCateg
       fileInputRef.current.value = '';
     }
   };
-  // === [AKHIR PERBAIKAN] ===
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -185,7 +178,7 @@ const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCateg
         disabled={isLoading}
         style={{ marginBottom: '1rem', background: 'var(--color-bg-light)' }}
       >
-        📸 Pindai Nota (Gratis)
+        📸 Upload Nota
       </button>
 
       {error && <p className="error">{error}</p>}
