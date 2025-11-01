@@ -1188,11 +1188,6 @@ button:disabled {
     padding: 0.25rem 0.75rem;
   }
 
-  /* Konten loading di HP - HILANGKAN DARI SINI */
-  .main-content.loading-content {
-    /* Dibiarkan kosong/default agar tidak mengganggu */
-  }
-
   /* Style tabungan di HP */
   .card-savings {
     grid-column: 1 / -1;
@@ -1206,6 +1201,167 @@ button:disabled {
     gap: 1rem;
   }
   .savings-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* === [BARU] CSS UNTUK FITUR BARU === */
+
+/* Navigasi Sidebar */
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+}
+.sidebar-nav a {
+  text-decoration: none;
+  color: var(--color-text-muted);
+  font-size: 1.1rem;
+  font-weight: 500;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  transition: all 0.2s ease-in-out;
+}
+.sidebar-nav a:hover {
+  background-color: var(--color-bg-light);
+  color: var(--color-text);
+}
+.sidebar-nav a.active {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+/* Tombol Link (di kartu) */
+.btn-link-full {
+  display: block;
+  text-align: center;
+  width: 100%;
+  padding: 0.75rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  background-color: var(--color-bg-light);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  text-decoration: none;
+  margin-top: 1.5rem;
+  transition: background-color 0.2s;
+}
+.btn-link-full:hover {
+  background-color: var(--color-border);
+}
+
+
+/* Halaman Akun */
+.accounts-page h2 {
+  margin-top: 0;
+  font-size: 2rem;
+}
+.accounts-page > p {
+  font-size: 1.1rem;
+  color: var(--color-text-muted);
+  margin-bottom: 2rem;
+}
+.account-form {
+  margin-bottom: 1.5rem;
+}
+.account-list {
+  margin-top: 1.5rem;
+}
+.account-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+.account-actions button {
+  width: 100%;
+  font-size: 0.9rem;
+  padding: 0.5rem;
+}
+.account-actions .btn-delete {
+  background-color: var(--color-accent-error);
+}
+
+/* Halaman Laporan */
+.reports-page h2 {
+  margin-top: 0;
+  font-size: 2rem;
+}
+.reports-page > p {
+  font-size: 1.1rem;
+  color: var(--color-text-muted);
+  margin-bottom: 2rem;
+}
+.reports-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+@media (min-width: 1024px) {
+  .reports-grid {
+    grid-template-columns: 2fr 1fr; /* Grafik garis lebih besar */
+  }
+}
+.chart-container {
+  padding: 1.5rem;
+  position: relative;
+  min-height: 300px;
+}
+
+
+/* Modifikasi List Item di Dashboard */
+.list-item-details span {
+  display: flex;
+  gap: 0.5rem; /* Beri jarak antara tanggal dan nama akun */
+}
+
+/* Navigasi Mobile */
+.mobile-header {
+  flex-wrap: wrap; /* Izinkan wrap */
+}
+.mobile-nav {
+  display: none; /* Sembunyikan di desktop */
+  width: 100%;
+  background-color: var(--color-bg-dark);
+  border-top: 1px solid var(--color-border);
+  margin-top: 1rem;
+  padding-top: 0.5rem;
+}
+.mobile-nav a {
+  display: inline-block;
+  padding: 0.75rem 1rem;
+  color: var(--color-text-muted);
+  text-decoration: none;
+  font-weight: 500;
+}
+.mobile-nav a.active {
+  color: var(--color-primary);
+}
+
+
+/* Tampilkan Navigasi Mobile di HP */
+@media (max-width: 768px) {
+  .mobile-nav {
+    display: flex;
+    justify-content: space-around;
+  }
+  .main-content {
+    padding-bottom: 60px; /* Beri ruang untuk nav mobile jika menempel */
+  }
+
+  /* Perbaikan grid form transaksi */
+  .transaction-form .form-group-inline {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+  .form-group-inline .form-group {
+    margin-bottom: 0;
+  }
+  
+  /* Grid Laporan di HP */
+  .reports-grid {
     grid-template-columns: 1fr;
   }
 }

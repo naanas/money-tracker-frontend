@@ -2,34 +2,37 @@ import React, { useState, useEffect } from 'react';
 import axiosClient from '../api/axiosClient';
 import { formatNumberInput, parseNumberInput } from '../utils/format';
 
-// [MODIFIKASI] Ambil prop 'isRefetching'
-const TransactionForm = ({ categories, onTransactionAdded, onOpenCategoryModal, selectedDate, isRefetching }) => {
+// [MODIFIKASI] Ambil 'accounts'
+const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCategoryModal, selectedDate, isRefetching }) => {
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState('');
   const [type, setType] = useState('expense');
   const [description, setDescription] = useState('');
+  const [accountId, setAccountId] = useState(''); // [BARU]
   
-  // === [MODIFIKASI STATE TANGGAL] ===
-  // Fungsi untuk membuat tanggal hari ini TAPI di bulan & tahun yang dipilih
   const getInitialDate = () => {
     const today = new Date();
     const targetDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), today.getDate());
     return targetDate.toISOString().split('T')[0];
   };
-
   const [date, setDate] = useState(getInitialDate());
-
-  // Update tanggal jika bulan diganti
-  useEffect(() => {
-    setDate(getInitialDate());
-  }, [selectedDate]);
-  // === [AKHIR MODIFIKASI] ===
-
 
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const currentCategories = categories.filter(c => c.type === type);
+  // [MODIFIKASI] Filter kategori, kecualikan 'Transfer'
+  const currentCategories = categories.filter(c => c.type === type && c.name !== 'Transfer');
+
+  // Set akun default
+  useEffect(() => {
+    if (!accountId && accounts.length > 0) {
+      setAccountId(accounts[0].id);
+    }
+  }, [accounts, accountId]);
+
+  useEffect(() => {
+    setDate(getInitialDate());
+  }, [selectedDate]);
 
   useEffect(() => {
     setCategory('');
@@ -39,6 +42,10 @@ const TransactionForm = ({ categories, onTransactionAdded, onOpenCategoryModal, 
     e.preventDefault();
     if (!category && currentCategories.length > 0) {
       setError('Pilih kategori');
+      return;
+    }
+    if (!accountId) { // [BARU] Validasi akun
+      setError('Pilih akun');
       return;
     }
 
@@ -52,6 +59,7 @@ const TransactionForm = ({ categories, onTransactionAdded, onOpenCategoryModal, 
         type,
         description,
         date,
+        account_id: accountId, // [BARU] Kirim account_id
       });
       
       setAmount('');
@@ -65,14 +73,14 @@ const TransactionForm = ({ categories, onTransactionAdded, onOpenCategoryModal, 
     setLoading(false);
   };
   
-  // [BARU] Gabungkan state loading internal dan prop isRefetching
   const isLoading = loading || isRefetching;
 
   return (
     <form onSubmit={handleSubmit} className="transaction-form">
       {error && <p className="error">{error}</p>}
       <div className="form-group-radio">
-        <label>
+        {/* ... (Radio button tidak berubah) ... */}
+         <label>
           <input 
             type="radio" 
             value="expense" 
@@ -92,17 +100,29 @@ const TransactionForm = ({ categories, onTransactionAdded, onOpenCategoryModal, 
         </label>
       </div>
 
-      <div className="form-group">
-        <label>Jumlah</label>
-        <input
-          type="text" 
-          inputMode="numeric"
-          value={formatNumberInput(amount)} 
-          onChange={(e) => setAmount(parseNumberInput(e.target.value))} 
-          placeholder="0"
-          required
-          className="input-currency" 
-        />
+      {/* [BARU] Form Group Akun & Jumlah */}
+      <div className="form-group-inline">
+        <div className="form-group" style={{ flex: 2 }}>
+            <label>Akun</label>
+            <select value={accountId} onChange={(e) => setAccountId(e.target.value)} required>
+                <option value="" disabled>Pilih Akun</option>
+                {accounts.map(acc => (
+                <option key={acc.id} value={acc.id}>{acc.name}</option>
+                ))}
+            </select>
+        </div>
+        <div className="form-group" style={{ flex: 3 }}>
+            <label>Jumlah</label>
+            <input
+            type="text" 
+            inputMode="numeric"
+            value={formatNumberInput(amount)} 
+            onChange={(e) => setAmount(parseNumberInput(e.target.value))} 
+            placeholder="0"
+            required
+            className="input-currency" 
+            />
+        </div>
       </div>
 
       <div className="form-group-inline">
@@ -125,30 +145,30 @@ const TransactionForm = ({ categories, onTransactionAdded, onOpenCategoryModal, 
         </button>
       </div>
 
-      <div className="form-group">
-        <label>Tanggal</label>
-        <input
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          required
-        />
-      </div>
-      <div className="form-group">
-        <label>Deskripsi (Opsional)</label>
-        <input
-          type="text"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="Makan siang, Gaji, dll."
-        />
+      <div className="form-group-inline">
+          <div className="form-group" style={{flex: 1}}>
+            <label>Tanggal</label>
+            <input
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            required
+            />
+          </div>
+          <div className="form-group" style={{flex: 2}}>
+            <label>Deskripsi (Opsional)</label>
+            <input
+            type="text"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Makan siang, Gaji, dll."
+            />
+          </div>
       </div>
       
-      {/* === [TOMBOL DIMODIFIKASI] === */}
       <button type="submit" disabled={isLoading}>
         {isLoading ? <div className="btn-spinner"></div> : 'Tambah'}
       </button>
-      {/* === [AKHIR MODIFIKASI] === */}
     </form>
   );
 };
