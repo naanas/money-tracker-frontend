@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import axiosClient from '../api/axiosClient';
-// [MODIFIKASI] Impor Tesseract dan parser
 import { createWorker } from 'tesseract.js';
 import { formatNumberInput, parseNumberInput, parseReceiptText } from '../utils/format';
 
@@ -27,7 +26,6 @@ const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCateg
   const [ocrStatus, setOcrStatus] = useState(''); 
   const fileInputRef = useRef(null);
   
-  // [PERBAIKAN] Buat instance worker di luar
   const workerRef = useRef(null);
 
   const currentCategories = categories.filter(c => c.type === type && c.name !== 'Transfer');
@@ -46,12 +44,17 @@ const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCateg
     setCategory('');
   }, [type]);
 
-  // === [FUNGSI BARU UNTUK SETUP WORKER] ===
-  // Kita siapkan worker saat komponen dimuat (tapi tidak di-await)
+  // === [FUNGSI DIPERBAIKI] ===
+  // Kita siapkan worker saat komponen dimuat
   const initializeWorker = async () => {
     try {
-      workerRef.current = createWorker(); // Tidak di-await
       setOcrStatus('Memuat mesin OCR...');
+      
+      // [PERBAIKAN DI SINI]
+      // Kita 'await createWorker()' untuk mendapatkan instance worker-nya
+      workerRef.current = await createWorker();
+      
+      // Baru kita bisa panggil .load() pada instance tersebut
       await workerRef.current.load();
       setOcrStatus('Memuat bahasa (INA)...');
       await workerRef.current.loadLanguage('ind');
@@ -60,22 +63,19 @@ const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCateg
     } catch (err) {
       console.error("Gagal inisialisasi worker OCR", err);
       setError("Gagal memuat fitur OCR. Coba refresh.");
+      setOcrStatus(''); // Hapus status loading jika error
     }
   };
 
-  // Panggil inisialisasi sekali saat komponen dimuat
   useEffect(() => {
     initializeWorker();
     
-    // Cleanup saat komponen unmount
     return () => {
       workerRef.current?.terminate();
     }
-  }, []); // <-- Array kosong berarti hanya jalan sekali
+  }, []); 
 
-  // === [FUNGSI BARU UNTUK OCR] ===
   const handleScanClick = () => {
-    // Jika worker belum siap, tampilkan pesan
     if (!workerRef.current || ocrStatus.includes('Memuat')) {
       alert("Mesin OCR sedang disiapkan... Harap tunggu sebentar.");
       return;
@@ -83,7 +83,6 @@ const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCateg
     fileInputRef.current.click();
   };
 
-  // === [FUNGSI DIMODIFIKASI] ===
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (!file || !workerRef.current) return;
@@ -94,17 +93,14 @@ const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCateg
     try {
       setOcrStatus('Mengenali teks...');
       
-      // 1. Panggil recognize (tanpa await) untuk mendapatkan 'job'
       const job = workerRef.current.recognize(file);
 
-      // 2. Langganan progres dari 'job'
       job.progress(m => {
         if (m.status === 'recognizing text') {
           setOcrStatus(`Membaca gambar... (${Math.round(m.progress * 100)}%)`);
         }
       });
 
-      // 3. Sekarang 'await' job-nya untuk mendapatkan hasil
       const { data: { text } } = await job;
       
       setOcrStatus('Memproses hasil...');
@@ -127,7 +123,7 @@ const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCateg
       fileInputRef.current.value = '';
     }
   };
-  // === [AKHIR MODIFIKASI] ===
+  // === [AKHIR PERBAIKAN] ===
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -164,7 +160,6 @@ const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCateg
     setLoading(false);
   };
   
-  // [MODIFIKASI] Cek juga status worker
   const isLoading = loading || isRefetching || isOcrLoading || ocrStatus.includes('Memuat');
 
   return (
