@@ -18,7 +18,7 @@ const Dashboard = () => {
   const [analytics, setAnalytics] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [allSavingsGoals, setAllSavingsGoals] = useState([]); // Menyimpan semua goals
+  const [allSavingsGoals, setAllSavingsGoals] = useState([]); 
   
   const [isLoading, setIsLoading] = useState(true); 
   const [isRefetching, setIsRefetching] = useState(false); 
@@ -28,11 +28,76 @@ const Dashboard = () => {
   const [budgetToEdit, setBudgetToEdit] = useState(null);
   const isInitialMount = useRef(true); 
 
-  // Kategori yang harus dikecualikan dari Budget/Analisis Pengeluaran
-  const EXCLUDED_CATEGORY = 'Tabungan';
+  // [DIHAPUS] Kategori yang dikecualikan sekarang ditangani oleh backend
+  // const EXCLUDED_CATEGORY = 'Tabungan';
 
-  // FUNGSI UNTUK MENGAMBIL KATEGORI SECARA TERPISAH
-  const fetchCategories = useCallback(async () => {
+  // === [BLOK PERBAIKAN: DATA FETCHING DIPISAH] ===
+
+  // Fungsi untuk mengambil data bulanan (Analytics + Transaksi)
+  const fetchMonthlyData = useCallback(async () => {
+    // Tentukan apakah ini load awal atau ganti bulan
+    if (isInitialMount.current) {
+      setIsLoading(true); // Tampilkan loading besar
+      isInitialMount.current = false;
+    } else {
+      setIsRefetching(true); // Tampilkan loading senyap
+    }
+    setError('');
+    
+    const month = selectedDate.getMonth() + 1;
+    const year = selectedDate.getFullYear();
+    const params = { month, year }; 
+
+    try {
+      const [analyticsRes, transactionsRes] = await Promise.all([
+        axiosClient.get('/api/analytics/summary', { params }),
+        axiosClient.get('/api/transactions', { params }), 
+      ]);
+      
+      setAnalytics(analyticsRes.data.data);
+      setTransactions(transactionsRes.data.data.transactions);
+      
+    } catch (err) {
+      console.error("Failed to fetch monthly data:", err);
+      setError(err.response?.data?.error || err.message || 'Gagal mengambil data bulanan');
+    } finally {
+      setIsLoading(false); // Selalu matikan loading besar
+      setIsRefetching(false); // Selalu matikan loading senyap
+    }
+  }, [selectedDate]); // Hanya bergantung pada selectedDate
+
+  // Fungsi untuk mengambil data statis (Kategori + Tabungan)
+  const fetchStaticData = useCallback(async () => {
+    // Fungsi ini tidak mengatur loading, biarkan fetchMonthlyData yang mengatur
+    try {
+      const [categoriesRes, savingsRes] = await Promise.all([
+        axiosClient.get('/api/categories'),
+        axiosClient.get('/api/savings'),
+      ]);
+      setCategories(categoriesRes.data.data);
+      setAllSavingsGoals(savingsRes.data.data);
+    } catch (err) {
+      console.error("Failed to fetch static data:", err);
+      setError(err.response?.data?.error || err.message || 'Gagal mengambil data statis');
+    }
+  }, []); // Dependensi kosong, hanya dibuat sekali
+
+  // EFEK 1: Ambil data statis SEKALI saat komponen dimuat
+  useEffect(() => {
+    fetchStaticData();
+  }, [fetchStaticData]); // Panggil sekali
+
+  // EFEK 2: Ambil data bulanan saat TANGGAL berubah, atau saat data statis selesai dimuat
+  useEffect(() => {
+    // Jangan ambil data bulanan jika data statis (kategori) belum siap
+    if (categories.length === 0) return;
+    
+    fetchMonthlyData();
+  }, [selectedDate, categories, fetchMonthlyData]); // Berjalan saat ganti bulan / data statis siap
+
+  
+  // Fungsi untuk mengambil ulang Kategori (dipanggil oleh handleDataUpdate)
+  const refetchCategories = useCallback(async () => {
     try {
       const categoriesRes = await axiosClient.get('/api/categories');
       setCategories(categoriesRes.data.data);
@@ -41,116 +106,51 @@ const Dashboard = () => {
     }
   }, []);
 
-  // Fungsi untuk mengambil data bulanan + data tabungan
-  const fetchDataForMonth = useCallback(async () => {
-    setIsRefetching(true); 
-    setError('');
-    
-    const month = selectedDate.getMonth() + 1;
-    const year = selectedDate.getFullYear();
-    const params = { month, year }; 
-
+  // Fungsi untuk mengambil ulang Tabungan (dipanggil oleh handleDataUpdate)
+  const refetchSavings = useCallback(async () => {
     try {
-      // Fetch analytics dan transactions yang tergantung bulan
-      const [analyticsRes, transactionsRes] = await Promise.all([
-        axiosClient.get('/api/analytics/summary', { params }),
-        axiosClient.get('/api/transactions', { params }), 
-      ]);
-      
-      // Fetch semua savings goals (tidak tergantung bulan)
       const savingsRes = await axiosClient.get('/api/savings');
-
-      setAnalytics(analyticsRes.data.data);
-      setTransactions(transactionsRes.data.data.transactions);
       setAllSavingsGoals(savingsRes.data.data); 
-      
     } catch (err) {
-      console.error("Failed to fetch dashboard data:", err);
-      setError(err.response?.data?.error || err.message || 'Gagal mengambil data dashboard');
-    } finally {
-      setIsRefetching(false);
+      console.error("Failed to re-fetch savings:", err);
     }
-  }, [selectedDate]); 
-
-  // EFEK UNTUK LOAD AWAL 
-  useEffect(() => {
-    const fetchInitialData = async () => {
-      setIsLoading(true); 
-      setError('');
-      
-      const month = selectedDate.getMonth() + 1;
-      const year = selectedDate.getFullYear();
-      const params = { month, year }; 
-
-      try {
-        const [categoriesRes, analyticsRes, transactionsRes, savingsRes] = await Promise.all([
-          axiosClient.get('/api/categories'),
-          axiosClient.get('/api/analytics/summary', { params }),
-          axiosClient.get('/api/transactions', { params }), 
-          axiosClient.get('/api/savings'),
-        ]);
-
-        setCategories(categoriesRes.data.data);
-        setAnalytics(analyticsRes.data.data);
-        setTransactions(transactionsRes.data.data.transactions);
-        setAllSavingsGoals(savingsRes.data.data); 
-        
-      } catch (err) {
-        console.error("Failed to fetch initial dashboard data:", err);
-        setError(err.response?.data?.error || err.message || 'Gagal mengambil data dashboard');
-      } finally {
-        setIsLoading(false); 
-      }
-    };
-    
-    fetchInitialData();
-  }, []); 
-
-  // EFEK UNTUK GANTI BULAN
-  useEffect(() => {
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
-    } else {
-      fetchDataForMonth();
-    }
-  }, [selectedDate, fetchDataForMonth]); 
+  }, []);
 
   // FUNGSI UPDATE (SETELAH SUBMIT FORM)
-  const handleDataUpdate = async () => {
-    await fetchDataForMonth(); 
-    await fetchCategories();
+  const handleDataUpdate = async (options = {}) => {
+    // options: { refetchCategories: bool, refetchSavings: bool }
+
+    // Selalu ambil ulang data bulanan
+    await fetchMonthlyData(); 
+    
+    // Ambil ulang data statis HANYA jika diminta
+    if (options.refetchCategories) {
+      await refetchCategories();
+    }
+    if (options.refetchSavings) {
+      await refetchSavings();
+    }
     
     triggerSuccessAnimation(); 
     setBudgetToEdit(null); 
   };
 
-  const filteredSavingsGoals = useMemo(() => {
-    const goals = allSavingsGoals;
+  // === [AKHIR BLOK PERBAIKAN] ===
 
-    // Ambil tanggal awal bulan yang dipilih
+  const filteredSavingsGoals = useMemo(() => {
+    // Logika ini tetap di frontend karena ini murni logika tampilan
+    // yang bergantung pada 'selectedDate'
+    const goals = allSavingsGoals;
     const selectedMonthStart = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
     
     return goals.filter(goal => {
-      // 1. Goals tanpa target_date (ongoing) selalu ditampilkan
       if (!goal.target_date) return true;
-      
       const targetDate = new Date(goal.target_date);
-      // Buat tanggal yang hanya berisi bulan dan tahun target (set ke awal bulan target)
       const targetMonthStart = new Date(targetDate.getFullYear(), targetDate.getMonth(), 1);
-
-      // HIDE jika bulan yang dipilih sudah melewati bulan target.
-      if (selectedMonthStart > targetMonthStart) {
-        return false;
-      }
-      
-      // HIDE jika bulan yang dipilih SEBELUM bulan target (Kasus Oct (selected) vs Nov (target) -> Hide)
-      if (selectedMonthStart < targetMonthStart) {
-        return false; 
-      }
-
+      if (selectedMonthStart > targetMonthStart) return false;
+      if (selectedMonthStart < targetMonthStart) return false; 
       return true; 
     });
-
   }, [allSavingsGoals, selectedDate]);
 
   const totalSavingsCurrent = useMemo(() => {
@@ -168,10 +168,10 @@ const Dashboard = () => {
     e.stopPropagation(); 
     if (!window.confirm('Yakin ingin menghapus budget pocket ini?\n\n(Ini tidak akan menghapus transaksi Anda yang sudah ada.)')) return;
     setError('');
-    setIsRefetching(true);
+    setIsRefetching(true); // Gunakan isRefetching untuk loading senyap
     try {
       await axiosClient.delete(`/api/budgets/${budgetId}`);
-      handleDataUpdate(); 
+      handleDataUpdate(); // Panggil update
     } catch (err) {
       console.error("Failed to delete budget:", err);
       setError(err.response?.data?.error || err.message || 'Gagal menghapus budget');
@@ -185,7 +185,7 @@ const Dashboard = () => {
     setIsRefetching(true);
     try {
       await axiosClient.delete(`/api/transactions/${transactionId}`);
-      handleDataUpdate(); 
+      handleDataUpdate(); // Panggil update
     } catch (err) {
       console.error("Failed to delete transaction:", err);
       setError(err.response?.data?.error || err.message || 'Gagal menghapus transaksi');
@@ -203,7 +203,7 @@ const Dashboard = () => {
     setIsRefetching(true); 
     try {
       await axiosClient.delete('/api/transactions/reset');
-      handleDataUpdate(); 
+      handleDataUpdate({ refetchSavings: true }); // Reset juga data tabungan
     } catch (err) {
       console.error("Failed to reset transactions:", err);
       setError(err.response?.data?.error || err.message || 'Gagal mereset transaksi');
@@ -211,23 +211,13 @@ const Dashboard = () => {
     }
   };
   
-  // [LOGIKA BUDGET POCKETS DIMODIFIKASI UNTUK MENGECUALIKAN KATEGORI TABUNGAN]
+  // [PERBAIKAN] Logika budgetPockets disederhanakan.
+  // Tidak perlu filter 'EXCLUDED_CATEGORY' lagi.
   const budgetPockets = useMemo(() => {
     if (!analytics) return [];
     
-    // Filter Budget Details: Kecualikan kategori Tabungan
-    const budgetDetails = (analytics.budget?.details || []).filter(
-        b => b.category_name !== EXCLUDED_CATEGORY
-    );
-    
-    // Filter Expenses: Kecualikan pengeluaran Tabungan
-    const rawExpenses = analytics.expenses_by_category || {};
-    const expenses = Object.keys(rawExpenses).reduce((acc, key) => {
-        if (key !== EXCLUDED_CATEGORY) {
-            acc[key] = rawExpenses[key];
-        }
-        return acc;
-    }, {});
+    const budgetDetails = analytics.budget?.details || [];
+    const expenses = analytics.expenses_by_category || {};
     
     // 1. Ambil budget yang sudah di-set
     const pockets = budgetDetails.map(budget => {
@@ -240,7 +230,7 @@ const Dashboard = () => {
       };
     });
     
-    // 2. Tambahkan kategori yang punya pengeluaran tapi TIDAK di-budget (sebagai virtual pocket)
+    // 2. Tambahkan kategori yang punya pengeluaran tapi TIDAK di-budget
     const existingBudgetNames = new Set(pockets.map(p => p.category_name));
     
     Object.keys(expenses).forEach(categoryName => {
@@ -259,27 +249,17 @@ const Dashboard = () => {
     return pockets;
   }, [analytics]);
 
-  // [LOGIKA RINGKASAN DIMODIFIKASI UNTUK MENGECUALIKAN KATEGORI TABUNGAN]
-  const totalExpensesFiltered = useMemo(() => {
-    if (!analytics) return 0;
-    const expenses = analytics.expenses_by_category || {};
-    
-    // Jumlahkan semua pengeluaran KECUALI 'Tabungan'
-    return Object.keys(expenses).reduce((sum, key) => {
-        if (key !== EXCLUDED_CATEGORY) {
-            return sum + parseFloat(expenses[key]);
-        }
-        return sum;
-    }, 0);
-  }, [analytics]);
-  
+  // [PERBAIKAN] Logika ringkasan disederhanakan.
+  // Data dari 'analytics' sudah bersih (tidak termasuk tabungan).
   const totalIncome = analytics?.summary?.total_income || 0;
-  const totalBudget = analytics?.budget?.total_amount || 0; // Total budget masih sama
-  const totalSpent = totalExpensesFiltered; // Gunakan total yang sudah difilter
+  const totalExpensesFiltered = analytics?.summary?.total_expenses || 0;
+  const totalTransferredToSavings = analytics?.summary?.total_transferred_to_savings || 0;
+
+  const totalBudget = analytics?.budget?.total_amount || 0;
+  const totalSpent = totalExpensesFiltered;
   const totalRemaining = totalBudget - totalSpent; 
   const totalProgress = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
   
-  // Saldo total juga harus menggunakan totalExpensesFiltered
   const currentBalance = totalIncome - totalSpent;
 
 
@@ -315,7 +295,7 @@ const Dashboard = () => {
           </header>
 
           <div className="month-navigator">
-            <button onClick={handlePrevMonth}>&lt;</button>
+            <button onClick={handlePrevMonth} disabled={isRefetching}>&lt;</button>
             <DatePicker
               selected={selectedDate}
               onChange={(date) => setSelectedDate(date)}
@@ -324,20 +304,19 @@ const Dashboard = () => {
               showFullMonthYearPicker
               className="month-picker-input"
               popperPlacement="bottom"
+              disabled={isRefetching}
             />
-            <button onClick={handleNextMonth}>&gt;</button>
+            <button onClick={handleNextMonth} disabled={isRefetching}>&gt;</button>
           </div>
           
           {error && <p className="error" style={{textAlign: 'center', padding: '1rem', backgroundColor: 'var(--color-bg-medium)', borderRadius: '12px'}}>{error}</p>}
 
-          {/* HILANGKAN SPINNER DAN TEKS LOADING PADA INITIAL LOAD */}
           {isLoading ? (
             <div className="loading-content">
-               {/* Halaman kosong saat loading awal, menghilangkan spinner */}
+               {/* Halaman kosong saat loading awal */}
             </div>
           ) : (
             analytics ? (
-              // Konten ditampilkan meskipun isRefetching (silent update)
               <div className="dashboard-grid" style={{ opacity: isRefetching ? 0.8 : 1, transition: 'opacity 0.3s' }}>
                 
                 <> 
@@ -348,19 +327,23 @@ const Dashboard = () => {
                       <span className="income">{formatCurrency(totalIncome)}</span>
                     </div>
                     <div className="summary-item">
-                      {/* [MODIFIKASI] Gunakan totalSpent yang sudah difilter */}
                       <span>Total Pengeluaran</span>
-                      <span className="expense">{formatCurrency(totalSpent)}</span>
+                      <span className="expense">{formatCurrency(totalExpensesFiltered)}</span>
                     </div>
                     
+                    {/* [PERBAIKAN] Gunakan data `totalTransferredToSavings` dari backend */}
+                    <div className="summary-item">
+                      <span>Dana Ditabung</span>
+                      <span className="income">{formatCurrency(totalTransferredToSavings)}</span>
+                    </div>
+
                     <div className="summary-item total-savings">
-                      <span>Total Dana Tabungan</span>
+                      <span>Total Dana Tabungan (Bulan Ini)</span>
                       <span className="income">{formatCurrency(totalSavingsCurrent)}</span>
                     </div>
                     
                     <hr />
                     <div className="summary-item total">
-                      {/* [MODIFIKASI] Gunakan currentBalance yang sudah difilter */}
                       <span>Saldo</span>
                       <span>{formatCurrency(currentBalance)}</span>
                     </div>
@@ -388,7 +371,7 @@ const Dashboard = () => {
                     
                     <BudgetForm 
                       categories={categories} 
-                      onBudgetSet={handleDataUpdate}
+                      onBudgetSet={handleDataUpdate} // [PERBAIKAN] Panggil fungsi standar
                       budgetToEdit={budgetToEdit}
                       onClearEdit={() => setBudgetToEdit(null)}
                       selectedDate={selectedDate} 
@@ -443,7 +426,7 @@ const Dashboard = () => {
                     <h3>Tambah Transaksi Baru</h3>
                     <TransactionForm 
                       categories={categories} 
-                      onTransactionAdded={handleDataUpdate} 
+                      onTransactionAdded={handleDataUpdate} // [PERBAIKAN] Panggil fungsi standar
                       onOpenCategoryModal={() => setIsCategoryModalOpen(true)}
                       selectedDate={selectedDate}
                       isRefetching={isRefetching} 
@@ -452,18 +435,17 @@ const Dashboard = () => {
                   
                   <SavingsGoals 
                     savingsGoals={filteredSavingsGoals} 
-                    onDataUpdate={handleDataUpdate}
+                    // [PERBAIKAN] Kirim opsi untuk refetch data tabungan
+                    onDataUpdate={() => handleDataUpdate({ refetchSavings: true })}
                     isRefetching={isRefetching}
                   />
 
                   <section className="card card-list full-height-card">
                     <h3>Transaksi {formatMonthYear(selectedDate)}</h3>
                     <ul>
+                      {/* [PERBAIKAN] Logika filter 'Tabungan' dihapus dari sini */}
                       {transactions.length > 0 ? (
-                        transactions
-                            // [MODIFIKASI] Filter transaksi untuk tidak menampilkan 'Transfer ke tabungan'
-                            .filter(t => t.category !== EXCLUDED_CATEGORY)
-                            .map((t) => (
+                        transactions.map((t) => (
                           <li key={t.id} className="list-item">
                             <button 
                               className="btn-delete-item"
@@ -492,12 +474,9 @@ const Dashboard = () => {
                     <section className="card card-list">
                       <h3>Pengeluaran per Kategori</h3>
                       <ul>
-                        {/* [MODIFIKASI] Filter expenses_by_category untuk tidak menampilkan 'Tabungan' */}
-                        {Object.keys(analytics.expenses_by_category)
-                            .filter(category => category !== EXCLUDED_CATEGORY)
-                            .length > 0 ? (
+                        {/* [PERBAIKAN] Logika filter 'Tabungan' dihapus dari sini */}
+                        {Object.keys(analytics.expenses_by_category).length > 0 ? (
                             Object.entries(analytics.expenses_by_category)
-                                .filter(([category]) => category !== EXCLUDED_CATEGORY)
                                 .map(([category, amount]) => (
                                     <li key={category} className="list-item">
                                         <span>{category}</span>
@@ -528,7 +507,8 @@ const Dashboard = () => {
         <CategoryForm 
           existingCategories={categories}
           onClose={() => setIsCategoryModalOpen(false)}
-          onSuccess={handleDataUpdate} 
+          // [PERBAIKAN] Kirim opsi untuk refetch data kategori
+          onSuccess={() => handleDataUpdate({ refetchCategories: true })} 
         />
       )}
     </>
