@@ -13,7 +13,8 @@ import {
   ArcElement
 } from 'chart.js';
 import { Line, Doughnut } from 'react-chartjs-2';
-import { formatCurrency } from '../utils/format';
+// [MODIFIKASI] Impor formatNumberInput
+import { formatCurrency, formatNumberInput } from '../utils/format';
 
 ChartJS.register(
   CategoryScale,
@@ -45,6 +46,7 @@ const chartOptions = {
           if (label) {
             label += ': ';
           }
+          // Tooltip tetap pakai formatCurrency lengkap
           if (context.parsed.y !== null) {
             label += formatCurrency(context.parsed.y);
           }
@@ -61,7 +63,11 @@ const chartOptions = {
     y: {
       ticks: { 
         color: '#e1e1e1',
-        callback: (value) => formatCurrency(value, '') // Format ringkas
+        // === [INI PERBAIKANNYA] ===
+        // Menggunakan formatNumberInput (misal: 1.000.000)
+        // Bukan formatCurrency(value, '')
+        callback: (value) => formatNumberInput(value)
+        // === [AKHIR PERBAIKAN] ===
       },
       grid: { color: '#3a3a3a' }
     }
@@ -86,6 +92,7 @@ const pieOptions = {
                     let label = context.label || '';
                     if (label) { label += ': '; }
                     if (context.parsed !== null) {
+                        // Tooltip tetap pakai formatCurrency lengkap
                         label += formatCurrency(context.parsed);
                     }
                     return label;
@@ -184,12 +191,18 @@ const Reports = () => {
         <div className="reports-grid">
           <div className="card chart-container" style={{height: '400px'}}>
             <h3>Pemasukan vs Pengeluaran</h3>
-            {lineChartData && <Line options={chartOptions} data={lineChartData} />}
+            {lineChartData ? 
+                (<Line options={chartOptions} data={lineChartData} />) : 
+                (<p>Data tidak cukup.</p>)
+            }
           </div>
           
           <div className="card chart-container" style={{height: '400px'}}>
             <h3>Top Pengeluaran (6 Bulan)</h3>
-            {pieChartData && <Doughnut options={pieOptions} data={pieChartData} />}
+            {pieChartData && pieChartData.datasets[0].data.length > 0 ? 
+                (<Doughnut options={pieOptions} data={pieChartData} />) : 
+                (<p>Tidak ada data pengeluaran.</p>)
+            }
           </div>
         </div>
       )}
