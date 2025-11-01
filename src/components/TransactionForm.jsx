@@ -23,11 +23,12 @@ const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCateg
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   
-  // === [KODE BARU UNTUK OCR] ===
   const [isOcrLoading, setIsOcrLoading] = useState(false);
-  const [ocrStatus, setOcrStatus] = useState(''); // Untuk menampilkan progres
+  const [ocrStatus, setOcrStatus] = useState(''); 
   const fileInputRef = useRef(null);
-  // === [AKHIR KODE BARU] ===
+  
+  // [PERBAIKAN] Buat instance worker di luar
+  const workerRef = useRef(null);
 
   const currentCategories = categories.filter(c => c.type === type && c.name !== 'Transfer');
 
@@ -45,45 +46,74 @@ const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCateg
     setCategory('');
   }, [type]);
 
+  // === [FUNGSI BARU UNTUK SETUP WORKER] ===
+  // Kita siapkan worker saat komponen dimuat (tapi tidak di-await)
+  const initializeWorker = async () => {
+    try {
+      workerRef.current = createWorker(); // Tidak di-await
+      setOcrStatus('Memuat mesin OCR...');
+      await workerRef.current.load();
+      setOcrStatus('Memuat bahasa (INA)...');
+      await workerRef.current.loadLanguage('ind');
+      await workerRef.current.initialize('ind');
+      setOcrStatus(''); // Siap
+    } catch (err) {
+      console.error("Gagal inisialisasi worker OCR", err);
+      setError("Gagal memuat fitur OCR. Coba refresh.");
+    }
+  };
+
+  // Panggil inisialisasi sekali saat komponen dimuat
+  useEffect(() => {
+    initializeWorker();
+    
+    // Cleanup saat komponen unmount
+    return () => {
+      workerRef.current?.terminate();
+    }
+  }, []); // <-- Array kosong berarti hanya jalan sekali
+
   // === [FUNGSI BARU UNTUK OCR] ===
   const handleScanClick = () => {
+    // Jika worker belum siap, tampilkan pesan
+    if (!workerRef.current || ocrStatus.includes('Memuat')) {
+      alert("Mesin OCR sedang disiapkan... Harap tunggu sebentar.");
+      return;
+    }
     fileInputRef.current.click();
   };
 
+  // === [FUNGSI DIMODIFIKASI] ===
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
-    if (!file) return;
+    if (!file || !workerRef.current) return;
 
     setIsOcrLoading(true);
     setError('');
 
     try {
-      setOcrStatus('Memuat mesin OCR...');
-      const worker = await createWorker({
-        logger: m => {
-          if (m.status === 'recognizing text') {
-            setOcrStatus(`Membaca gambar... (${Math.round(m.progress * 100)}%)`);
-          }
-        },
+      setOcrStatus('Mengenali teks...');
+      
+      // 1. Panggil recognize (tanpa await) untuk mendapatkan 'job'
+      const job = workerRef.current.recognize(file);
+
+      // 2. Langganan progres dari 'job'
+      job.progress(m => {
+        if (m.status === 'recognizing text') {
+          setOcrStatus(`Membaca gambar... (${Math.round(m.progress * 100)}%)`);
+        }
       });
 
-      setOcrStatus('Memuat bahasa (INA)...');
-      await worker.loadLanguage('ind'); // Bahasa Indonesia
-      await worker.initialize('ind');
-
-      setOcrStatus('Mengenali teks...');
-      const { data: { text } } = await worker.recognize(file);
+      // 3. Sekarang 'await' job-nya untuk mendapatkan hasil
+      const { data: { text } } = await job;
       
       setOcrStatus('Memproses hasil...');
-      // Panggil parser kita
       const parsedData = parseReceiptText(text);
 
-      // Isi form
       setAmount(parsedData.amount.toString());
       setDescription(parsedData.description);
-      setType('expense'); // Nota biasanya pengeluaran
+      setType('expense'); 
 
-      await worker.terminate();
       setOcrStatus('');
 
     } catch (err) {
@@ -97,7 +127,7 @@ const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCateg
       fileInputRef.current.value = '';
     }
   };
-  // === [AKHIR FUNGSI BARU] ===
+  // === [AKHIR MODIFIKASI] ===
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -134,19 +164,18 @@ const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCateg
     setLoading(false);
   };
   
-  const isLoading = loading || isRefetching || isOcrLoading;
+  // [MODIFIKASI] Cek juga status worker
+  const isLoading = loading || isRefetching || isOcrLoading || ocrStatus.includes('Memuat');
 
   return (
     <form onSubmit={handleSubmit} className="transaction-form" style={{ position: 'relative' }}>
-      {/* [MODIFIKASI] Tampilkan overlay loading OCR dengan status */}
-      {isOcrLoading && (
+      {(isOcrLoading || ocrStatus.includes('Memuat')) && (
         <div className="ocr-loading-overlay">
           <div className="btn-spinner"></div>
           <p>{ocrStatus || 'Memindai Nota...'}</p>
         </div>
       )}
 
-      {/* === [UI BARU UNTUK OCR] === */}
       <input
         type="file"
         accept="image/*"
@@ -163,7 +192,6 @@ const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCateg
       >
         📸 Pindai Nota (Gratis)
       </button>
-      {/* === [AKHIR UI BARU] === */}
 
       {error && <p className="error">{error}</p>}
       <div className="form-group-radio">
