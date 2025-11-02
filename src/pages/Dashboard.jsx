@@ -100,25 +100,30 @@ const Dashboard = () => {
   const [allSavingsGoals, setAllSavingsGoals] = useState([]); 
   
   // State UI
-  const [isLoading, setIsLoading] = useState(true); 
+  const [isLoading, setIsLoading] = useState(true); // Ganti nama dari 'isLoading' ke 'isLoading'
   const [isRefetching, setIsRefetching] = useState(false); 
   const [error, setError] = useState('');
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [budgetToEdit, setBudgetToEdit] = useState(null);
-  const isInitialMount = useRef(true); 
+  
+  // === [PERBAIKAN 1] ===
+  // Ganti `isInitialMount` dengan `didMountRef` untuk skip Efek ganti tanggal
+  const didMountRef = useRef(false); 
 
   // State untuk Animasi & Geser
   const [animationClass, setAnimationClass] = useState('');
   const [touchStart, setTouchStart] = useState(null);
   const minSwipeDistance = 75; 
 
+  // === [PERBAIKAN 2] ===
   // Fungsi untuk mengambil data bulanan (Analytics + Transaksi)
-  const fetchMonthlyData = useCallback(async () => {
-    if (isInitialMount.current) {
-      setIsLoading(true); 
-      isInitialMount.current = false;
-    } else {
+  // Sekarang menerima flag `isRefetch` dan HANYA mengatur state loading.
+  const fetchMonthlyData = useCallback(async (isRefetch = false) => {
+    if (isRefetch) {
       setIsRefetching(true);
+    } else {
+      // Jika bukan refetch, berarti ini adalah bagian dari load awal
+      setIsLoading(true);
     }
     setError('');
     
@@ -137,12 +142,15 @@ const Dashboard = () => {
       console.error("Failed to fetch monthly data:", err);
       setError(err.response?.data?.error || 'Gagal mengambil data bulanan');
     } finally {
+      // Selalu matikan SEMUA state loading
       setIsLoading(false); 
       setIsRefetching(false);
     }
-  }, [selectedDate]); 
+  }, [selectedDate]); // Dependency HANYA selectedDate
 
+  // === [PERBAIKAN 3] ===
   // Fungsi untuk mengambil data statis (Kategori + Tabungan + Akun)
+  // Sekarang me-return status untuk chain di useEffect
   const fetchStaticData = useCallback(async () => {
     try {
       const [categoriesRes, savingsRes, accountsRes] = await Promise.all([
@@ -153,45 +161,65 @@ const Dashboard = () => {
       setCategories(categoriesRes.data.data);
       setAllSavingsGoals(savingsRes.data.data);
       setAccounts(accountsRes.data.data);
-    } catch (err)
- {
+      
+      // Kembalikan status
+      return { 
+        success: true, 
+        hasAccounts: accountsRes.data.data.length > 0, 
+        hasCategories: categoriesRes.data.data.length > 0 
+      };
+    } catch (err) {
       console.error("Failed to fetch static data:", err);
       setError(err.response?.data?.error || 'Gagal mengambil data statis');
+      setIsLoading(false); // Matikan loading jika data statis gagal
+      return { success: false, hasAccounts: false, hasCategories: false };
     }
-  }, []);
+  }, []); // Dependency kosong, hanya jalan sekali
 
-  // === [MODIFIKASI EFEK 1 & 2] ===
+  // === [PERBAIKAN 4] ===
+  // Hapus dua useEffect lama dan ganti dengan ini:
 
-  // EFEK 1: Ambil data statis SEKALI
+  // EFEK 1: Load Awal (Hanya berjalan sekali saat mount)
   useEffect(() => {
-    fetchStaticData();
-  }, [fetchStaticData]);
-
-  // EFEK 2: Ambil data bulanan saat TANGGAL atau data STATIS berubah
-  useEffect(() => {
-    // Cek 1: Jika ini adalah load awal (isLoading) DAN data statis belum datang, tunggu.
-    if (isInitialMount.current && accounts.length === 0 && categories.length === 0 && isLoading) {
-       return; 
-    }
-
-    // Cek 2: Jika data statis sudah datang, TAPI salah satunya kosong (misal: belum buat akun)
-    if (categories.length === 0 || accounts.length === 0) {
-      // Kita harus matikan loading state jika ini adalah initial load
-      if (isLoading) {
-        setIsLoading(false);
-      }
-      isInitialMount.current = false; // Tandai selesai
-      setAnalytics(null); // Bersihkan data bulanan
-      setTransactions([]);
-      return; // Jangan fetch data bulanan
-    }
+    setIsLoading(true); // 1. Set loading global
     
-    // Jika kita sampai sini, artinya categories DAN accounts ada isinya.
-    // Lanjutkan fetch data bulanan.
-    fetchMonthlyData();
-  }, [selectedDate, categories, accounts, fetchMonthlyData, isLoading]); // Tambahkan isLoading
-  
-  // === [AKHIR MODIFIKASI EFEK] ===
+    fetchStaticData().then((staticDataStatus) => {
+      // 2. Ambil data statis
+      
+      // 3. Cek hasil data statis
+      if (staticDataStatus.success && staticDataStatus.hasAccounts && staticDataStatus.hasCategories) {
+        // 4. Jika sukses & ada data, ambil data bulanan
+        // `fetchMonthlyData` akan otomatis mematikan `isLoading` saat selesai
+        fetchMonthlyData(false); // false = bukan refetch
+      } else {
+        // 5. Jika gagal ATAU tidak ada akun/kategori, matikan loading manual
+        setIsLoading(false); 
+        setAnalytics(null);
+        setTransactions([]);
+      }
+    });
+    
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchStaticData]); // fetchMonthlyData dihapus dari sini agar tidak re-trigger
+
+
+  // EFEK 2: Handle Ganti Tanggal (Hanya berjalan saat selectedDate berubah)
+  useEffect(() => {
+    // Cek `didMountRef` untuk MELEWATKAN panggilan pertama (karena EFEK 1 sudah handle)
+    if (didMountRef.current) {
+      
+      // Cek apakah kita punya akun/kategori sebelum fetch
+      if (accounts.length > 0 && categories.length > 0) {
+        fetchMonthlyData(true); // true = ini adalah refetch
+      }
+      
+    } else {
+      // Ini adalah panggilan saat mount, tandai saja sudah mount
+      didMountRef.current = true;
+    }
+  }, [selectedDate, fetchMonthlyData, accounts, categories]); // Bergantung pada tanggal & data statis
+
+  // === [AKHIR PERBAIKAN LOGIKA] ===
 
 
   // Fungsi untuk mengambil ulang data individual
@@ -218,12 +246,9 @@ const Dashboard = () => {
 
   // FUNGSI UPDATE UTAMA
   const handleDataUpdate = async (options = {}) => {
-    setIsRefetching(true); 
-
-    // [MODIFIKASI] Cek jika kita perlu fetch monthly data
-    // Jika tidak ada akun, fetchMonthlyData tidak akan jalan, jadi kita skip
+    // Panggil fetchMonthlyData (karena ini akan handle state loading/refetching)
     if (accounts.length > 0 && categories.length > 0) {
-      await fetchMonthlyData(); 
+      await fetchMonthlyData(true); // true = refetch
     }
     
     if (options.refetchCategories) await refetchCategories();
@@ -232,11 +257,6 @@ const Dashboard = () => {
     
     triggerSuccessAnimation(); 
     setBudgetToEdit(null); 
-    // fetchMonthlyData sudah handle setIsRefetching(false)
-    // tapi jika kita skip, kita harus set manual
-    if (accounts.length === 0 || categories.length === 0) {
-      setIsRefetching(false);
-    }
   };
 
   // Memo untuk total saldo
@@ -289,23 +309,23 @@ const Dashboard = () => {
 
   // Handler Navigasi & Geser
   const handlePrevMonth = () => {
-    if (isRefetching || animationClass) return;
+    if (isRefetching || animationClass || isLoading) return; // Tambah cek isLoading
     setAnimationClass('slide-in-right');
     setSelectedDate(prevDate => new Date(prevDate.getFullYear(), prevDate.getMonth() - 1, 1));
   };
   const handleNextMonth = () => {
-    if (isRefetching || animationClass) return;
+    if (isRefetching || animationClass || isLoading) return; // Tambah cek isLoading
     setAnimationClass('slide-in-left');
     setSelectedDate(prevDate => new Date(prevDate.getFullYear(), prevDate.getMonth() + 1, 1));
   };
 
   const handleTouchStart = (e) => {
-    if (isRefetching || animationClass) return;
+    if (isRefetching || animationClass || isLoading) return;
     setTouchStart(e.targetTouches[0].clientX);
   };
 
   const handleTouchEnd = (e) => {
-    if (touchStart === null || isRefetching || animationClass) return;
+    if (touchStart === null || isRefetching || animationClass || isLoading) return;
     
     const touchEnd = e.changedTouches[0].clientX;
     const deltaX = touchEnd - touchStart;
@@ -324,10 +344,10 @@ const Dashboard = () => {
     e.stopPropagation(); 
     if (!window.confirm('Yakin ingin menghapus budget pocket ini?')) return;
     setError('');
-    setIsRefetching(true);
+    setIsRefetching(true); // Set refetching manual
     try {
       await axiosClient.delete(`/api/budgets/${budgetId}`);
-      handleDataUpdate(); 
+      handleDataUpdate(); // handleDataUpdate akan memanggil fetchMonthlyData
     } catch (err) {
       setError(err.response?.data?.error || 'Gagal menghapus budget');
       setIsRefetching(false);
@@ -337,7 +357,7 @@ const Dashboard = () => {
   const handleDeleteTransaction = async (transactionId) => {
     if (!window.confirm('Yakin ingin menghapus transaksi ini?')) return;
     setError('');
-    setIsRefetching(true);
+    setIsRefetching(true); // Set refetching manual
     try {
       await axiosClient.delete(`/api/transactions/${transactionId}`);
       handleDataUpdate({ refetchAccounts: true, refetchSavings: true });
@@ -347,10 +367,13 @@ const Dashboard = () => {
     }
   };
   
+  // Gabungkan isLoading dan isRefetching untuk Skeleton
+  const showSkeleton = isLoading || isRefetching;
+
   return (
     <>
       <div className="month-navigator">
-        <button onClick={handlePrevMonth} disabled={isRefetching || !!animationClass}>&lt;</button>
+        <button onClick={handlePrevMonth} disabled={isRefetching || !!animationClass || isLoading}>&lt;</button>
         <DatePicker
           selected={selectedDate}
           onChange={(date) => setSelectedDate(date)}
@@ -359,15 +382,11 @@ const Dashboard = () => {
           showFullMonthYearPicker
           className="month-picker-input"
           popperPlacement="bottom"
-          disabled={isRefetching || !!animationClass}
+          disabled={isRefetching || !!animationClass || isLoading}
         />
-        <button onClick={handleNextMonth} disabled={isRefetching || !!animationClass}>&gt;</button>
+        <button onClick={handleNextMonth} disabled={isRefetching || !!animationClass || isLoading}>&gt;</button>
       </div>
       
-      {/* [DIHAPUS] Error dipindah ke dalam wrapper 
-        {error && <p className="error" ...>{error}</p>}
-      */}
-
       <div 
         className="dashboard-content-wrapper"
         onTouchStart={handleTouchStart}
@@ -375,8 +394,8 @@ const Dashboard = () => {
       >
         {/* === [MODIFIKASI LOGIKA RENDER] === */}
 
-        {/* 1. Loading State */}
-        {isLoading || isRefetching ? (
+        {/* 1. Loading State (termasuk refetching) */}
+        {showSkeleton ? (
           <DashboardSkeleton />
         ) : 
         
