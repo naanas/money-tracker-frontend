@@ -28,11 +28,12 @@ const AuthCallback = () => {
         <div className="auth-form-container">
           <div className="verification-box">
             {!isVerified ? (
-              <>
-                <div className="spinner"></div>
-                <h2>Memverifikasi...</h2>
+              // [PERBAIKAN] Menggunakan spinner baru
+              <div className="page-spinner-container">
+                <div className="page-spinner"></div>
+                <h2 style={{marginTop: '1.5rem'}}>Memverifikasi...</h2>
                 <p>Harap tunggu sebentar...</p>
-              </>
+              </div>
             ) : (
               <>
                 <div className="checkmark-wrapper">

@@ -1427,3 +1427,98 @@ button:disabled {
   font-size: 0.9rem;
   color: var(--color-text-muted);
 }
+/* ... (SEMUA CSS ANDA DARI SEBELUMNYA) ... */
+
+
+/* === [BARU] CSS UNTUK OCR LOADING OVERLAY === */
+.ocr-loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(30, 30, 30, 0.85);
+  backdrop-filter: blur(2px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+  border-radius: 12px;
+  color: var(--color-text);
+}
+
+.ocr-loading-overlay .btn-spinner {
+  width: 30px;
+  height: 30px;
+  border-width: 4px;
+}
+
+.ocr-loading-overlay p {
+  margin-top: 1rem;
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+
+
+/* === [BARU] ANIMASI & SKELETON LOADING === */
+
+/* Animasi denyut untuk skeleton */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Kontainer untuk skeleton loader */
+.skeleton-loader {
+  /* Gunakan animasi pulse */
+  animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Base untuk kartu skeleton */
+.skeleton-card {
+  background-color: var(--color-bg-light); /* Lebih terang dari card asli */
+  padding: 1.5rem;
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Base untuk garis teks skeleton */
+.skeleton-line {
+  height: 1rem;
+  background-color: var(--color-border); /* Lebih gelap, warna placeholder */
+  border-radius: 4px;
+  margin-bottom: 0.75rem;
+}
+
+/* Variasi ukuran skeleton */
+.skeleton-line.h-1-5 { height: 1.5rem; margin-bottom: 1rem; }
+.skeleton-line.w-75 { width: 75%; }
+.skeleton-line.w-50 { width: 50%; }
+.skeleton-line.w-25 { width: 25%; }
+
+
+/* Spinner Halaman Penuh (untuk AuthCheck & Callback) */
+.page-spinner-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 250px;
+}
+
+.page-spinner {
+  width: 50px;
+  height: 50px;
+  border-width: 5px;
+  border: 5px solid var(--color-border);
+  border-radius: 50%;
+  border-top-color: var(--color-primary);
+  animation: spin 1s linear infinite; /* Menggunakan @keyframes spin yang sudah ada */
+}

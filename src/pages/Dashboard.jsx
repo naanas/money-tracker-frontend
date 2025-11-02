@@ -13,6 +13,78 @@ import SavingsGoals from '../components/SavingsGoals';
 import TransferForm from '../components/TransferForm'; // [BARU]
 import AccountSummary from '../components/AccountSummary'; // [BARU]
 
+// [BARU] Komponen Skeleton untuk loading
+const DashboardSkeleton = () => (
+  <div className="skeleton-loader">
+    {/* 1. Month Navigator Skeleton */}
+    <div 
+      className="month-navigator" 
+      style={{ 
+        backgroundColor: 'var(--color-bg-light)', 
+        justifyContent: 'center',
+        opacity: 0.7
+      }}
+    >
+      <div className="skeleton-line h-1-5" style={{ width: '200px', backgroundColor: 'var(--color-border)', margin: 0 }}></div>
+    </div>
+
+    {/* 2. Grid Skeleton */}
+    <div className="dashboard-grid">
+      {/* Card 1: Summary */}
+      <div className="skeleton-card">
+        <div className="skeleton-line h-1-5 w-50" style={{ backgroundColor: 'var(--color-border)' }}></div>
+        <div className="skeleton-line w-75"></div>
+        <div className="skeleton-line w-75"></div>
+        <div className="skeleton-line w-75"></div>
+        <div className="skeleton-line h-1-5 w-75" style={{ marginTop: '1.5rem' }}></div>
+      </div>
+
+      {/* Card 2: Accounts */}
+      <div className="skeleton-card">
+        <div className="skeleton-line h-1-5 w-50" style={{ backgroundColor: 'var(--color-border)' }}></div>
+        <div className="skeleton-line w-75"></div>
+        <div className="skeleton-line w-75"></div>
+        <div className="skeleton-line" style={{ height: '40px', marginTop: '1.5rem' }}></div>
+      </div>
+
+      {/* Card 3: Budget (Span 2) */}
+      <div className="skeleton-card" style={{ gridColumn: 'span 1 / -1' }}>
+        <div className="skeleton-line h-1-5 w-25" style={{ backgroundColor: 'var(--color-border)' }}></div>
+        <div className="skeleton-line" style={{ height: '20px', margin: '1rem 0' }}></div>
+        <div className="skeleton-line" style={{ height: '80px', marginTop: '1.5rem' }}></div>
+      </div>
+
+      {/* Card 4: Transaction Form */}
+      <div className="skeleton-card">
+        <div className="skeleton-line h-1-5 w-50" style={{ backgroundColor: 'var(--color-border)' }}></div>
+        <div className="skeleton-line" style={{ height: '40px', marginTop: '1rem' }}></div>
+        <div className="skeleton-line" style={{ height: '40px', marginTop: '1rem' }}></div>
+        <div className="skeleton-line" style={{ height: '40px', marginTop: '1rem' }}></div>
+        <div className="skeleton-line" style={{ height: '40px', marginTop: '1rem' }}></div>
+      </div>
+
+      {/* Card 7: Transaction List (Span 2 Row) */}
+      <div className="skeleton-card" style={{ gridRow: 'span 2' }}>
+        <div className="skeleton-line h-1-5 w-50" style={{ backgroundColor: 'var(--color-border)' }}></div>
+        <div className="skeleton-line" style={{ height: '3rem', marginTop: '1rem' }}></div>
+        <div className="skeleton-line" style={{ height: '3rem', marginTop: '1rem' }}></div>
+        <div className="skeleton-line" style={{ height: '3rem', marginTop: '1rem' }}></div>
+        <div className="skeleton-line" style={{ height: '3rem', marginTop: '1rem' }}></div>
+        <div className="skeleton-line" style={{ height: '3rem', marginTop: '1rem' }}></div>
+      </div>
+
+      {/* Card 5: Transfer Form */}
+      <div className="skeleton-card">
+          <div className="skeleton-line h-1-5 w-50" style={{ backgroundColor: 'var(--color-border)' }}></div>
+        <div className="skeleton-line" style={{ height: '40px', marginTop: '1rem' }}></div>
+        <div className="skeleton-line" style={{ height: '40px', marginTop: '1rem' }}></div>
+        <div className="skeleton-line" style={{ height: '40px', marginTop: '1rem' }}></div>
+      </div>
+    </div>
+  </div>
+);
+
+
 const Dashboard = () => {
   const { triggerSuccessAnimation } = useAuth();
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -240,10 +312,9 @@ const Dashboard = () => {
       
       {error && <p className="error" style={{textAlign: 'center', padding: '1rem', backgroundColor: 'var(--color-bg-medium)', borderRadius: '12px'}}>{error}</p>}
 
+      {/* === [PERUBAHAN UTAMA LOADING] === */}
       {isLoading ? (
-        <div className="loading-content">
-           {/* Halaman kosong saat loading awal */}
-        </div>
+        <DashboardSkeleton />
       ) : (
         analytics ? (
           <div className="dashboard-grid" style={{ opacity: isRefetching ? 0.8 : 1, transition: 'opacity 0.3s' }}>
@@ -419,6 +490,7 @@ const Dashboard = () => {
           )
         )
       )}
+      {/* === [AKHIR PERUBAHAN LOADING] === */}
 
       {isCategoryModalOpen && (
         <CategoryForm 
