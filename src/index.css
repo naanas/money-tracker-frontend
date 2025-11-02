@@ -362,11 +362,32 @@ button:disabled {
 
 /* [BARU] Style untuk Total Dana Tabungan */
 .card-summary .summary-item.total-savings {
+  /* Sudah ada, hanya modifikasi */
+  font-size: 1.6em; /* Perbesar dari 1.4em */
   margin-top: 1rem;
+  font-weight: 600; /* Sedikit lebih tebal */
+}
+.card-summary .summary-item.total:last-child {
+  font-size: 1.3em; /* Sedikit lebih kecil dari "Sisa Uang" */
+  margin-top: 0.5rem;
+  font-weight: 500;
   border-top: 1px solid var(--color-border);
   padding-top: 0.75rem;
+}
+/* Target spesifik "Sisa Uang" */
+.card-summary .summary-item.total:nth-last-child(2) {
+  font-size: 1.8em; /* Paling besar */
+  font-weight: 700;
+  color: var(--color-text); /* Pastikan putih cerah */
+}
+
+.card-summary .summary-item:not(.total) {
+  font-size: 1em; /* Perkecil item pendukung */
+  color: var(--color-text-muted); /* Buat sedikit redup */
+}
+.card-summary .summary-item:not(.total) > span:last-child {
+  color: var(--color-text); /* Nilainya tetap cerah */
   font-weight: 500;
-  font-size: 1.1em;
 }
 /* [AKHIR BARU] */
 
