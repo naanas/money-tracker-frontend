@@ -2,8 +2,6 @@ import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react'
 import { useAuth } from '../contexts/AuthContext';
 import axiosClient from '../api/axiosClient';
 import { formatCurrency, formatMonthYear } from '../utils/format';
-// [BARU] Impor DataContext
-import { useData } from '../contexts/DataContext'; 
 
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
@@ -15,23 +13,7 @@ import SavingsGoals from '../components/SavingsGoals';
 import TransferForm from '../components/TransferForm'; 
 import AccountSummary from '../components/AccountSummary'; 
 
-// [BARU] Komponen Notifikasi Selamat Datang
-const WelcomeNotification = () => (
-  <div className="card welcome-notification-card">
-    <h2>Selamat Datang di Money Tracker! 👋</h2>
-    <p>
-      Langkah pertama untuk memulai adalah membuat akun (rekening bank, dompet digital, atau tunai) untuk melacak transaksi Anda.
-    </p>
-    <p>
-      Setelah Anda membuat akun, dashboard lengkap Anda akan muncul di sini.
-    </p>
-    <Link to="/accounts" className="btn-go-to-accounts">
-      Buat Akun Sekarang
-    </Link>
-  </div>
-);
-
-// Komponen Skeleton (Tidak berubah)
+// Komponen Skeleton untuk loading
 const DashboardSkeleton = () => (
   <div className="skeleton-loader">
     {/* 1. Month Navigator Skeleton */}
@@ -48,7 +30,7 @@ const DashboardSkeleton = () => (
 
     {/* 2. Grid Skeleton */}
     <div className="dashboard-grid">
-      {/* ... (isi skeleton tidak berubah) ... */}
+      {/* Card 1: Summary */}
       <div className="skeleton-card">
         <div className="skeleton-line h-1-5 w-50" style={{ backgroundColor: 'var(--color-border)' }}></div>
         <div className="skeleton-line w-75"></div>
@@ -107,10 +89,7 @@ const Dashboard = () => {
   const { triggerSuccessAnimation } = useAuth();
   const [selectedDate, setSelectedDate] = useState(new Date());
   
-  // === [MODIFIKASI] Ambil data dari DataContext ===
-  const { accounts, categories, staticLoading, refetchAccounts, refetchCategories } = useData();
-  
-  // State Data Bulanan (Analytics & Transaksi)
+  // State Data Utama
   const [analytics, setAnalytics] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -118,21 +97,22 @@ const Dashboard = () => {
   const [allSavingsGoals, setAllSavingsGoals] = useState([]); 
   
   // State UI
-  const [isMonthlyLoading, setIsMonthlyLoading] = useState(true); // Loading data bulanan
+  const [isLoading, setIsLoading] = useState(true); 
   const [isRefetching, setIsRefetching] = useState(false); 
   const [error, setError] = useState('');
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [budgetToEdit, setBudgetToEdit] = useState(null);
   const isInitialMount = useRef(true); 
 
+  // State untuk Animasi & Geser
   const [animationClass, setAnimationClass] = useState('');
   const [touchStart, setTouchStart] = useState(null);
   const minSwipeDistance = 75; 
 
-  // === [MODIFIKASI] fetchMonthlyData ===
+  // Fungsi untuk mengambil data bulanan (Analytics + Transaksi)
   const fetchMonthlyData = useCallback(async () => {
     if (isInitialMount.current) {
-      setIsMonthlyLoading(true); // Gunakan state loading bulanan
+      setIsLoading(true); 
       isInitialMount.current = false;
     } else {
       setIsRefetching(true);
@@ -141,48 +121,62 @@ const Dashboard = () => {
     
     const month = selectedDate.getMonth() + 1;
     const year = selectedDate.getFullYear();
-    
-    // [BARU] Tambahkan filter ke params
-    const params = { month, year };
-    if (filterType) params.type = filterType;
-    if (filterAccountId) params.account_id = filterAccountId;
-    
+    const params = { month, year }; 
+
     try {
-      // Ambil data tabungan BERSAMAAN dengan data bulanan
-      const [analyticsRes, transactionsRes, savingsRes] = await Promise.all([
+      const [analyticsRes, transactionsRes] = await Promise.all([
         axiosClient.get('/api/analytics/summary', { params }),
         axiosClient.get('/api/transactions', { params }), 
-        axiosClient.get('/api/savings'), // Ambil tabungan di sini
       ]);
       setAnalytics(analyticsRes.data.data);
       setTransactions(transactionsRes.data.data.transactions);
-      setAllSavingsGoals(savingsRes.data.data); // Set tabungan di sini
     } catch (err) {
       console.error("Failed to fetch monthly data:", err);
       setError(err.response?.data?.error || 'Gagal mengambil data bulanan');
     } finally {
-      setIsMonthlyLoading(false); // Selesai loading bulanan
+      setIsLoading(false); 
       setIsRefetching(false);
     }
   }, [selectedDate]); 
 
-  // === [DIHAPUS] fetchStaticData dihapus, sudah di Context ===
-  // const fetchStaticData = useCallback(async () => { ... }, []);
-  // useEffect(() => { fetchStaticData(); }, [fetchStaticData]);
+  // Fungsi untuk mengambil data statis (Kategori + Tabungan + Akun)
+  const fetchStaticData = useCallback(async () => {
+    try {
+      const [categoriesRes, savingsRes, accountsRes] = await Promise.all([
+        axiosClient.get('/api/categories'),
+        axiosClient.get('/api/savings'),
+        axiosClient.get('/api/accounts'),
+      ]);
+      setCategories(categoriesRes.data.data);
+      setAllSavingsGoals(savingsRes.data.data);
+      setAccounts(accountsRes.data.data);
+    } catch (err)
+ {
+      console.error("Failed to fetch static data:", err);
+      setError(err.response?.data?.error || 'Gagal mengambil data statis');
+    }
+  }, []);
 
-  // === [MODIFIKASI] EFEK 2 ===
-  // Ambil data bulanan saat TANGGAL atau data STATIS (dari context) berubah
+  // EFEK 1: Ambil data statis SEKALI
   useEffect(() => {
-    // Jangan fetch jika data statis (terutama kategori/akun) belum siap
-    // ATAU jika user tidak punya akun
-    if (staticLoading || accounts.length === 0) return;
+    fetchStaticData();
+  }, [fetchStaticData]);
+
+  // EFEK 2: Ambil data bulanan saat TANGGAL atau data STATIS berubah
+  useEffect(() => {
+    if (categories.length === 0 || accounts.length === 0) return;
     
     fetchMonthlyData();
-  }, [selectedDate, accounts, categories, staticLoading, fetchMonthlyData]); 
+  }, [selectedDate, categories, accounts, fetchMonthlyData]); 
 
-  // === [MODIFIKASI] Fungsi Refetch ===
-  // Hapus refetchCategories dan refetchAccounts, kita pakai dari context
-  
+  // Fungsi untuk mengambil ulang data individual
+  const refetchCategories = useCallback(async () => {
+    try {
+      const res = await axiosClient.get('/api/categories');
+      setCategories(res.data.data);
+    } catch (err) { console.error("Failed to re-fetch categories:", err); }
+  }, []);
+
   const refetchSavings = useCallback(async () => {
     try {
       const res = await axiosClient.get('/api/savings');
@@ -211,8 +205,7 @@ const Dashboard = () => {
     setBudgetToEdit(null); 
     setIsRefetching(false); 
   };
-  
-  // ... (SEMUA FUNGSI MEMO & HANDLER LAINNYA TIDAK BERUBAH) ...
+
   // Memo untuk total saldo
   const totalBalance = useMemo(() => {
     return accounts.reduce((sum, acc) => sum + parseFloat(acc.current_balance), 0);
@@ -222,6 +215,7 @@ const Dashboard = () => {
   const filteredSavingsGoals = useMemo(() => {
     const goals = allSavingsGoals;
     const selectedMonthStart = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
+    
     return goals.filter(goal => {
       if (!goal.target_date) return true;
       const targetDate = new Date(goal.target_date);
@@ -231,6 +225,8 @@ const Dashboard = () => {
       return true; 
     });
   }, [allSavingsGoals, selectedDate]);
+
+  // Memo untuk budget pockets
   const budgetPockets = useMemo(() => {
     if (!analytics) return [];
     const budgetDetails = analytics.budget?.details || [];
@@ -247,6 +243,8 @@ const Dashboard = () => {
     });
     return pockets;
   }, [analytics]);
+
+  // Variabel ringkasan
   const totalIncome = analytics?.summary?.total_income || 0;
   const totalExpensesFiltered = analytics?.summary?.total_expenses || 0;
   const totalTransferredToSavings = analytics?.summary?.total_transferred_to_savings || 0;
@@ -255,6 +253,8 @@ const Dashboard = () => {
   const totalRemaining = totalBudget - totalSpent; 
   const totalProgress = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
   const currentBalance = totalIncome - totalSpent; 
+
+  // Handler Navigasi & Geser
   const handlePrevMonth = () => {
     if (isRefetching || animationClass) return;
     setAnimationClass('slide-in-right');
@@ -265,14 +265,17 @@ const Dashboard = () => {
     setAnimationClass('slide-in-left');
     setSelectedDate(prevDate => new Date(prevDate.getFullYear(), prevDate.getMonth() + 1, 1));
   };
+
   const handleTouchStart = (e) => {
     if (isRefetching || animationClass) return;
     setTouchStart(e.targetTouches[0].clientX);
   };
+
   const handleTouchEnd = (e) => {
     if (touchStart === null || isRefetching || animationClass) return;
+    
     const touchEnd = e.changedTouches[0].clientX;
-    const deltaX = touchEnd - touchStartRef.current;
+    const deltaX = touchEnd - touchStart;
     
     if (deltaX > minSwipeDistance) {
       handlePrevMonth();
@@ -282,6 +285,8 @@ const Dashboard = () => {
     
     setTouchStart(null);
   };
+
+  // Handler Delete
   const handleDeleteBudget = async (e, budgetId) => {
     e.stopPropagation(); 
     if (!window.confirm('Yakin ingin menghapus budget pocket ini?')) return;
@@ -295,6 +300,7 @@ const Dashboard = () => {
       setIsRefetching(false);
     }
   };
+
   const handleDeleteTransaction = async (transactionId) => {
     if (!window.confirm('Yakin ingin menghapus transaksi ini?')) return;
     setError('');
@@ -307,40 +313,7 @@ const Dashboard = () => {
       setIsRefetching(false);
     }
   };
-
-  // === [MODIFIKASI] Logika Render Utama ===
   
-  // Tampilkan skeleton jika data statis (akun/kategori) masih dimuat
-  if (staticLoading) {
-    return (
-      <>
-        {/* Tampilkan navigator kosong selagi loading */}
-        <div className="month-navigator">
-          <button disabled>&lt;</button>
-          <div className="month-picker-input" style={{ width: '220px' }}></div>
-          <button disabled>&gt;</button>
-        </div>
-        <DashboardSkeleton />
-      </>
-    );
-  }
-
-  // Setelah data statis dimuat, cek apakah ada akun
-  if (!staticLoading && accounts.length === 0) {
-    return (
-      <>
-        {/* Tampilkan navigator kosong */}
-        <div className="month-navigator">
-          <button disabled>&lt;</button>
-          <div className="month-picker-input" style={{ width: '220px' }}></div>
-          <button disabled>&gt;</button>
-        </div>
-        <WelcomeNotification />
-      </>
-    );
-  }
-  
-  // Jika ada akun, lanjutkan ke render dashboard normal
   return (
     <>
       {/* [DIHAPUS] Loading bar tipis dihapus dari sini */}
@@ -367,8 +340,9 @@ const Dashboard = () => {
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
-        {/* Tampilkan skeleton jika loading bulanan ATAU refetching */}
-        {(isMonthlyLoading || isRefetching) ? (
+        {/* === [PERUBAHAN DI SINI] === */}
+        {/* Skeleton akan tampil saat isLoading ATAU isRefetching */}
+        {isLoading || isRefetching ? (
           <DashboardSkeleton />
         ) : (
           analytics ? (
@@ -404,8 +378,7 @@ const Dashboard = () => {
                   </div>
                 </section>
 
-                {/* Kirim akun dari context */}
-                <AccountSummary accounts={accounts} /> 
+                <AccountSummary accounts={accounts} />
 
                 <section className="card card-budget-pocket">
                   <h3>Budget Pockets</h3>
@@ -428,7 +401,7 @@ const Dashboard = () => {
                   </div>
                   
                   <BudgetForm 
-                    categories={categories} // dari context
+                    categories={categories} 
                     onBudgetSet={handleDataUpdate}
                     budgetToEdit={budgetToEdit}
                     onClearEdit={() => setBudgetToEdit(null)}
@@ -443,7 +416,31 @@ const Dashboard = () => {
                         onClick={() => pocket.id.startsWith('virtual-') ? null : setBudgetToEdit(pocket)}
                         title={pocket.id.startsWith('virtual-') ? "Kategori ini tidak di-budget" : "Klik untuk edit"}
                       >
-                          {/* ... (isi pocket-item tidak berubah) ... */}
+                          {!pocket.id.startsWith('virtual-') && (
+                            <button 
+                              className="pocket-delete-btn"
+                              onClick={(e) => handleDeleteBudget(e, pocket.id)}
+                              title="Hapus Budget Ini"
+                            >
+                              ✕
+                            </button>
+                          )}
+                          <div className="pocket-header">
+                            <span className="pocket-title">{pocket.category_name}</span>
+                            <span className={`pocket-remaining ${pocket.remaining < 0 ? 'expense' : ''}`}>
+                              {pocket.remaining < 0 ? 'Over!' : `${formatCurrency(pocket.remaining)} sisa`}
+                            </span>
+                          </div>
+                          <div className="progress-bar-container small">
+                            <div 
+                              className={`progress-bar-fill ${pocket.progress > 100 ? 'expense' : ''}`}
+                              style={{ width: `${Math.min(pocket.progress, 100)}%` }}
+                            ></div>
+                          </div>
+                          <div className="pocket-footer">
+                            <span className="expense">{formatCurrency(pocket.spent)}</span>
+                            <span className="total"> / {formatCurrency(pocket.amount)}</span>
+                          </div>
                       </div>
                     ))}
                   </div>
@@ -452,8 +449,8 @@ const Dashboard = () => {
                 <section className="card card-form">
                   <h3>Tambah Transaksi Baru</h3>
                   <TransactionForm 
-                    categories={categories} // dari context
-                    accounts={accounts} // dari context
+                    categories={categories} 
+                    accounts={accounts} 
                     onTransactionAdded={() => handleDataUpdate({ refetchAccounts: true })} 
                     onOpenCategoryModal={() => setIsCategoryModalOpen(true)}
                     selectedDate={selectedDate}
@@ -473,47 +470,39 @@ const Dashboard = () => {
                 
                 <SavingsGoals 
                   savingsGoals={filteredSavingsGoals} 
-                  accounts={accounts} // dari context
+                  accounts={accounts} 
                   onDataUpdate={() => handleDataUpdate({ refetchSavings: true, refetchAccounts: true })} 
                   isRefetching={isRefetching}
                 />
 
                 <section className="card card-list full-height-card">
                   <h3>Transaksi {formatMonthYear(selectedDate)}</h3>
-
-                  {/* === [UI FILTER BARU] === */}
-                  <div className="transaction-filters">
-                    <div className="form-group">
-                      <label>Tipe</label>
-                      <select value={filterType} onChange={(e) => setFilterType(e.target.value)}>
-                        <option value="">Semua Tipe</option>
-                        <option value="income">Pemasukan</option>
-                        <option value="expense">Pengeluaran</option>
-                      </select>
-                    </div>
-                    <div className="form-group">
-                      <label>Akun</label>
-                      <select value={filterAccountId} onChange={(e) => setFilterAccountId(e.target.value)}>
-                        <option value="">Semua Akun</option>
-                        {accounts.map(acc => (
-                          <option key={acc.id} value={acc.id}>{acc.name}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                  {/* === [AKHIR UI FILTER] === */}
-
                   <ul>
                     {transactions.length > 0 ? (
                       transactions.map((t) => (
                         <li key={t.id} className="list-item">
-                          {/* ... (isi list-item tidak berubah) ... */}
+                          <button 
+                            className="btn-delete-item"
+                            title="Hapus transaksi ini"
+                            onClick={() => handleDeleteTransaction(t.id)}
+                          >
+                            ✕
+                          </button>
+                          <div className="list-item-details">
+                            <strong>{t.description || t.category}</strong>
+                            <span>
+                              {new Date(t.date).toLocaleDateString('id-ID', {day: '2-digit', month: 'short'})}
+                              {t.accounts ? ` • ${t.accounts.name}` : ''}
+                            </span>
+                          </div>
+                          <span className={t.type}>
+                            {t.type === 'expense' ? '-' : '+'}
+                            {formatCurrency(t.amount)}
+                          </span>
                         </li>
                       ))
                     ) : (
-                      <p style={{textAlign: 'center', marginTop: '1rem', color: 'var(--color-text-muted)'}}>
-                        Belum ada transaksi di bulan ini (atau sesuai filter Anda).
-                      </p>
+                      <p>Belum ada transaksi di bulan ini.</p>
                     )}
                   </ul>
                 </section>

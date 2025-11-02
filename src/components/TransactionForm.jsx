@@ -12,18 +12,14 @@ const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCateg
   const [description, setDescription] = useState('');
   const [accountId, setAccountId] = useState(''); 
   
-  // === [PERBAIKAN LOGIKA TANGGAL] ===
+  // === [MODIFIKASI] ===
+  // Fungsi ini sekarang HANYA mengembalikan tanggal hari ini.
   const getInitialDate = () => {
-    // Gunakan tanggal dari dashboard JIKA ADA
-    if (selectedDate) {
-      return selectedDate.toISOString().split('T')[0];
-    }
-    // Fallback ke hari ini
     const today = new Date();
     return today.toISOString().split('T')[0];
   };
   const [date, setDate] = useState(getInitialDate);
-  // === [AKHIR PERBAIKAN] ===
+  // === [AKHIR MODIFIKASI] ===
 
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -42,12 +38,12 @@ const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCateg
     }
   }, [accounts, accountId]);
 
-  // === [PERBAIKAN LOGIKA TANGGAL] ===
-  // Gunakan lagi useEffect ini untuk update tanggal saat selectedDate berubah
-  useEffect(() => {
-    setDate(getInitialDate());
-  }, [selectedDate]);
-  // === [AKHIR PERBAIKAN] ===
+  // === [MODIFIKASI] ===
+  // Hapus useEffect yang memantau selectedDate
+  // useEffect(() => {
+  //   setDate(getInitialDate());
+  // }, [selectedDate]);
+  // === [AKHIR MODIFIKASI] ===
 
   useEffect(() => {
     setCategory('');

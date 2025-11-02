@@ -4,9 +4,9 @@ import { useAuth } from '../contexts/AuthContext';
 import axiosClient from '../api/axiosClient';
 import ThemeToggle from './ThemeToggle';
 
-// Pisahkan Sidebar
+// Pisahkan Sidebar agar bisa dipakai ulang
 const Sidebar = ({ onLogout, onReset }) => {
-  const { user, profile } = useAuth(); // [MODIFIKASI] Ambil profile
+  const { user } = useAuth();
   const location = useLocation();
   const currentPath = location.pathname;
 
@@ -17,6 +17,7 @@ const Sidebar = ({ onLogout, onReset }) => {
       </div>
       
       <nav className="sidebar-nav">
+        {/* ... (Link navigasi tidak berubah) ... */}
         <Link 
           to="/dashboard" 
           className={currentPath === '/' || currentPath === '/dashboard' ? 'active' : ''}
@@ -35,20 +36,12 @@ const Sidebar = ({ onLogout, onReset }) => {
         >
           Laporan
         </Link>
-        {/* [LINK BARU] */}
-        <Link 
-          to="/profile" 
-          className={currentPath === '/profile' ? 'active' : ''}
-        >
-          Profil Saya
-        </Link>
       </nav>
 
       <div className="sidebar-footer">
         {/* Toggle ini untuk Desktop */}
         <ThemeToggle /> 
-        {/* [MODIFIKASI] Tampilkan nama atau email */}
-        <div className="user-info">{profile?.full_name || user?.email}</div>
+        <div className="user-info">{user?.email}</div>
         <button onClick={onLogout} className="logout-btn">
           Logout
         </button>
@@ -66,6 +59,7 @@ const MainLayout = () => {
   const [isResetting, setIsResetting] = useState(false);
 
   const handleResetTransactions = async () => {
+    // ... (Fungsi ini tidak berubah) ...
     const pass = prompt('Ini akan MENGHAPUS SEMUA data transaksi DAN progress tabungan Anda.\nKetik "RESET" untuk konfirmasi:');
     if (pass !== 'RESET') {
       alert('Reset dibatalkan.');
@@ -95,6 +89,7 @@ const MainLayout = () => {
         <header className="mobile-header">
             <h1>💰 Money Tracker</h1>
             <div>
+              {/* [DIHAPUS] ThemeToggle dipindah dari sini */}
               <button onClick={handleResetTransactions} className="btn-reset-mobile" title="Reset All Data">
                 Reset
               </button>
@@ -106,12 +101,10 @@ const MainLayout = () => {
                 <Link to="/dashboard">Dashboard</Link>
                 <Link to="/accounts">Akun</Link>
                 <Link to="/reports">Laporan</Link>
-                {/* [LINK BARU] */}
-                <Link to="/profile">Profil</Link> 
             </nav>
         </header>
 
-        {/* Toggle melayang di mobile */}
+        {/* [BARU] Toggle dipindah ke sini. Ini akan menjadi tombol melayang di mobile */}
         <ThemeToggle />
 
         <Outlet />

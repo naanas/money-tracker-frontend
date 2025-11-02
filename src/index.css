@@ -93,7 +93,6 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   scroll-behavior: smooth;
-  /* [BARU] Transisi halus saat ganti tema */
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
@@ -1345,6 +1344,85 @@ button:disabled {
 .account-list {
   margin-top: 1.5rem;
 }
+/* === [BARU] CSS UNTUK AKUN SWIPE === */
+
+.pocket-item-swipe-wrapper {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-large);
+  /* Latar belakang dipindah ke wrapper agar tombol tersembunyi terlihat */
+  background-color: var(--color-bg-light); 
+  transition: background-color 0.3s ease;
+}
+
+.pocket-item-actions {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  display: flex;
+  align-items: stretch; /* Membuat tombol setinggi kartu */
+}
+
+.pocket-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px; /* Lebar setiap tombol */
+  border: none;
+  border-radius: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 0;
+}
+
+.pocket-action-btn.btn-edit {
+  background-color: var(--color-border);
+  color: var(--color-text);
+}
+.pocket-action-btn.btn-edit:hover {
+  background-color: var(--color-bg-light);
+}
+
+.pocket-action-btn.btn-delete {
+  background-color: var(--color-accent-error);
+  color: white;
+}
+.pocket-action-btn.btn-delete:hover {
+  filter: brightness(1.2);
+}
+
+.pocket-item-content {
+  /* Ini adalah kartu yang terlihat dan bisa digeser */
+  position: relative;
+  background-color: var(--color-bg-medium);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-large);
+  padding: 1rem;
+  transition: transform 0.3s ease-out, background-color 0.3s ease, border-color 0.3s ease;
+  z-index: 2; /* Pastikan di atas tombol */
+  cursor: grab; /* Tanda bisa digeser */
+}
+
+.pocket-item-content.swiped-open {
+  /* Geser ke kiri sejauh 160px (2 tombol x 80px) */
+  transform: translateX(-160px);
+  cursor: default; /* Tidak perlu digeser lagi jika sudah terbuka */
+}
+
+/* Di desktop, kita tidak ingin ada swipe. Cukup hover */
+@media (min-width: 769px) {
+  .pocket-item-content {
+    cursor: default;
+  }
+  .pocket-item-swipe-wrapper:hover .pocket-item-content {
+    transform: translateX(-160px);
+  }
+  .pocket-item-content.swiped-open {
+     /* Hapus state swipe di desktop agar hover bisa mengontrol */
+    transform: translateX(0);
+  }
+}
 
 /* === HALAMAN LAPORAN === */
 .reports-page h2 {
@@ -1489,21 +1567,12 @@ button:disabled {
   margin-bottom: 1.25rem;
 }
 .auth-forgot-password {
-  background: none;
-  border: none;
-  color: var(--color-primary);
   font-size: 0.9rem;
-  font-weight: 500;
-  padding: 0;
-  width: auto;
-  text-align: right;
+  color: var(--color-primary);
   text-decoration: none;
 }
 .auth-forgot-password:hover {
   text-decoration: underline;
-  background: none;
-  box-shadow: none;
-  transform: none;
 }
 .auth-switch-page {
   text-align: center;
@@ -1533,24 +1602,6 @@ button:disabled {
 .auth-form-container p.error {
   display: none;
 }
-.auth-success-box {
-  background-color: rgba(74, 222, 128, 0.1);
-  border: 1px solid var(--color-accent-success);
-  padding: 0.75rem 1rem;
-  border-radius: var(--radius-medium);
-  margin-bottom: 1.25rem;
-}
-.auth-success-box p {
-  color: var(--color-text);
-  font-weight: 500;
-  margin: 0;
-  text-align: center;
-}
-:root[data-theme='light'] .auth-success-box p {
-  color: var(--color-accent-income);
-  font-weight: 600;
-}
-
 
 /* === SKELETON LOADING === */
 @keyframes pulse {
@@ -1607,6 +1658,7 @@ button:disabled {
   0% { transform: translateX(-100%); opacity: 0; }
   100% { transform: translateX(0); opacity: 1; }
 }
+
 .dashboard-grid.slide-in-left {
   animation: slideInFromLeft 0.3s ease-out forwards;
 }
@@ -1693,24 +1745,30 @@ input:checked + .theme-slider .slider-icon {
   display: none;
 }
 
+
 /* === MEDIA QUERIES (MOBILE) === */
 @media (max-width: 768px) {
+  /* ... (semua style mobile Anda yang lain) ... */
+  
   .main-content {
-    padding-bottom: 100px;
+    padding-bottom: 100px; /* Perbanyak ruang untuk FAB */
   }
   
+  /* [BARU] Logika Mobile: */
   /* 1. Sembunyikan toggle di sidebar */
   .sidebar-footer .theme-switch {
     display: none;
   }
   
-  /* 2. Tampilkan toggle di main-content sebagai FAB */
+  /* 2. Tampilkan toggle di main-content sebagai FAB (Floating Action Button) */
   .main-content > .theme-switch {
     display: inline-block;
     position: fixed;
-    bottom: 80px;
+    bottom: 80px; /* 60px (nav) + 20px (padding) */
     right: 20px;
     z-index: 999;
+    
+    /* Styling tambahan untuk FAB */
     box-shadow: var(--shadow-medium);
     border-radius: 34px;
   }
@@ -1718,50 +1776,4 @@ input:checked + .theme-slider .slider-icon {
   :root[data-theme='light'] .main-content > .theme-switch {
      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   }
-}
-/* ... (SEMUA CSS ANDA SEBELUMNYA) ... */
-
-/* === [BARU] CSS UNTUK KARTU NOTIFIKASI AKUN === */
-
-.welcome-notification-card {
-  text-align: center;
-  padding: 2.5rem;
-}
-
-.welcome-notification-card h2 {
-  font-size: 1.8rem;
-  font-weight: 600;
-  margin-top: 0;
-  margin-bottom: 1rem;
-}
-
-.welcome-notification-card p {
-  font-size: 1.1rem;
-  color: var(--color-text-muted);
-  max-width: 600px;
-  margin: 0.5rem auto 1rem;
-  line-height: 1.7;
-}
-
-.btn-go-to-accounts {
-  /* Terapkan style yang sama dengan tombol primary */
-  display: inline-block; /* Ubah dari <a> */
-  border-radius: var(--radius-medium);
-  border: 1px solid transparent;
-  padding: 0.75rem 1.5rem;
-  font-size: 1rem;
-  font-weight: 600;
-  font-family: inherit;
-  background-color: var(--color-primary);
-  color: var(--color-button-text);
-  cursor: pointer;
-  transition: all 0.25s ease;
-  text-decoration: none;
-  margin-top: 1.5rem;
-}
-
-.btn-go-to-accounts:hover {
-  background-color: var(--color-primary-hover);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 12px var(--color-primary-glow-shadow); 
 }

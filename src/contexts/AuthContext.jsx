@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import axiosClient from '../api/axiosClient';
 import { useNavigate } from 'react-router-dom';
@@ -11,80 +11,65 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true); 
   const navigate = useNavigate();
 
-  // === [MODIFIKASI] ===
-  const [profile, setProfile] = useState(null); // State baru untuk data tabel 'users'
-  const [authEvent, setAuthEvent] = useState(null); 
-
+  // === [STATE BARU UNTUK ANIMASI SUKSES] ===
   const [showSuccess, setShowSuccess] = useState(false);
   const [successTimeoutId, setSuccessTimeoutId] = useState(null);
-
-  // [BARU] Fungsi untuk mengambil data profil dari API kita
-  const fetchUserProfile = useCallback(async () => {
-    try {
-      const { data } = await axiosClient.get('/api/auth/profile');
-      setProfile(data.data);
-    } catch (error) {
-      console.error("Gagal mengambil profil user:", error);
-      // Jika gagal (misal: RLS), logout paksa
-      await supabase.auth.signOut();
-      setProfile(null);
-    }
-  }, []);
+  // === [AKHIR STATE BARU] ===
 
   useEffect(() => {
+    // Listener ini sudah benar (dari perbaikan sebelumnya)
     const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event, session) => { // Buat jadi async
+      (event, session) => {
         console.log('Auth Event:', event, session);
         setSession(session);
         setUser(session?.user ?? null);
-        
-        // === [MODIFIKASI] ===
-        if (session) {
-          // Jika user login, langsung ambil datanya
-          await fetchUserProfile();
-        } else {
-          // Jika user logout, bersihkan profile
-          setProfile(null);
-        }
-        // === [AKHIR MODIFIKASI] ===
-        
         setLoading(false); 
-        
-        const hash = window.location.hash;
-        if (hash.includes('type=recovery') && (event === 'SIGNED_IN' || event === 'PASSWORD_RECOVERY')) {
-          setAuthEvent('PASSWORD_RECOVERY');
-        } else {
-          setAuthEvent(event);
-        }
       }
     );
-
     return () => {
       authListener.subscription.unsubscribe();
     };
-  }, [fetchUserProfile]); // Tambahkan dependency
+  }, []);
 
+  // === [FUNGSI BARU UNTUK MEMICU ANIMASI] ===
   const triggerSuccessAnimation = () => {
-    if (successTimeoutId) clearTimeout(successTimeoutId);
+    // Jika animasi sedang berjalan, reset timernya
+    if (successTimeoutId) {
+      clearTimeout(successTimeoutId);
+    }
+    
     setShowSuccess(true);
+    
+    // Sembunyikan animasi setelah 1.5 detik
     const newTimeoutId = setTimeout(() => {
       setShowSuccess(false);
       setSuccessTimeoutId(null);
-    }, 1500); 
+    }, 1500); // 1.5 detik
     setSuccessTimeoutId(newTimeoutId);
   };
-  
+  // === [AKHIR FUNGSI BARU] ===
+
+
+  // ... (fungsi register, login, logout tidak berubah)
   const register = async (email, password, fullName) => {
     const { data } = await axiosClient.post('/api/auth/register', {
-      email, password, full_name: fullName,
+      email,
+      password,
+      full_name: fullName,
     });
     return data; 
   };
   
   const login = async (email, password) => {
-    const { data } = await axiosClient.post('/api/auth/login', { email, password });
+    const { data } = await axiosClient.post('/api/auth/login', {
+      email,
+      password,
+    });
     await supabase.auth.setSession(data.data.session);
-    triggerSuccessAnimation(); 
+    
+    // [PERUBAHAN DITAMBAHKAN DI SINI]
+    triggerSuccessAnimation(); // Panggil animasi sukses
+
     navigate('/dashboard');
     return data;
   };
@@ -94,29 +79,22 @@ export function AuthProvider({ children }) {
     navigate('/login');
   };
 
-  const clearAuthEvent = () => {
-    setAuthEvent(null);
-    navigate('/login');
-  };
-
   const value = {
     session,
     user,
-    profile, // [BARU] Ekspor profile
-    refetchProfile: fetchUserProfile, // [BARU] Ekspor fungsi refetch
     loading,
-    authEvent,
-    clearAuthEvent,
     register,
     login,
     logout,
-    triggerSuccessAnimation,
+    triggerSuccessAnimation, // [BARU] Ekspor fungsi ini
   };
 
   return (
     <AuthContext.Provider value={value}>
       {!loading && children}
 
+      {/* === [ANIMASI SUKSES RENDER GLOBAL] === */}
+      {/* Tampil di atas segalanya saat showSuccess = true */}
       {showSuccess && (
         <div className="success-animation-overlay">
           <div className="checkmark-wrapper">
@@ -127,6 +105,7 @@ export function AuthProvider({ children }) {
           </div>
         </div>
       )}
+      {/* === [AKHIR ANIMASI SUKSES] === */}
     </AuthContext.Provider>
   );
 }
