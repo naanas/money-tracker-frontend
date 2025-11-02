@@ -11,19 +11,25 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true); 
   const navigate = useNavigate();
 
-  // === [STATE BARU UNTUK ANIMASI SUKSES] ===
+  // === [STATE BARU] ===
+  // State untuk melacak event khusus (seperti reset password)
+  const [authEvent, setAuthEvent] = useState(null); 
+
   const [showSuccess, setShowSuccess] = useState(false);
   const [successTimeoutId, setSuccessTimeoutId] = useState(null);
-  // === [AKHIR STATE BARU] ===
 
   useEffect(() => {
-    // Listener ini sudah benar (dari perbaikan sebelumnya)
+    // [MODIFIKASI] Ambil 'event'
     const { data: authListener } = supabase.auth.onAuthStateChange(
       (event, session) => {
         console.log('Auth Event:', event, session);
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false); 
+        
+        // [BARU] Tangkap event dan simpan di state
+        // Jika user klik link email, event-nya adalah 'PASSWORD_RECOVERY'
+        setAuthEvent(event); 
       }
     );
     return () => {
@@ -31,26 +37,18 @@ export function AuthProvider({ children }) {
     };
   }, []);
 
-  // === [FUNGSI BARU UNTUK MEMICU ANIMASI] ===
   const triggerSuccessAnimation = () => {
-    // Jika animasi sedang berjalan, reset timernya
     if (successTimeoutId) {
       clearTimeout(successTimeoutId);
     }
-    
     setShowSuccess(true);
-    
-    // Sembunyikan animasi setelah 1.5 detik
     const newTimeoutId = setTimeout(() => {
       setShowSuccess(false);
       setSuccessTimeoutId(null);
-    }, 1500); // 1.5 detik
+    }, 1500); 
     setSuccessTimeoutId(newTimeoutId);
   };
-  // === [AKHIR FUNGSI BARU] ===
 
-
-  // ... (fungsi register, login, logout tidak berubah)
   const register = async (email, password, fullName) => {
     const { data } = await axiosClient.post('/api/auth/register', {
       email,
@@ -66,10 +64,7 @@ export function AuthProvider({ children }) {
       password,
     });
     await supabase.auth.setSession(data.data.session);
-    
-    // [PERUBAHAN DITAMBAHKAN DI SINI]
-    triggerSuccessAnimation(); // Panggil animasi sukses
-
+    triggerSuccessAnimation(); 
     navigate('/dashboard');
     return data;
   };
@@ -79,22 +74,28 @@ export function AuthProvider({ children }) {
     navigate('/login');
   };
 
+  // [BARU] Fungsi untuk membersihkan state event
+  const clearAuthEvent = () => {
+    setAuthEvent(null);
+    navigate('/login'); // Arahkan kembali ke login
+  };
+
   const value = {
     session,
     user,
     loading,
+    authEvent, // [BARU] Ekspor state event
+    clearAuthEvent, // [BARU] Ekspor fungsi clear
     register,
     login,
     logout,
-    triggerSuccessAnimation, // [BARU] Ekspor fungsi ini
+    triggerSuccessAnimation,
   };
 
   return (
     <AuthContext.Provider value={value}>
       {!loading && children}
 
-      {/* === [ANIMASI SUKSES RENDER GLOBAL] === */}
-      {/* Tampil di atas segalanya saat showSuccess = true */}
       {showSuccess && (
         <div className="success-animation-overlay">
           <div className="checkmark-wrapper">
@@ -105,7 +106,6 @@ export function AuthProvider({ children }) {
           </div>
         </div>
       )}
-      {/* === [AKHIR ANIMASI SUKSES] === */}
     </AuthContext.Provider>
   );
 }
