@@ -1344,19 +1344,84 @@ button:disabled {
 .account-list {
   margin-top: 1.5rem;
 }
-.account-actions {
+/* === [BARU] CSS UNTUK AKUN SWIPE === */
+
+.pocket-item-swipe-wrapper {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-large);
+  /* Latar belakang dipindah ke wrapper agar tombol tersembunyi terlihat */
+  background-color: var(--color-bg-light); 
+  transition: background-color 0.3s ease;
+}
+
+.pocket-item-actions {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
   display: flex;
-  gap: 0.5rem;
-  margin-top: 1rem;
+  align-items: stretch; /* Membuat tombol setinggi kartu */
 }
-.account-actions button {
-  width: 100%;
+
+.pocket-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px; /* Lebar setiap tombol */
+  border: none;
+  border-radius: 0;
   font-size: 0.9rem;
-  padding: 0.5rem;
-  border-radius: var(--radius-medium);
+  font-weight: 600;
+  padding: 0;
 }
-.account-actions .btn-delete {
+
+.pocket-action-btn.btn-edit {
+  background-color: var(--color-border);
+  color: var(--color-text);
+}
+.pocket-action-btn.btn-edit:hover {
+  background-color: var(--color-bg-light);
+}
+
+.pocket-action-btn.btn-delete {
   background-color: var(--color-accent-error);
+  color: white;
+}
+.pocket-action-btn.btn-delete:hover {
+  filter: brightness(1.2);
+}
+
+.pocket-item-content {
+  /* Ini adalah kartu yang terlihat dan bisa digeser */
+  position: relative;
+  background-color: var(--color-bg-medium);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-large);
+  padding: 1rem;
+  transition: transform 0.3s ease-out, background-color 0.3s ease, border-color 0.3s ease;
+  z-index: 2; /* Pastikan di atas tombol */
+  cursor: grab; /* Tanda bisa digeser */
+}
+
+.pocket-item-content.swiped-open {
+  /* Geser ke kiri sejauh 160px (2 tombol x 80px) */
+  transform: translateX(-160px);
+  cursor: default; /* Tidak perlu digeser lagi jika sudah terbuka */
+}
+
+/* Di desktop, kita tidak ingin ada swipe. Cukup hover */
+@media (min-width: 769px) {
+  .pocket-item-content {
+    cursor: default;
+  }
+  .pocket-item-swipe-wrapper:hover .pocket-item-content {
+    transform: translateX(-160px);
+  }
+  .pocket-item-content.swiped-open {
+     /* Hapus state swipe di desktop agar hover bisa mengontrol */
+    transform: translateX(0);
+  }
 }
 
 /* === HALAMAN LAPORAN === */

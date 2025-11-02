@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import axiosClient from '../api/axiosClient';
 import { useAuth } from '../contexts/AuthContext';
 import { formatCurrency, formatNumberInput, parseNumberInput } from '../utils/format';
 
-// Komponen Form Akun
+// Komponen Form Akun (Tidak berubah)
 const AccountForm = ({ onAccountAdded, accountToEdit, setAccountToEdit }) => {
   const [name, setName] = useState('');
   const [type, setType] = useState('Bank');
@@ -108,6 +108,11 @@ const Accounts = () => {
   const [error, setError] = useState('');
   const [accountToEdit, setAccountToEdit] = useState(null);
 
+  // === [STATE BARU UNTUK SWIPE] ===
+  const [swipedAccountId, setSwipedAccountId] = useState(null);
+  const touchStartRef = useRef(null);
+  const minSwipeDistance = 50; // Jarak swipe minimal (pixel)
+
   const fetchAccounts = useCallback(async () => {
     setLoading(true);
     try {
@@ -126,6 +131,7 @@ const Accounts = () => {
   const handleSuccess = () => {
     fetchAccounts();
     triggerSuccessAnimation();
+    setSwipedAccountId(null); // Tutup semua swipe
   };
 
   const handleDelete = async (account) => {
@@ -139,6 +145,52 @@ const Accounts = () => {
       alert(`Gagal hapus: ${err.response?.data?.error || 'Gagal menghapus akun'}`);
     }
   };
+
+  // === [HANDLER BARU UNTUK SWIPE] ===
+  const handleTouchStart = (e, accountId) => {
+    // Hanya simpan jika tidak ada kartu lain yang terbuka
+    if (!swipedAccountId || swipedAccountId === accountId) {
+      touchStartRef.current = e.targetTouches[0].clientX;
+    }
+  };
+
+  const handleTouchEnd = (e, accountId) => {
+    if (touchStartRef.current === null) return;
+
+    const touchEnd = e.changedTouches[0].clientX;
+    const deltaX = touchEnd - touchStartRef.current;
+
+    // Geser ke Kiri (Buka)
+    if (deltaX < -minSwipeDistance) {
+      setSwipedAccountId(accountId);
+    } 
+    // Geser ke Kanan (Tutup)
+    else if (deltaX > minSwipeDistance) {
+      setSwipedAccountId(null);
+    }
+    
+    touchStartRef.current = null;
+  };
+  
+  // Klik pada kartu untuk menutupnya
+  const handleCardClick = (accountId) => {
+    if (swipedAccountId === accountId) {
+      setSwipedAccountId(null);
+    }
+    // Jika diklik tapi tidak terbuka, jangan lakukan apa-apa
+  };
+
+  // Handler baru untuk tombol yang menutup swipe setelah diklik
+  const handleEditClick = (account) => {
+    setAccountToEdit(account);
+    setSwipedAccountId(null); // Tutup swipe
+  };
+
+  const handleDeleteClick = (account) => {
+    handleDelete(account);
+    setSwipedAccountId(null); // Tutup swipe
+  };
+  // === [AKHIR HANDLER BARU] ===
 
   return (
     <div className="accounts-page">
@@ -158,26 +210,51 @@ const Accounts = () => {
         {!loading && accounts.length === 0 && (
           <p>Anda belum memiliki akun. Silakan tambahkan di atas.</p>
         )}
+        
+        {/* === [STRUKTUR JSX DIMODIFIKASI] === */}
         <div className="pocket-grid">
           {accounts.map(acc => (
-            <div className="pocket-item" key={acc.id} >
-              <div className="pocket-header">
-                <span className="pocket-title">{acc.name}</span>
-                <span className="pocket-remaining" style={{fontSize: '0.8em'}}>{acc.type}</span>
+            <div className="pocket-item-swipe-wrapper" key={acc.id}>
+              {/* Tombol yang tersembunyi */}
+              <div className="pocket-item-actions">
+                <button 
+                  className="pocket-action-btn btn-edit" 
+                  onClick={() => handleEditClick(acc)}
+                >
+                  Edit
+                </button>
+                <button 
+                  className="pocket-action-btn btn-delete" 
+                  onClick={() => handleDeleteClick(acc)}
+                >
+                  Hapus
+                </button>
               </div>
-              <h2 className={acc.current_balance >= 0 ? 'income' : 'expense'} style={{margin: '0.5rem 0', textAlign: 'right'}}>
-                {formatCurrency(acc.current_balance)}
-              </h2>
-              <span style={{fontSize: '0.8em', color: 'var(--color-text-muted)', textAlign: 'right'}}>
-                Saldo Awal: {formatCurrency(acc.initial_balance)}
-              </span>
-              <div className="account-actions">
-                <button className="btn-secondary" onClick={() => setAccountToEdit(acc)}>Edit</button>
-                <button className="btn-delete" onClick={() => handleDelete(acc)}>Hapus</button>
+
+              {/* Konten yang terlihat & bisa digeser */}
+              <div 
+                className={`pocket-item-content ${swipedAccountId === acc.id ? 'swiped-open' : ''}`}
+                onTouchStart={(e) => handleTouchStart(e, acc.id)}
+                onTouchEnd={(e) => handleTouchEnd(e, acc.id)}
+                onClick={() => handleCardClick(acc.id)}
+              >
+                <div className="pocket-header">
+                  <span className="pocket-title">{acc.name}</span>
+                  <span className="pocket-remaining" style={{fontSize: '0.8em'}}>{acc.type}</span>
+                </div>
+                <h2 className={acc.current_balance >= 0 ? 'income' : 'expense'} style={{margin: '0.5rem 0', textAlign: 'right'}}>
+                  {formatCurrency(acc.current_balance)}
+                </h2>
+                <span style={{fontSize: '0.8em', color: 'var(--color-text-muted)', textAlign: 'right'}}>
+                  Saldo Awal: {formatCurrency(acc.initial_balance)}
+                </span>
+                {/* DIV account-actions yang lama dihapus dari sini */}
               </div>
             </div>
           ))}
         </div>
+        {/* === [AKHIR MODIFIKASI JSX] === */}
+
       </div>
     </div>
   );
