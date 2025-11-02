@@ -33,10 +33,17 @@ body {
   background-color: var(--color-bg-dark);
   color: var(--color-text);
   min-height: 100vh;
+  /* [BARU] Scroll lebih halus */
+  scroll-behavior: smooth;
 }
 
 #root {
   width: 100%;
+}
+
+/* [BARU] Transisi global untuk link */
+a {
+  transition: color 0.2s ease-in-out, background-color 0.2s ease-in-out;
 }
 
 /* === AUTH LAYOUT (LOGIN/REGISTER) === */
@@ -107,6 +114,8 @@ body {
   background-color: var(--color-bg-light);
   color: var(--color-text);
   font-size: 1rem;
+  /* [BARU] Transisi saat focus */
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 .form-group input:focus,
 .form-group select:focus {
@@ -320,19 +329,6 @@ button:disabled {
   border-color: var(--color-primary);
 }
 
-/* Konten Loading - HILANGKAN DARI SINI */
-/* .main-content.loading-content {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  height: calc(100vh - 100px); 
-}
-.main-content.loading-content h2 {
-  font-size: 1.5rem;
-  color: var(--color-text-muted);
-} */
-
 /* Grid Dashboard */
 .dashboard-grid {
   display: grid;
@@ -346,6 +342,9 @@ button:disabled {
   padding: 1.5rem;
   border-radius: 12px;
   border: 1px solid var(--color-border);
+  /* [PERBAIKAN] Tambah shadow & transisi */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
 }
 .card h3 {
   margin-top: 0;
@@ -573,8 +572,15 @@ button:disabled {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.75rem 0;
+  /* [PERBAIKAN] Padding lebih lega */
+  padding: 1rem 0;
   border-bottom: 1px solid var(--color-border);
+  /* [BARU] Transisi untuk hover */
+  transition: background-color 0.2s ease;
+}
+/* [BARU] Efek hover pada list item */
+.card-list .list-item:hover {
+  background-color: var(--color-bg-light);
 }
 .card-list .list-item:last-child {
   border-bottom: none;
@@ -696,24 +702,6 @@ button:disabled {
 .verification-box p {
   text-align: center;
 }
-/* HAPUS SPINNER UTAMA */
-/* .spinner {
-  border: 4px solid var(--color-border);
-  border-radius: 50%;
-  border-top: 4px solid var(--color-primary);
-  width: 50px;
-  height: 50px;
-  animation: spin 1s linear infinite;
-  margin-bottom: 20px;
-}
-.main-content.loading-content h2 {
-  font-size: 1.5rem;
-  color: var(--color-text-muted);
-}
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-} */
 
 /* Spinner untuk di dalam tombol */
 .btn-spinner {
@@ -726,7 +714,6 @@ button:disabled {
   border-top-color: #ffffff; /* Warna top spinner putih */
   animation: spin 1s linear infinite;
 }
-/* Tambahkan @keyframes spin lagi (jika dihapus dari atas) */
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
@@ -1128,9 +1115,81 @@ button:disabled {
     padding: 1rem;
     width: 100%;
   }
+
+  /* === [PERBAIKAN UX MOBILE] === */
+  
   .mobile-header {
     display: flex;
+    /* [PERBAIKAN] Jangan wrap, buat 1 baris */
+    flex-wrap: nowrap; 
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background-color: var(--color-bg-medium);
+    border-bottom: 1px solid var(--color-border);
+    /* [PERBAIKAN] Margin disesuaikan */
+    margin: -1rem -1rem 1.5rem -1rem; 
   }
+  .mobile-header h1 {
+     font-size: 1.25rem;
+     margin: 0;
+     white-space: nowrap;
+     overflow: hidden;
+     text-overflow: ellipsis;
+  }
+  .mobile-header > div { /* Kontainer tombol */
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0; /* Jangan biarkan tombol 'shrink' */
+  }
+
+  /* [PERBAIKAN BESAR] Ubah .mobile-nav jadi fixed bottom bar */
+  .mobile-nav {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    
+    /* Styling baru */
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 60px; /* Tinggi tetap */
+    background-color: var(--color-bg-medium);
+    border-top: 1px solid var(--color-border);
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.2);
+    
+    /* Reset style lama */
+    margin-top: 0;
+    padding-top: 0;
+    /* [BARU] Support notch iPhone */
+    padding-bottom: env(safe-area-inset-bottom); 
+    z-index: 100;
+  }
+  
+  .mobile-nav a {
+    flex: 1; /* Bagi rata spasi */
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: 0 0.25rem;
+    font-size: 0.95rem;
+    color: var(--color-text-muted);
+    text-decoration: none;
+    font-weight: 500;
+  }
+  
+  .mobile-nav a.active {
+    color: var(--color-primary);
+    font-weight: 600;
+  }
+  /* === [AKHIR PERBAIKAN UX MOBILE] === */
+
+
   .main-content h2 {
     font-size: 1.75rem;
   }
@@ -1203,9 +1262,30 @@ button:disabled {
   .savings-list {
     grid-template-columns: 1fr;
   }
+  
+  /* [PERBAIKAN] Pastikan ada padding bawah untuk fixed nav */
+  .main-content {
+    padding-bottom: 80px; /* 60px nav + 20px space */
+  }
+
+  /* Perbaikan grid form transaksi */
+  .transaction-form .form-group-inline {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+  .form-group-inline .form-group {
+    margin-bottom: 0;
+  }
+  
+  /* Grid Laporan di HP */
+  .reports-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
-/* === [BARU] CSS UNTUK FITUR BARU === */
+
+/* === [BARU] CSS UNTUK FITUR BARU (Sudah Ada) === */
 
 /* Navigasi Sidebar */
 .sidebar-nav {
@@ -1221,7 +1301,7 @@ button:disabled {
   font-weight: 500;
   padding: 0.75rem 1rem;
   border-radius: 8px;
-  transition: all 0.2s ease-in-out;
+  /* Transisi sudah di-handle global 'a' */
 }
 .sidebar-nav a:hover {
   background-color: var(--color-bg-light);
@@ -1316,57 +1396,6 @@ button:disabled {
   gap: 0.5rem; /* Beri jarak antara tanggal dan nama akun */
 }
 
-/* Navigasi Mobile */
-.mobile-header {
-  flex-wrap: wrap; /* Izinkan wrap */
-}
-.mobile-nav {
-  display: none; /* Sembunyikan di desktop */
-  width: 100%;
-  background-color: var(--color-bg-dark);
-  border-top: 1px solid var(--color-border);
-  margin-top: 1rem;
-  padding-top: 0.5rem;
-}
-.mobile-nav a {
-  display: inline-block;
-  padding: 0.75rem 1rem;
-  color: var(--color-text-muted);
-  text-decoration: none;
-  font-weight: 500;
-}
-.mobile-nav a.active {
-  color: var(--color-primary);
-}
-
-
-/* Tampilkan Navigasi Mobile di HP */
-@media (max-width: 768px) {
-  .mobile-nav {
-    display: flex;
-    justify-content: space-around;
-  }
-  .main-content {
-    padding-bottom: 60px; /* Beri ruang untuk nav mobile jika menempel */
-  }
-
-  /* Perbaikan grid form transaksi */
-  .transaction-form .form-group-inline {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 1rem;
-  }
-  .form-group-inline .form-group {
-    margin-bottom: 0;
-  }
-  
-  /* Grid Laporan di HP */
-  .reports-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* ... (CSS Anda yang sudah ada) ... */
 
 /* === [BARU] CSS UNTUK OCR LOADING OVERLAY === */
 .ocr-loading-overlay {
