@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import axiosClient from '../api/axiosClient';
-// [BARU] Impor ThemeToggle
+// [MODIFIKASI] Impor ThemeToggle di sini juga
 import ThemeToggle from './ThemeToggle';
 
 // Pisahkan Sidebar agar bisa dipakai ulang
@@ -39,8 +39,8 @@ const Sidebar = ({ onLogout, onReset }) => {
       </nav>
 
       <div className="sidebar-footer">
-        {/* [BARU] Tambahkan ThemeToggle di sini */}
-        <ThemeToggle />
+        {/* Toggle ini akan otomatis disembunyikan di mobile oleh CSS baru */}
+        <ThemeToggle /> 
         <div className="user-info">{user?.email}</div>
         <button onClick={onLogout} className="logout-btn">
           Logout
@@ -59,6 +59,7 @@ const MainLayout = () => {
   const [isResetting, setIsResetting] = useState(false);
 
   const handleResetTransactions = async () => {
+    // ... (Fungsi ini tidak berubah)
     const pass = prompt('Ini akan MENGHAPUS SEMUA data transaksi DAN progress tabungan Anda.\nKetik "RESET" untuk konfirmasi:');
     if (pass !== 'RESET') {
       alert('Reset dibatalkan.');
@@ -68,7 +69,7 @@ const MainLayout = () => {
     try {
       await axiosClient.delete('/api/transactions/reset');
       alert('Reset berhasil! Halaman akan dimuat ulang.');
-      window.location.reload(); // Reload untuk reset state
+      window.location.reload(); 
     } catch (err) {
       console.error("Failed to reset transactions:", err);
       alert(err.response?.data?.error || err.message || 'Gagal mereset transaksi');
@@ -88,6 +89,8 @@ const MainLayout = () => {
         <header className="mobile-header">
             <h1>💰 Money Tracker</h1>
             <div>
+              {/* [BARU] Tambahkan ThemeToggle di header mobile */}
+              <ThemeToggle />
               <button onClick={handleResetTransactions} className="btn-reset-mobile" title="Reset All Data">
                 Reset
               </button>

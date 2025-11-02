@@ -3036,3 +3036,51 @@ input:checked + .theme-slider .slider-icon {
   background-color: var(--color-bg-dark);
   border-color: var(--color-primary-hover);
 }
+/* ... (SEMUA CSS ANDA DARI SEBELUMNYA) ... */
+
+
+/* === [BARU] CSS UNTUK THEME TOGGLE (Responsif) === */
+
+/* Logika Desktop: Sembunyikan toggle di header mobile */
+.mobile-header .theme-switch {
+  display: none;
+}
+/* Pastikan toggle di sidebar terlihat di desktop */
+.sidebar-footer .theme-switch {
+  display: inline-block;
+  margin-bottom: 1rem;
+}
+
+
+/* === MEDIA QUERIES (MOBILE) === */
+@media (max-width: 768px) {
+
+  /* ... (semua style mobile Anda yang lain) ... */
+
+  /* [BARU] Logika Mobile: */
+
+  /* 1. Sembunyikan toggle di sidebar (karena sidebarnya sendiri disembunyikan) */
+  .sidebar-footer .theme-switch {
+    display: none;
+  }
+  
+  /* 2. Tampilkan toggle di header mobile */
+  .mobile-header .theme-switch {
+    display: inline-block;
+    width: 50px; /* Perkecil sedikit */
+    height: 28px;
+  }
+  .mobile-header .theme-slider {
+    border-radius: 28px;
+  }
+  .mobile-header .slider-icon {
+    height: 22px;
+    width: 22px;
+    left: 2px;
+    bottom: 2px;
+    font-size: 14px;
+  }
+  .mobile-header input:checked + .theme-slider .slider-icon {
+    transform: translateX(22px);
+  }
+}
