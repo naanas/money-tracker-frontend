@@ -1522,3 +1522,101 @@ button:disabled {
   border-top-color: var(--color-primary);
   animation: spin 1s linear infinite; /* Menggunakan @keyframes spin yang sudah ada */
 }
+
+/* ... (SEMUA CSS DARI SEBELUMNYA) ... */
+
+
+/* === [BARU] ANIMASI & SKELETON LOADING === */
+
+/* ... (Skeleton & Page Spinner CSS dari langkah sebelumnya) ... */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+.skeleton-loader {
+  animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+.skeleton-card {
+  background-color: var(--color-bg-light); 
+  padding: 1.5rem;
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+.skeleton-line {
+  height: 1rem;
+  background-color: var(--color-border);
+  border-radius: 4px;
+  margin-bottom: 0.75rem;
+}
+.skeleton-line.h-1-5 { height: 1.5rem; margin-bottom: 1rem; }
+.skeleton-line.w-75 { width: 75%; }
+.skeleton-line.w-50 { width: 50%; }
+.skeleton-line.w-25 { width: 25%; }
+
+.page-spinner-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 250px;
+}
+.page-spinner {
+  width: 50px;
+  height: 50px;
+  border-width: 5px;
+  border: 5px solid var(--color-border);
+  border-radius: 50%;
+  border-top-color: var(--color-primary);
+  animation: spin 1s linear infinite; 
+}
+
+
+/* === [BARU] Animasi Geser Bulan === */
+
+/* Wrapper untuk 'memotong' (clip) animasi */
+.dashboard-content-wrapper {
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* Keyframes untuk slide */
+@keyframes slideInFromLeft {
+  0% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInFromRight {
+  0% {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* [PERBAIKAN] Hapus opacity dari isRefetching di sini */
+.dashboard-grid {
+  transition: opacity 0.3s; /* Transisi untuk opacity saat refetch */
+}
+
+/* Kelas animasi yang akan diterapkan */
+.dashboard-grid.slide-in-left {
+  animation: slideInFromLeft 0.3s ease-out forwards;
+}
+
+.dashboard-grid.slide-in-right {
+  animation: slideInFromRight 0.3s ease-out forwards;
+}
