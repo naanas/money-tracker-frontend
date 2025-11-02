@@ -13,7 +13,7 @@ import SavingsGoals from '../components/SavingsGoals';
 import TransferForm from '../components/TransferForm'; 
 import AccountSummary from '../components/AccountSummary'; 
 
-// [BARU] Komponen Skeleton untuk loading
+// Komponen Skeleton untuk loading
 const DashboardSkeleton = () => (
   <div className="skeleton-loader">
     {/* 1. Month Navigator Skeleton */}
@@ -104,13 +104,10 @@ const Dashboard = () => {
   const [budgetToEdit, setBudgetToEdit] = useState(null);
   const isInitialMount = useRef(true); 
 
-  // === [STATE BARU UNTUK ANIMASI & GESER] ===
+  // State untuk Animasi & Geser
   const [animationClass, setAnimationClass] = useState('');
   const [touchStart, setTouchStart] = useState(null);
-  const minSwipeDistance = 75; // Jarak minimal (pixel) untuk dianggap swipe
-  // === [AKHIR STATE BARU] ===
-
-  // === [BLOK DATA FETCHING (Menggunakan Pola dari Refaktor Sebelumnya)] ===
+  const minSwipeDistance = 75; 
 
   // Fungsi untuk mengambil data bulanan (Analytics + Transaksi)
   const fetchMonthlyData = useCallback(async () => {
@@ -148,11 +145,11 @@ const Dashboard = () => {
       const [categoriesRes, savingsRes, accountsRes] = await Promise.all([
         axiosClient.get('/api/categories'),
         axiosClient.get('/api/savings'),
-        axiosClient.get('/api/accounts'), // [BARU]
+        axiosClient.get('/api/accounts'),
       ]);
       setCategories(categoriesRes.data.data);
       setAllSavingsGoals(savingsRes.data.data);
-      setAccounts(accountsRes.data.data); // [BARU]
+      setAccounts(accountsRes.data.data);
     } catch (err)
  {
       console.error("Failed to fetch static data:", err);
@@ -167,7 +164,6 @@ const Dashboard = () => {
 
   // EFEK 2: Ambil data bulanan saat TANGGAL atau data STATIS berubah
   useEffect(() => {
-    // Jangan fetch jika data statis (terutama kategori/akun) belum siap
     if (categories.length === 0 || accounts.length === 0) return;
     
     fetchMonthlyData();
@@ -197,31 +193,25 @@ const Dashboard = () => {
 
   // FUNGSI UPDATE UTAMA
   const handleDataUpdate = async (options = {}) => {
-    // options: { refetchCategories, refetchSavings, refetchAccounts }
-    setIsRefetching(true); // Mulai loading senyap
+    setIsRefetching(true); 
 
-    // Selalu ambil ulang data bulanan
     await fetchMonthlyData(); 
     
-    // Ambil ulang data statis HANYA jika diminta
     if (options.refetchCategories) await refetchCategories();
     if (options.refetchSavings) await refetchSavings();
-    // [BARU] Jika ada transaksi/transfer, saldo akun PASTI berubah
     if (options.refetchAccounts) await refetchAccounts();
     
     triggerSuccessAnimation(); 
     setBudgetToEdit(null); 
-    setIsRefetching(false); // Selesai
+    setIsRefetching(false); 
   };
-
-  // === [AKHIR BLOK DATA FETCHING] ===
 
   // Memo untuk total saldo
   const totalBalance = useMemo(() => {
     return accounts.reduce((sum, acc) => sum + parseFloat(acc.current_balance), 0);
   }, [accounts]);
 
-  // Memo untuk filter tabungan (tidak berubah)
+  // Memo untuk filter tabungan
   const filteredSavingsGoals = useMemo(() => {
     const goals = allSavingsGoals;
     const selectedMonthStart = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
@@ -236,7 +226,7 @@ const Dashboard = () => {
     });
   }, [allSavingsGoals, selectedDate]);
 
-  // Memo untuk budget pockets (tidak berubah, sudah dibersihkan di refaktor sebelumnya)
+  // Memo untuk budget pockets
   const budgetPockets = useMemo(() => {
     if (!analytics) return [];
     const budgetDetails = analytics.budget?.details || [];
@@ -254,7 +244,7 @@ const Dashboard = () => {
     return pockets;
   }, [analytics]);
 
-  // Variabel ringkasan (tidak berubah, sudah dibersihkan di refaktor sebelumnya)
+  // Variabel ringkasan
   const totalIncome = analytics?.summary?.total_income || 0;
   const totalExpensesFiltered = analytics?.summary?.total_expenses || 0;
   const totalTransferredToSavings = analytics?.summary?.total_transferred_to_savings || 0;
@@ -262,17 +252,17 @@ const Dashboard = () => {
   const totalSpent = totalExpensesFiltered;
   const totalRemaining = totalBudget - totalSpent; 
   const totalProgress = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
-  const currentBalance = totalIncome - totalSpent; // Sisa uang bulan ini
+  const currentBalance = totalIncome - totalSpent; 
 
-  // === [HANDLER NAVIGASI & GESER (DIMODIFIKASI)] ===
+  // Handler Navigasi & Geser
   const handlePrevMonth = () => {
-    if (isRefetching || animationClass) return; // Cegah spam klik saat animasi
-    setAnimationClass('slide-in-right'); // Konten baru datang dari kiri
+    if (isRefetching || animationClass) return;
+    setAnimationClass('slide-in-right');
     setSelectedDate(prevDate => new Date(prevDate.getFullYear(), prevDate.getMonth() - 1, 1));
   };
   const handleNextMonth = () => {
-    if (isRefetching || animationClass) return; // Cegah spam klik saat animasi
-    setAnimationClass('slide-in-left'); // Konten baru datang dari kanan
+    if (isRefetching || animationClass) return;
+    setAnimationClass('slide-in-left');
     setSelectedDate(prevDate => new Date(prevDate.getFullYear(), prevDate.getMonth() + 1, 1));
   };
 
@@ -288,17 +278,15 @@ const Dashboard = () => {
     const deltaX = touchEnd - touchStart;
     
     if (deltaX > minSwipeDistance) {
-      // Geser ke Kanan (Bulan Sebelumnya)
       handlePrevMonth();
     } else if (deltaX < -minSwipeDistance) {
-      // Geser ke Kiri (Bulan Selanjutnya)
       handleNextMonth();
     }
     
-    setTouchStart(null); // Reset
+    setTouchStart(null);
   };
-  // === [AKHIR MODIFIKASI HANDLER] ===
 
+  // Handler Delete
   const handleDeleteBudget = async (e, budgetId) => {
     e.stopPropagation(); 
     if (!window.confirm('Yakin ingin menghapus budget pocket ini?')) return;
@@ -319,7 +307,7 @@ const Dashboard = () => {
     setIsRefetching(true);
     try {
       await axiosClient.delete(`/api/transactions/${transactionId}`);
-      handleDataUpdate({ refetchAccounts: true, refetchSavings: true }); // [MODIFIKASI]
+      handleDataUpdate({ refetchAccounts: true, refetchSavings: true });
     } catch (err) {
       setError(err.response?.data?.error || 'Gagal menghapus transaksi');
       setIsRefetching(false);
@@ -328,7 +316,8 @@ const Dashboard = () => {
   
   return (
     <>
-      {/* Sidebar dan Header dipindah ke MainLayout.jsx */}
+      {/* [DIHAPUS] Loading bar tipis dihapus dari sini */}
+      
       <div className="month-navigator">
         <button onClick={handlePrevMonth} disabled={isRefetching || !!animationClass}>&lt;</button>
         <DatePicker
@@ -346,21 +335,19 @@ const Dashboard = () => {
       
       {error && <p className="error" style={{textAlign: 'center', padding: '1rem', backgroundColor: 'var(--color-bg-medium)', borderRadius: '12px'}}>{error}</p>}
 
-      {/* [BARU] Wrapper untuk swipe dan clipping animasi */}
       <div 
         className="dashboard-content-wrapper"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
-        {isLoading ? (
+        {/* === [PERUBAHAN DI SINI] === */}
+        {/* Skeleton akan tampil saat isLoading ATAU isRefetching */}
+        {isLoading || isRefetching ? (
           <DashboardSkeleton />
         ) : (
           analytics ? (
             <div 
               className={`dashboard-grid ${animationClass}`}
-              // [UBAH] Opacity untuk refetch, bukan animasi
-              style={{ opacity: isRefetching ? 0.7 : 1 }} 
-              // [UBAH] Reset class animasi setelah selesai
               onAnimationEnd={() => setAnimationClass('')} 
             >
               
@@ -532,7 +519,6 @@ const Dashboard = () => {
           )
         )}
       </div> 
-      {/* === [AKHIR WRAPPER BARU] === */}
 
       {isCategoryModalOpen && (
         <CategoryForm 

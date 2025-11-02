@@ -93,7 +93,6 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   scroll-behavior: smooth;
-  /* [BARU] Transisi halus saat ganti tema */
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
@@ -303,6 +302,7 @@ button:disabled {
   background-color: var(--color-bg-dark);
   background-image: var(--gradient-main);
   transition: background-color 0.3s ease;
+  position: relative;
 }
 .main-content h2 {
   margin-top: 0;
@@ -1148,7 +1148,7 @@ button:disabled {
   }
   .main-content {
     padding: 1rem;
-    padding-bottom: 80px; /* Ruang untuk nav mobile */
+    padding-bottom: 100px; /* Ruang untuk nav & FAB */
     background-image: var(--gradient-mobile);
   }
   .mobile-header {
@@ -1593,9 +1593,7 @@ button:disabled {
   0% { transform: translateX(-100%); opacity: 0; }
   100% { transform: translateX(0); opacity: 1; }
 }
-.dashboard-grid {
-  transition: opacity 0.3s;
-}
+
 .dashboard-grid.slide-in-left {
   animation: slideInFromLeft 0.3s ease-out forwards;
 }
