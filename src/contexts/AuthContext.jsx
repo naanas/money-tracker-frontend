@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { supabase } from '../supabaseClient';
 import axiosClient from '../api/axiosClient';
 import { useNavigate } from 'react-router-dom';
@@ -11,43 +11,61 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true); 
   const navigate = useNavigate();
 
+  // === [MODIFIKASI] ===
+  const [profile, setProfile] = useState(null); // State baru untuk data tabel 'users'
   const [authEvent, setAuthEvent] = useState(null); 
 
   const [showSuccess, setShowSuccess] = useState(false);
   const [successTimeoutId, setSuccessTimeoutId] = useState(null);
 
+  // [BARU] Fungsi untuk mengambil data profil dari API kita
+  const fetchUserProfile = useCallback(async () => {
+    try {
+      const { data } = await axiosClient.get('/api/auth/profile');
+      setProfile(data.data);
+    } catch (error) {
+      console.error("Gagal mengambil profil user:", error);
+      // Jika gagal (misal: RLS), logout paksa
+      await supabase.auth.signOut();
+      setProfile(null);
+    }
+  }, []);
+
   useEffect(() => {
-    // [PERBAIKAN LOGIKA]
     const { data: authListener } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => { // Buat jadi async
         console.log('Auth Event:', event, session);
         setSession(session);
         setUser(session?.user ?? null);
+        
+        // === [MODIFIKASI] ===
+        if (session) {
+          // Jika user login, langsung ambil datanya
+          await fetchUserProfile();
+        } else {
+          // Jika user logout, bersihkan profile
+          setProfile(null);
+        }
+        // === [AKHIR MODIFIKASI] ===
+        
         setLoading(false); 
         
-        // Cek URL hash SECARA MANUAL untuk mengatasi race condition
         const hash = window.location.hash;
-        
         if (hash.includes('type=recovery') && (event === 'SIGNED_IN' || event === 'PASSWORD_RECOVERY')) {
-          // Jika ini adalah event SIGNED_IN TAPI karena link recovery,
-          // PAKSA event-nya menjadi PASSWORD_RECOVERY
           setAuthEvent('PASSWORD_RECOVERY');
         } else {
           setAuthEvent(event);
         }
       }
     );
-    // [AKHIR PERBAIKAN LOGIKA]
 
     return () => {
       authListener.subscription.unsubscribe();
     };
-  }, []);
+  }, [fetchUserProfile]); // Tambahkan dependency
 
   const triggerSuccessAnimation = () => {
-    if (successTimeoutId) {
-      clearTimeout(successTimeoutId);
-    }
+    if (successTimeoutId) clearTimeout(successTimeoutId);
     setShowSuccess(true);
     const newTimeoutId = setTimeout(() => {
       setShowSuccess(false);
@@ -55,21 +73,16 @@ export function AuthProvider({ children }) {
     }, 1500); 
     setSuccessTimeoutId(newTimeoutId);
   };
-
+  
   const register = async (email, password, fullName) => {
     const { data } = await axiosClient.post('/api/auth/register', {
-      email,
-      password,
-      full_name: fullName,
+      email, password, full_name: fullName,
     });
     return data; 
   };
   
   const login = async (email, password) => {
-    const { data } = await axiosClient.post('/api/auth/login', {
-      email,
-      password,
-    });
+    const { data } = await axiosClient.post('/api/auth/login', { email, password });
     await supabase.auth.setSession(data.data.session);
     triggerSuccessAnimation(); 
     navigate('/dashboard');
@@ -89,6 +102,8 @@ export function AuthProvider({ children }) {
   const value = {
     session,
     user,
+    profile, // [BARU] Ekspor profile
+    refetchProfile: fetchUserProfile, // [BARU] Ekspor fungsi refetch
     loading,
     authEvent,
     clearAuthEvent,
