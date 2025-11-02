@@ -11,15 +11,13 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true); 
   const navigate = useNavigate();
 
-  // === [STATE BARU] ===
-  // State untuk melacak event khusus (seperti reset password)
   const [authEvent, setAuthEvent] = useState(null); 
 
   const [showSuccess, setShowSuccess] = useState(false);
   const [successTimeoutId, setSuccessTimeoutId] = useState(null);
 
   useEffect(() => {
-    // [MODIFIKASI] Ambil 'event'
+    // [PERBAIKAN LOGIKA]
     const { data: authListener } = supabase.auth.onAuthStateChange(
       (event, session) => {
         console.log('Auth Event:', event, session);
@@ -27,11 +25,20 @@ export function AuthProvider({ children }) {
         setUser(session?.user ?? null);
         setLoading(false); 
         
-        // [BARU] Tangkap event dan simpan di state
-        // Jika user klik link email, event-nya adalah 'PASSWORD_RECOVERY'
-        setAuthEvent(event); 
+        // Cek URL hash SECARA MANUAL untuk mengatasi race condition
+        const hash = window.location.hash;
+        
+        if (hash.includes('type=recovery') && (event === 'SIGNED_IN' || event === 'PASSWORD_RECOVERY')) {
+          // Jika ini adalah event SIGNED_IN TAPI karena link recovery,
+          // PAKSA event-nya menjadi PASSWORD_RECOVERY
+          setAuthEvent('PASSWORD_RECOVERY');
+        } else {
+          setAuthEvent(event);
+        }
       }
     );
+    // [AKHIR PERBAIKAN LOGIKA]
+
     return () => {
       authListener.subscription.unsubscribe();
     };
@@ -74,18 +81,17 @@ export function AuthProvider({ children }) {
     navigate('/login');
   };
 
-  // [BARU] Fungsi untuk membersihkan state event
   const clearAuthEvent = () => {
     setAuthEvent(null);
-    navigate('/login'); // Arahkan kembali ke login
+    navigate('/login');
   };
 
   const value = {
     session,
     user,
     loading,
-    authEvent, // [BARU] Ekspor state event
-    clearAuthEvent, // [BARU] Ekspor fungsi clear
+    authEvent,
+    clearAuthEvent,
     register,
     login,
     logout,

@@ -8,7 +8,7 @@ const ResetPasswordForm = () => {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
-  const { clearAuthEvent } = useAuth(); // Kita akan buat fungsi ini
+  const { clearAuthEvent } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -22,8 +22,6 @@ const ResetPasswordForm = () => {
 
     setLoading(true);
     try {
-      // Ini adalah fungsi Supabase untuk update password
-      // Ini HANYA akan berhasil jika ada token di URL hash
       const { error } = await supabase.auth.updateUser({
         password: password
       });
@@ -32,8 +30,10 @@ const ResetPasswordForm = () => {
 
       setMessage("Password berhasil diperbarui! Silakan login dengan password baru Anda.");
       
-      // Setelah 3 detik, kembalikan ke form login
+      // Setelah 3 detik, bersihkan hash dan kembalikan ke form login
       setTimeout(() => {
+        // [PERBAIKAN DI SINI] Hapus hash dari URL
+        window.location.hash = '';
         clearAuthEvent();
       }, 3000);
 
