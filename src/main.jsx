@@ -4,17 +4,21 @@ import App from './App.jsx';
 import './index.css';
 import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext.jsx';
+// [BARU] Impor ThemeProvider
+import { ThemeProvider } from './contexts/ThemeContext.jsx';
 
-// === [BARIS BARU DITAMBAHKAN] ===
 // Impor CSS default untuk react-datepicker
 import 'react-datepicker/dist/react-datepicker.css';
-// === [AKHIR BARIS BARU] ===
+
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <BrowserRouter>
       <AuthProvider>
-        <App />
+        {/* [BARU] Bungkus App dengan ThemeProvider */}
+        <ThemeProvider>
+          <App />
+        </ThemeProvider>
       </AuthProvider>
     </BrowserRouter>
   </React.StrictMode>

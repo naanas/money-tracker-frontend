@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import axiosClient from '../api/axiosClient';
+// [BARU] Impor ThemeToggle
+import ThemeToggle from './ThemeToggle';
 
-// [BARU] Pisahkan Sidebar agar bisa dipakai ulang
+// Pisahkan Sidebar agar bisa dipakai ulang
 const Sidebar = ({ onLogout, onReset }) => {
   const { user } = useAuth();
   const location = useLocation();
@@ -15,7 +17,6 @@ const Sidebar = ({ onLogout, onReset }) => {
         <h1>💰 Money Tracker</h1>
       </div>
       
-      {/* [BARU] Navigasi Utama */}
       <nav className="sidebar-nav">
         <Link 
           to="/dashboard" 
@@ -38,6 +39,8 @@ const Sidebar = ({ onLogout, onReset }) => {
       </nav>
 
       <div className="sidebar-footer">
+        {/* [BARU] Tambahkan ThemeToggle di sini */}
+        <ThemeToggle />
         <div className="user-info">{user?.email}</div>
         <button onClick={onLogout} className="logout-btn">
           Logout
@@ -50,7 +53,7 @@ const Sidebar = ({ onLogout, onReset }) => {
   );
 };
 
-// [BARU] Layout Utama
+// Layout Utama
 const MainLayout = () => {
   const { logout } = useAuth();
   const [isResetting, setIsResetting] = useState(false);
@@ -75,16 +78,13 @@ const MainLayout = () => {
 
   return (
     <div className="dashboard-layout">
-      {/* Kirim props ke Sidebar */}
       <Sidebar 
         onLogout={logout} 
         onReset={handleResetTransactions} 
         isResetting={isResetting} 
       />
       
-      {/* Konten Halaman (Dashboard, Accounts, Reports) */}
       <main className="main-content">
-        {/* Header Mobile (bisa dipindah ke sini dari Dashboard.jsx) */}
         <header className="mobile-header">
             <h1>💰 Money Tracker</h1>
             <div>
@@ -95,7 +95,6 @@ const MainLayout = () => {
                 Logout
               </button>
             </div>
-            {/* [BARU] Navigasi Mobile */}
             <nav className="mobile-nav">
                 <Link to="/dashboard">Dashboard</Link>
                 <Link to="/accounts">Akun</Link>
