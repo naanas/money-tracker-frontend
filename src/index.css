@@ -1823,3 +1823,72 @@ input:checked + .theme-slider .slider-icon {
   transform: translateY(-2px);
   box-shadow: 0 6px 12px var(--color-primary-glow-shadow); 
 }
+/* ... (SEMUA CSS ANDA SEBELUMNYA) ... */
+
+/* === [BARU] CSS UNTUK NOTIFIKASI SUKSES LOGIN === */
+
+.auth-success-box {
+  background-color: rgba(74, 222, 128, 0.1); /* Latar belakang hijau transparan */
+  border: 1px solid var(--color-accent-success);
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-medium);
+  margin-bottom: 1.25rem;
+}
+.auth-success-box p {
+  color: var(--color-text);
+  font-weight: 500;
+  margin: 0;
+  text-align: center;
+}
+:root[data-theme='light'] .auth-success-box p {
+  color: var(--color-accent-income);
+  font-weight: 600;
+}
+/* Ubah tombol "Lupa Password" agar terlihat seperti link */
+.auth-forgot-password {
+  background: none;
+  border: none;
+  color: var(--color-primary);
+  font-size: 0.9rem;
+  font-weight: 500;
+  padding: 0;
+  width: auto;
+  text-align: right;
+  text-decoration: none;
+}
+.auth-forgot-password:hover {
+  text-decoration: underline;
+  background: none;
+  box-shadow: none;
+  transform: none;
+}
+
+/* === [BARU] CSS UNTUK FILTER TRANSAKSI === */
+.transaction-filters {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 1rem;
+}
+.transaction-filters .form-group {
+  margin-bottom: 0;
+}
+.transaction-filters .form-group label {
+  font-size: 0.8rem;
+  margin-bottom: 0.25rem;
+}
+.transaction-filters .form-group select {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.9rem;
+  height: 40px;
+}
+
+/* Di mobile, buat filter jadi 1 kolom */
+@media (max-width: 768px) {
+  .transaction-filters {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+}
