@@ -10,24 +10,28 @@ const TransferForm = ({ accounts, onTransferAdded, isRefetching, selectedDate })
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
 
-  // === [MODIFIKASI] ===
-  // Fungsi ini sekarang HANYA mengembalikan tanggal hari ini.
+  // === [PERBAIKAN LOGIKA TANGGAL] ===
   const getInitialDate = () => {
+    // Gunakan tanggal dari dashboard JIKA ADA
+    if (selectedDate) {
+      return selectedDate.toISOString().split('T')[0];
+    }
+    // Fallback ke hari ini
     const today = new Date();
     return today.toISOString().split('T')[0];
   };
   const [date, setDate] = useState(getInitialDate());
-  // === [AKHIR MODIFIKASI] ===
+  // === [AKHIR PERBAIKAN] ===
 
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // === [MODIFIKASI] ===
-  // Hapus useEffect yang memantau selectedDate
-  // useEffect(() => {
-  //   setDate(getInitialDate());
-  // }, [selectedDate]);
-  // === [AKHIR MODIFIKASI] ===
+  // === [PERBAIKAN LOGIKA TANGGAL] ===
+  // Gunakan lagi useEffect ini untuk update tanggal saat selectedDate berubah
+  useEffect(() => {
+    setDate(getInitialDate());
+  }, [selectedDate]);
+  // === [AKHIR PERBAIKAN] ===
 
 
   // Set akun default
