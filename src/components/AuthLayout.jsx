@@ -21,12 +21,19 @@ const AuthLayout = () => {
     <div className="auth-layout">
       <div className="auth-sidebar">
         <div className="auth-form-container">
-          <Outlet />
+          <Outlet /> {/* Ini akan merender Login.jsx atau Register.jsx */}
         </div>
       </div>
+      
+      {/* === [PERUBAHAN DI SINI] === */}
       <div className="auth-main-content">
-        {/* Biarkan kosong agar gelap seperti di screenshot */}
+        {/* Tambahkan elemen branding di sisi kanan */}
+        <div className="auth-branding">
+          <h1>💰 Money Tracker</h1>
+          <p>Kendalikan keuangan Anda. Mulai dari langkah kecil.</p>
+        </div>
       </div>
+      {/* === [AKHIR PERUBAHAN] === */}
     </div>
   );
 };

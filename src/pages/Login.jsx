@@ -14,7 +14,6 @@ const Login = () => {
     e.preventDefault();
     setError('');
     
-    // [MODIFIKASI] Validasi client-side sederhana
     if (!email || !password) {
       setError("Email dan Password harus diisi.");
       return;
@@ -33,35 +32,51 @@ const Login = () => {
 
   return (
     <form onSubmit={handleSubmit}>
-      <h2>Login</h2>
-      {error && <p className="error">{error}</p>}
+      {/* === [PERUBAHAN DI SINI] === */}
+      <p className="auth-welcome">Selamat Datang Kembali 👋</p>
+      <h2>Login ke Akun Anda</h2>
+      
+      {error && (
+        <div className="auth-error-box">
+          <p>{error}</p>
+        </div>
+      )}
+
       <div className="form-group">
         <label>Email</label>
-        <input
-          type="email"
-          value={email}
-          // [MODIFIKASI] Hapus error saat mengetik
-          onChange={(e) => {
-            setEmail(e.target.value);
-            if (error) setError('');
-          }}
-          required
-        />
+        {/* Wrapper baru untuk ikon */}
+        <div className="form-input-wrapper">
+          <span className="input-icon">✉️</span> 
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              if (error) setError('');
+            }}
+            placeholder="contoh@email.com"
+            required
+          />
+        </div>
       </div>
       
       <div className="form-group">
         <label>Password</label>
         <div className="password-wrapper">
-          <input
-            type={showPassword ? 'text' : 'password'}
-            value={password}
-            // [MODIFIKASI] Hapus error saat mengetik
-            onChange={(e) => {
-              setPassword(e.target.value);
-              if (error) setError('');
-            }}
-            required
-          />
+          {/* Wrapper baru untuk ikon */}
+          <div className="form-input-wrapper">
+            <span className="input-icon">🔒</span>
+            <input
+              type={showPassword ? 'text' : 'password'}
+              value={password}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                if (error) setError('');
+              }}
+              placeholder="Minimal 8 karakter"
+              required
+            />
+          </div>
           <button 
             type="button" 
             className="password-toggle-btn" 
@@ -71,13 +86,22 @@ const Login = () => {
           </button>
         </div>
       </div>
+
+      <div className="auth-extra-links">
+        {/* Tautan Lupa Password baru */}
+        <a href="#" className="auth-forgot-password" onClick={(e) => e.preventDefault()}>
+          Lupa Password?
+        </a>
+      </div>
       
-      <button type="submit" disabled={loading}>
-        {loading ? 'Logging in...' : 'Login'}
+      <button type="submit" disabled={loading} style={{marginTop: '0.5rem'}}>
+        {loading ? <div className="btn-spinner"></div> : 'Login'}
       </button>
-      <p>
+      
+      <p className="auth-switch-page">
         Belum punya akun? <Link to="/register">Daftar di sini</Link>
       </p>
+      {/* === [AKHIR PERUBAHAN] === */}
     </form>
   );
 };
