@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import axiosClient from '../api/axiosClient';
-// [MODIFIKASI] Impor ThemeToggle di sini juga
 import ThemeToggle from './ThemeToggle';
 
 // Pisahkan Sidebar agar bisa dipakai ulang
@@ -18,6 +17,7 @@ const Sidebar = ({ onLogout, onReset }) => {
       </div>
       
       <nav className="sidebar-nav">
+        {/* ... (Link navigasi tidak berubah) ... */}
         <Link 
           to="/dashboard" 
           className={currentPath === '/' || currentPath === '/dashboard' ? 'active' : ''}
@@ -39,7 +39,7 @@ const Sidebar = ({ onLogout, onReset }) => {
       </nav>
 
       <div className="sidebar-footer">
-        {/* Toggle ini akan otomatis disembunyikan di mobile oleh CSS baru */}
+        {/* Toggle ini untuk Desktop */}
         <ThemeToggle /> 
         <div className="user-info">{user?.email}</div>
         <button onClick={onLogout} className="logout-btn">
@@ -59,7 +59,7 @@ const MainLayout = () => {
   const [isResetting, setIsResetting] = useState(false);
 
   const handleResetTransactions = async () => {
-    // ... (Fungsi ini tidak berubah)
+    // ... (Fungsi ini tidak berubah) ...
     const pass = prompt('Ini akan MENGHAPUS SEMUA data transaksi DAN progress tabungan Anda.\nKetik "RESET" untuk konfirmasi:');
     if (pass !== 'RESET') {
       alert('Reset dibatalkan.');
@@ -89,8 +89,7 @@ const MainLayout = () => {
         <header className="mobile-header">
             <h1>💰 Money Tracker</h1>
             <div>
-              {/* [BARU] Tambahkan ThemeToggle di header mobile */}
-              <ThemeToggle />
+              {/* [DIHAPUS] ThemeToggle dipindah dari sini */}
               <button onClick={handleResetTransactions} className="btn-reset-mobile" title="Reset All Data">
                 Reset
               </button>
@@ -104,6 +103,9 @@ const MainLayout = () => {
                 <Link to="/reports">Laporan</Link>
             </nav>
         </header>
+
+        {/* [BARU] Toggle dipindah ke sini. Ini akan menjadi tombol melayang di mobile */}
+        <ThemeToggle />
 
         <Outlet />
       </main>

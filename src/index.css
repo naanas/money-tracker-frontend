@@ -1,1534 +1,5 @@
 /* naanas/money-tracker-frontend/src/index.css */
 
-/* === [BARU] ROOT & VARIABLE (Modern Theme) === */
-:root {
-  /* Font & Ukuran */
-  --font-body: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  --radius-small: 6px;
-  --radius-medium: 10px;  /* Lebih bulat dari 8px */
-  --radius-large: 16px;   /* Lebih bulat dari 12px */
-
-  /* Bayangan */
-  --shadow-small: 0 4px 8px rgba(0, 0, 0, 0.1);
-  --shadow-medium: 0 8px 16px rgba(0, 0, 0, 0.2);
-  
-  /* Palet Warna Navy/Teal Modern */
-  --color-bg-dark: #10121a;     /* Latar belakang utama (Deep Navy) */
-  --color-bg-medium: #1a1e29;  /* Latar belakang kartu */
-  --color-bg-light: #2a2f3d;   /* Latar belakang input */
-  --color-border: #3a4052;     /* Border yang lebih lembut */
-  
-  --color-text: #f0f2f5;         /* Teks utama (putih pudar) */
-  --color-text-muted: #a0a6b3;  /* Teks redup (lebih terbaca) */
-  
-  --color-primary: #00e0c6;        /* Primary (Modern Teal/Mint) */
-  --color-primary-hover: #00b39e;   /* Primary hover */
-  
-  --color-accent-income: #4ade80;   /* Tetap hijau untuk income */
-  --color-accent-expense: #f87171;  /* Tetap merah untuk expense */
-  --color-accent-error: #f87171;
-  --color-accent-success: #4ade80;
-}
-
-*, *::before, *::after {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  background-color: var(--color-bg-dark);
-  color: var(--color-text);
-  font-family: var(--font-body);
-  line-height: 1.6;
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  scroll-behavior: smooth;
-}
-
-#root {
-  width: 100%;
-}
-
-a {
-  transition: color 0.2s ease-in-out, background-color 0.2s ease-in-out;
-}
-
-/* === AUTH LAYOUT (LOGIN/REGISTER) === */
-.auth-layout {
-  display: flex;
-  width: 100%;
-  height: 100vh;
-}
-
-.auth-sidebar {
-  width: 100%;
-  max-width: 450px;
-  background-color: #161a23; /* Sedikit beda dari bg-medium */
-  border-right: 1px solid var(--color-border);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: 2.5rem;
-  overflow-y: auto;
-  z-index: 1;
-}
-
-.auth-form-container {
-  width: 100%;
-  max-width: 400px;
-  margin: 0 auto;
-}
-.auth-form-container form {
-  background-color: transparent;
-  padding: 0;
-  border: none;
-  box-shadow: none;
-  width: 100%;
-}
-.auth-form-container h2 {
-  text-align: left; 
-  margin-top: 0;
-  margin-bottom: 2rem;
-  font-size: 1.75rem;
-}
-
-/* === STYLING FORM UMUM === */
-.form-group {
-  margin-bottom: 1.25rem;
-  text-align: left;
-}
-.form-group label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: var(--color-text-muted);
-}
-.form-group input,
-.form-group select {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  border-radius: var(--radius-medium); /* BARU */
-  border: 1px solid var(--color-border);
-  background-color: var(--color-bg-light);
-  color: var(--color-text);
-  font-size: 1rem;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
-}
-.form-group input:focus,
-.form-group select:focus {
-  outline: none;
-  border-color: var(--color-primary);
-  /* [BARU] Efek glow lebih lembut */
-  box-shadow: 0 0 0 3px rgba(0, 224, 198, 0.4); 
-}
-.form-group .error-text {
-  color: var(--color-accent-error);
-  font-size: 0.85rem;
-  margin-top: 0.25rem;
-}
-.form-group-radio {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 1rem;
-}
-.form-group-radio label {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  cursor: pointer;
-}
-
-/* === TOMBOL UTAMA (BARU) === */
-button {
-  border-radius: var(--radius-medium); /* BARU */
-  border: 1px solid transparent;
-  padding: 0.75rem 1.5rem;
-  font-size: 1rem;
-  font-weight: 600; /* Sedikit lebih tebal */
-  font-family: inherit;
-  background-color: var(--color-primary);
-  color: var(--color-bg-dark); /* Teks gelap di atas tombol teal */
-  cursor: pointer;
-  transition: all 0.25s ease;
-  width: 100%;
-}
-button:hover:not(:disabled) {
-  background-color: var(--color-primary-hover);
-  filter: none; /* Hapus filter lama */
-  transform: translateY(-2px); /* Efek terangkat */
-  box-shadow: 0 6px 12px rgba(0, 224, 198, 0.2); /* Shadow glow */
-}
-button:disabled {
-  background-color: var(--color-border);
-  color: var(--color-text-muted);
-  cursor: not-allowed;
-}
-.btn-secondary {
-  background-color: var(--color-bg-light);
-  border: 1px solid var(--color-border);
-  color: var(--color-text);
-}
-.btn-secondary:hover:not(:disabled) {
-  background-color: var(--color-border);
-  transform: none; /* Tombol sekunder tidak perlu terangkat */
-  box-shadow: none;
-}
-.auth-form-container p {
-  text-align: left; 
-  margin-top: 1.5rem;
-  font-size: 0.9rem;
-  color: var(--color-text-muted);
-}
-.auth-form-container p a {
-  color: var(--color-primary);
-  text-decoration: none;
-  font-weight: 500;
-}
-
-/* === HELPER & UTILITIES === */
-.error {
-  color: var(--color-accent-error);
-  text-align: center;
-  margin-bottom: 1rem;
-}
-.success {
-  color: var(--color-accent-success);
-  text-align: center;
-  margin-bottom: 1rem;
-}
-.income { color: var(--color-accent-income); }
-.expense { color: var(--color-accent-expense); }
-
-
-/* === DASHBOARD LAYOUT === */
-.dashboard-layout {
-  display: flex;
-  height: 100vh;
-}
-
-/* [BARU] Sidebar dengan background beda */
-.sidebar {
-  width: 240px;
-  background-color: #161a23; /* Sedikit lebih gelap */
-  border-right: 1px solid var(--color-border);
-  padding: 1.5rem;
-  display: flex;
-  flex-direction: column;
-}
-.sidebar-header h1 {
-  margin: 0;
-  font-size: 1.5rem;
-}
-.sidebar-footer {
-  margin-top: auto;
-  text-align: center;
-}
-.user-info {
-  font-size: 0.9rem;
-  color: var(--color-text-muted);
-  word-break: break-all;
-  margin-bottom: 1rem;
-}
-.logout-btn {
-  background-color: var(--color-accent-error);
-  color: white;
-}
-.btn-reset-sidebar {
-  border: 1px solid var(--color-accent-error);
-  color: var(--color-accent-error);
-  /* ...properti lain di-inherit... */
-}
-.btn-reset-sidebar:hover:not(:disabled) {
-  background-color: var(--color-accent-expense);
-  color: white;
-  transform: none;
-  box-shadow: none;
-}
-
-/* [BARU] Main Content dengan Gradient Glow */
-.main-content {
-  flex: 1;
-  padding: 2rem;
-  overflow-y: auto;
-  background-color: var(--color-bg-dark);
-  /* Efek glow dari sudut kiri atas & kanan atas */
-  background-image: radial-gradient(circle at 1% 1%, rgba(42, 47, 61, 0.5) 0%, transparent 30%),
-                    radial-gradient(circle at 99% 1%, rgba(0, 224, 198, 0.1) 0%, transparent 40%);
-}
-.main-content h2 {
-  margin-top: 0;
-  font-size: 2rem;
-  font-weight: 600; /* Judul lebih tegas */
-}
-
-/* HEADER MOBILE */
-.mobile-header {
-  display: none; 
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem;
-  background-color: var(--color-bg-medium);
-  border-bottom: 1px solid var(--color-border);
-  margin: -1rem -1rem 1.5rem -1rem; 
-}
-.mobile-header h1 {
-  font-size: 1.25rem;
-  margin: 0;
-}
-.mobile-header > div {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-/* === DASHBOARD COMPONENTS === */
-.month-navigator {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-  background-color: var(--color-bg-medium);
-  padding: 0.5rem;
-  border-radius: var(--radius-medium);
-}
-.month-navigator button {
-  width: auto;
-  font-size: 1.5rem;
-  padding: 0.25rem 1rem;
-  background-color: var(--color-bg-light);
-}
-.month-navigator button:hover:not(:disabled) {
-  background-color: var(--color-primary);
-  border-color: var(--color-primary);
-  color: var(--color-bg-dark);
-  transform: none;
-  box-shadow: none;
-}
-.month-navigator h2 {
-  margin: 0;
-  font-size: 1.5rem;
-  min-width: 200px;
-  text-align: center;
-}
-
-/* Grid Dashboard */
-.dashboard-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 1.5rem;
-  margin-top: 2rem;
-}
-
-/* [BARU] Kartu dengan style baru */
-.card {
-  background-color: var(--color-bg-medium);
-  padding: 1.5rem;
-  border-radius: var(--radius-large); /* BARU */
-  border: 1px solid var(--color-border);
-  box-shadow: var(--shadow-medium); /* BARU */
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-/* [BARU] Efek hover kartu */
-.card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.25);
-}
-.card h3 {
-  margin-top: 0;
-  border-bottom: 1px solid var(--color-border);
-  padding-bottom: 0.75rem;
-  font-weight: 600;
-}
-
-/* [BARU] Hierarki Ringkasan */
-.card-summary .summary-item.total {
-  font-size: 1.6em; 
-  margin-top: 1rem;
-  font-weight: 600;
-}
-.card-summary .summary-item.total:last-child {
-  font-size: 1.3em;
-  margin-top: 0.5rem;
-  font-weight: 500;
-  border-top: 1px solid var(--color-border);
-  padding-top: 0.75rem;
-}
-.card-summary .summary-item.total:nth-last-child(2) {
-  font-size: 1.8em;
-  font-weight: 700;
-  color: var(--color-text);
-}
-.card-summary .summary-item:not(.total) {
-  font-size: 1em;
-  color: var(--color-text-muted);
-}
-.card-summary .summary-item:not(.total) > span:last-child {
-  color: var(--color-text);
-  font-weight: 500;
-}
-.card-summary .summary-item.total-savings {
-  margin-top: 1rem;
-  border-top: 1px solid var(--color-border);
-  padding-top: 0.75rem;
-  font-weight: 500;
-  font-size: 1.1em;
-}
-.card-summary hr {
-  border-color: var(--color-border);
-  margin: 0.75rem 0;
-}
-
-/* Card: Budget Pockets */
-.card-budget-pocket {
-  grid-column: span 1 / span 1;
-}
-@media (min-width: 1024px) {
-  .card-budget-pocket {
-    grid-column: span 2 / span 2; 
-  }
-}
-.card-budget .budget-info {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.9em;
-  color: var(--color-text-muted);
-}
-.card-budget .budget-info.total {
-  font-size: 1em;
-  font-weight: bold;
-  color: var(--color-text);
-  margin-top: 0.5rem;
-}
-.progress-bar-container {
-  width: 100%;
-  height: 20px;
-  background-color: var(--color-bg-light);
-  border-radius: 10px;
-  overflow: hidden;
-  margin: 1rem 0 0.5rem;
-}
-.progress-bar-fill {
-  height: 100%;
-  background-color: var(--color-primary); /* BARU */
-  border-radius: 10px;
-  transition: width 0.5s ease-in-out;
-}
-.budget-form .form-group {
-  display: flex;
-  gap: 10px;
-  margin-top: 1.5rem;
-}
-.budget-form input {
-  flex-grow: 1;
-}
-.budget-form button {
-  padding: 0 1.5rem;
-  width: auto;
-}
-.budget-form .form-group-inline {
-  display: flex;
-  gap: 10px;
-}
-.budget-form .form-group-inline .btn-secondary {
-  width: auto;
-  padding: 0 1.5rem;
-  background-color: var(--color-border);
-}
-.budget-form .form-group-inline .btn-secondary:hover {
-  background-color: var(--color-bg-light);
-}
-
-/* Pocket Grid */
-.pocket-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1rem;
-  margin-top: 1.5rem;
-  max-height: 300px;
-  overflow-y: auto;
-  padding-right: 10px;
-}
-.pocket-item {
-  position: relative;
-  background-color: var(--color-bg-light);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-medium); /* BARU */
-  padding: 1rem;
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-}
-.pocket-item:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-  border-color: var(--color-primary);
-}
-.pocket-delete-btn {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 24px;
-  height: 24px;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.2rem;
-  font-weight: bold;
-  line-height: 1;
-  background-color: var(--color-border);
-  color: var(--color-text-muted);
-  border-radius: 50%;
-  border: none;
-  opacity: 0.5;
-  transition: all 0.2s ease-in-out;
-}
-.pocket-item:hover .pocket-delete-btn {
-  opacity: 1;
-}
-.pocket-delete-btn:hover {
-  background-color: var(--color-accent-error);
-  color: white;
-  transform: scale(1.1);
-}
-.pocket-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.75rem;
-}
-.pocket-title {
-  font-weight: 600;
-  font-size: 1.1rem;
-}
-.pocket-remaining {
-  font-size: 0.9rem;
-  color: var(--color-text-muted);
-}
-.pocket-remaining.expense {
-  color: var(--color-accent-error);
-  font-weight: 500;
-}
-.progress-bar-container.small {
-  height: 8px;
-  margin: 0.5rem 0;
-}
-.progress-bar-fill.expense {
-  background-color: var(--color-accent-expense);
-}
-.pocket-footer {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.9rem;
-}
-.pocket-footer .total {
-  color: var(--color-text-muted);
-}
-.budget-details-list {
-  max-height: 150px;
-  overflow-y: auto;
-  margin-top: 1.5rem;
-  border-top: 1px solid var(--color-border);
-}
-.budget-details-list .list-item.clickable {
-  cursor: pointer;
-  transition: background-color 0.2s ease-in-out;
-}
-.budget-details-list .list-item.clickable:hover {
-  background-color: var(--color-bg-light);
-}
-
-/* Card: Form Transaksi */
-.form-group-inline {
-  display: flex;
-  align-items: flex-end;
-  gap: 10px;
-  margin-bottom: 1.25rem;
-}
-.form-group-inline .form-group {
-  margin-bottom: 0;
-  flex-grow: 1;
-}
-.btn-new-category {
-  height: 47px;
-  flex-shrink: 0;
-  padding: 0 1rem;
-  background-color: var(--color-bg-light);
-  border: 1px solid var(--color-border);
-  width: auto;
-  border-radius: var(--radius-medium); /* BARU */
-}
-.btn-new-category:hover {
-  background-color: var(--color-border);
-}
-
-/* Card: Daftar Transaksi */
-.card-list ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-.card-list .list-item {
-  position: relative; 
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem 0.5rem; /* BARU */
-  border-bottom: 1px solid var(--color-border);
-  transition: background-color 0.2s ease;
-  border-radius: var(--radius-small); /* BARU */
-}
-.card-list .list-item:hover {
-  background-color: var(--color-bg-light);
-}
-.card-list .list-item:last-child {
-  border-bottom: none;
-}
-.card-list .list-item .list-item-details {
-  display: flex;
-  flex-direction: column;
-  padding-left: 30px; 
-  flex-grow: 1;
-}
-.card-list .list-item-details strong {
-  font-size: 1em;
-  font-weight: 500;
-}
-.card-list .list-item-details span {
-  font-size: 0.85em;
-  color: var(--color-text-muted);
-}
-.btn-delete-item {
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 24px;
-  height: 24px;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.2rem;
-  font-weight: bold;
-  line-height: 1;
-  background-color: transparent;
-  color: var(--color-text-muted);
-  border-radius: 50%;
-  border: none;
-  opacity: 0; 
-  transition: all 0.2s ease-in-out;
-}
-.list-item:hover .btn-delete-item {
-  opacity: 1; 
-}
-.btn-delete-item:hover {
-  background-color: var(--color-accent-error);
-  color: white;
-}
-.card-list.full-height-card {
-  grid-row: span 2; 
-  display: flex;
-  flex-direction: column;
-}
-.card-list.full-height-card ul {
-  flex-grow: 1;
-  overflow-y: auto; 
-  max-height: 600px; 
-  padding-right: 10px; 
-}
-
-
-/* === MODAL & ANIMASI === */
-.modal-backdrop {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.8);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-.modal-content {
-  background-color: var(--color-bg-medium);
-  padding: 2.5rem;
-  border-radius: var(--radius-large); /* BARU */
-  border: 1px solid var(--color-border);
-  width: 100%;
-  max-width: 420px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-  animation: modal-fade-in 0.3s ease;
-}
-@keyframes modal-fade-in {
-  from { opacity: 0; transform: translateY(-20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.modal-content h2 {
-  margin-top: 0;
-  text-align: center;
-}
-.modal-content input.color-picker {
-  width: 100%;
-  height: 47px;
-  padding: 0.2rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-medium); /* BARU */
-}
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 1rem;
-  margin-top: 2rem;
-}
-.modal-actions button {
-  width: auto;
-}
-
-/* Animasi Verifikasi */
-.verification-box {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 250px;
-}
-.verification-box h2 {
-  text-align: center;
-}
-.verification-box p {
-  text-align: center;
-}
-
-/* Spinner untuk di dalam tombol */
-.btn-spinner {
-  width: 20px;
-  height: 20px;
-  border-width: 3px;
-  margin: 0 auto; /* Pusatkan di dalam tombol */
-  border: 3px solid rgba(0, 0, 0, 0.3); /* Disesuaikan untuk teks gelap */
-  border-radius: 50%;
-  border-top-color: var(--color-bg-dark); /* Disesuaikan untuk teks gelap */
-  animation: spin 1s linear infinite;
-}
-/* Spinner di tombol sekunder (teks terang) */
-.btn-secondary .btn-spinner {
-   border: 3px solid rgba(255, 255, 255, 0.3);
-   border-top-color: #ffffff;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.checkmark-wrapper {
-  width: 80px;
-  height: 80px;
-  margin-bottom: 10px;
-}
-.checkmark {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  display: block;
-  stroke-width: 3;
-  stroke: var(--color-accent-success);
-  stroke-miterlimit: 10;
-  box-shadow: inset 0px 0px 0px var(--color-accent-success);
-  animation: fill .4s ease-in-out .4s forwards, scale .3s ease-in-out .9s both;
-}
-.checkmark-circle {
-  stroke-dasharray: 166;
-  stroke-dashoffset: 166;
-  stroke-width: 3;
-  stroke-miterlimit: 10;
-  stroke: var(--color-accent-success);
-  fill: none;
-  animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
-}
-.checkmark-check {
-  transform-origin: 50% 50%;
-  stroke-dasharray: 48;
-  stroke-dashoffset: 48;
-  animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
-}
-@keyframes stroke {
-  100% { stroke-dashoffset: 0; }
-}
-@keyframes scale {
-  0%, 100% { transform: none; }
-  50% { transform: scale3d(1.1, 1.1, 1); }
-}
-@keyframes fill {
-  100% { box-shadow: inset 0px 0px 0px 40px var(--color-accent-success); }
-}
-
-/* Show/Hide Password */
-.password-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-.password-wrapper input {
-  padding-right: 60px; /* Ruang untuk tombol */
-}
-.password-toggle-btn {
-  position: absolute;
-  right: 5px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: auto;
-  padding: 0.25rem 0.5rem;
-  font-size: 0.8rem;
-  font-weight: 600;
-  background-color: var(--color-border);
-  color: var(--color-text);
-  border: none;
-  cursor: pointer;
-  height: 30px;
-  border-radius: var(--radius-small);
-}
-.password-toggle-btn:hover {
-  background-color: var(--color-bg-light);
-}
-
-/* Modal Kategori (Edit/Delete) */
-.modal-divider {
-  border: none;
-  border-top: 1px solid var(--color-border);
-  margin: 2rem 0;
-}
-.modal-content h3 {
-  text-align: center;
-  margin-bottom: 1rem;
-}
-.category-list-modal {
-  max-height: 200px;
-  overflow-y: auto;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-medium); /* BARU */
-  background-color: var(--color-bg-dark);
-}
-.category-list-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid var(--color-border);
-}
-.category-list-item:last-child {
-  border-bottom: none;
-}
-.category-list-item .category-details {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  cursor: pointer; 
-  flex-grow: 1;
-  padding: 0.25rem;
-  border-radius: var(--radius-small);
-  transition: background-color 0.2s;
-}
-.category-list-item .category-details:hover {
-  background-color: var(--color-bg-light);
-}
-.category-icon {
-  display: inline-flex;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.9rem;
-  color: #000;
-  background-color: #fff;
-}
-.category-type {
-  font-size: 0.8em;
-  color: var(--color-text-muted);
-}
-.category-type.income {
-  color: var(--color-accent-income);
-}
-.category-type.expense {
-  color: var(--color-accent-expense);
-}
-.btn-delete-category {
-  width: auto;
-  padding: 0.2rem 0.6rem;
-  font-size: 1rem;
-  font-weight: bold;
-  background-color: var(--color-bg-light);
-  color: var(--color-accent-error);
-  border: 1px solid var(--color-border);
-}
-.btn-delete-category:hover {
-  background-color: var(--color-accent-expense);
-  color: white;
-  border-color: var(--color-accent-expense);
-}
-
-/* Input Mata Uang */
-.input-currency {
-  text-align: right;
-  font-weight: 500;
-  font-size: 1.1rem !important;
-}
-
-
-/* === REACT-DATEPICKER THEME (BARU) === */
-.month-picker-input {
-  background-color: transparent !important;
-  border: none !important;
-  color: var(--color-text) !important;
-  font-size: 1.5rem !important;
-  font-weight: 600; /* BARU */
-  width: 220px;
-  text-align: center;
-  cursor: pointer;
-  padding: 0.25rem;
-  border-radius: var(--radius-medium); /* BARU */
-}
-.month-picker-input:hover {
-  background-color: var(--color-bg-light) !important;
-}
-.month-picker-input:focus {
-  outline: none !important;
-  box-shadow: none !important;
-}
-.react-datepicker-popper {
-  z-index: 1001;
-}
-.react-datepicker {
-  font-family: var(--font-body) !important;
-  background-color: var(--color-bg-medium) !important;
-  border: 1px solid var(--color-border) !important;
-  border-radius: var(--radius-large) !important; /* BARU */
-  box-shadow: var(--shadow-medium);
-}
-.react-datepicker__triangle {
-  display: none !important;
-}
-.react-datepicker__header {
-  background-color: var(--color-bg-medium) !important;
-  border-bottom: 1px solid var(--color-border) !important;
-  padding-top: 1rem !important;
-}
-.react-datepicker__current-month,
-.react-datepicker__navigation--previous-month,
-.react-datepicker__navigation--next-month {
-  color: var(--color-text) !important;
-  font-weight: 500 !important;
-  font-size: 1rem !important;
-}
-.react-datepicker__navigation-icon::before {
-  border-color: var(--color-text) !important;
-}
-.react-datepicker__month-wrapper {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  padding: 0.5rem;
-}
-.react-datepicker__month-text {
-  display: inline-flex !important;
-  justify-content: center;
-  align-items: center;
-  width: 80px !important;
-  height: 45px !important;
-  margin: 0.5rem !important;
-  border-radius: var(--radius-medium); /* BARU */
-  color: var(--color-text);
-  cursor: pointer;
-}
-.react-datepicker__month-text:hover {
-  background-color: var(--color-bg-light) !important;
-}
-.react-datepicker__month-text--selected {
-  background-color: var(--color-primary) !important;
-  color: var(--color-bg-dark) !important; /* BARU */
-  font-weight: 600 !important;
-}
-.react-datepicker__month-text--disabled {
-  color: var(--color-text-muted) !important;
-  cursor: not-allowed;
-}
-.react-datepicker__month-text--disabled:hover {
-  background-color: transparent !important;
-}
-
-
-/* === ANIMASI SUKSES GLOBAL === */
-.success-animation-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.7);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 2000; /* Paling atas */
-  opacity: 0;
-  animation: modal-fade-in 0.3s ease forwards;
-}
-.success-animation-overlay .checkmark-wrapper {
-  width: 100px;
-  height: 100px;
-  background-color: var(--color-bg-medium);
-  border-radius: 50%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  border: 1px solid var(--color-border);
-}
-.success-animation-overlay .checkmark {
-  width: 80px;
-  height: 80px;
-}
-
-/* === KARTU TABUNGAN === */
-.card-savings {
-  grid-column: span 1;
-}
-@media (min-width: 1024px) {
-  .card-savings {
-    grid-column: span 2 / span 2; 
-  }
-}
-.savings-form .form-group-triple {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
-.savings-form .form-group-triple .form-group {
-    margin-bottom: 0;
-}
-.savings-form .form-group-inline {
-  align-items: flex-end;
-}
-.savings-form .form-group {
-  margin-bottom: 0;
-  flex: 1;
-}
-.savings-list {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1rem;
-  margin-top: 1.5rem;
-  max-height: 400px;
-  overflow-y: auto;
-  padding-right: 10px;
-}
-.savings-item {
-  position: relative;
-  background-color: var(--color-bg-light);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-medium); /* BARU */
-  padding: 1rem;
-  display: flex;
-  flex-direction: column;
-}
-.progress-bar-fill.income {
-  background-color: var(--color-accent-success);
-}
-.btn-add-funds {
-  width: 100%;
-  padding: 0.5rem 1rem;
-  font-size: 0.9rem;
-  margin-top: 1rem;
-  background-color: var(--color-bg-light);
-  border: 1px solid var(--color-border);
-  color: var(--color-accent-income);
-  font-weight: 600;
-  border-radius: var(--radius-medium); /* BARU */
-}
-.btn-add-funds:hover:not(:disabled) {
-  background-color: var(--color-accent-success);
-  color: var(--color-bg-dark);
-  border-color: var(--color-accent-success);
-  transform: none;
-  box-shadow: none;
-}
-.btn-add-funds:disabled {
-  background-color: var(--color-border);
-  color: var(--color-text-muted);
-  cursor: not-allowed;
-  border-color: var(--color-border);
-}
-
-/* === MEDIA QUERIES (MOBILE) === */
-@media (max-width: 768px) {
-  .auth-layout {
-    flex-direction: column;
-  }
-  .auth-sidebar {
-    width: 100%;
-    max-width: 100%;
-    height: 100vh;
-    border-right: none;
-    padding: 1.5rem;
-  }
-  .dashboard-layout {
-    flex-direction: column;
-    height: auto;
-    min-height: 100vh;
-  }
-  .sidebar {
-    display: none;
-  }
-  .main-content {
-    padding: 1rem;
-    padding-bottom: 80px; /* Ruang untuk nav mobile */
-    background-image: radial-gradient(circle at 50% 1%, rgba(0, 224, 198, 0.1) 0%, transparent 50%);
-  }
-  .mobile-header {
-    display: flex;
-    flex-wrap: nowrap; 
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem;
-    background-color: var(--color-bg-medium);
-    border-bottom: 1px solid var(--color-border);
-    margin: -1rem -1rem 1.5rem -1rem; 
-  }
-  .mobile-header h1 {
-     font-size: 1.25rem;
-     margin: 0;
-     white-space: nowrap;
-     overflow: hidden;
-     text-overflow: ellipsis;
-  }
-  .mobile-header > div {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    flex-shrink: 0;
-  }
-  
-  .mobile-nav {
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    width: 100%;
-    height: 60px;
-    background-color: #161a23; /* Cocokkan dengan sidebar */
-    border-top: 1px solid var(--color-border);
-    box-shadow: 0 -2px 10px rgba(0,0,0,0.2);
-    padding-bottom: env(safe-area-inset-bottom); 
-    z-index: 100;
-  }
-  .mobile-nav a {
-    flex: 1;
-    text-align: center;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    padding: 0 0.25rem;
-    font-size: 0.95rem;
-    color: var(--color-text-muted);
-    text-decoration: none;
-    font-weight: 500;
-  }
-  .mobile-nav a.active {
-    color: var(--color-primary);
-    font-weight: 600;
-  }
-
-  .main-content h2 {
-    font-size: 1.75rem;
-  }
-  .dashboard-grid {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
-  .card {
-    padding: 1rem;
-  }
-  .modal-content {
-    max-width: 90%;
-    padding: 1.5rem;
-  }
-  .modal-actions {
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-  .modal-actions button {
-    width: 100%;
-  }
-  .card-list.full-height-card {
-    grid-row: auto; 
-  }
-  .card-list.full-height-card ul {
-    max-height: 400px; 
-  }
-  .btn-delete-item {
-    opacity: 0.6;
-  }
-  .card-budget-pocket {
-    grid-column: 1 / -1;
-  }
-  .pocket-grid {
-    grid-template-columns: 1fr;
-  }
-  .month-navigator h2 {
-    font-size: 1.25rem;
-    min-width: 150px;
-  }
-  .month-picker-input {
-    font-size: 1.25rem !important;
-    width: 170px;
-  }
-  .month-navigator button {
-    font-size: 1.25rem;
-    padding: 0.25rem 0.75rem;
-  }
-  .card-savings {
-    grid-column: 1 / -1;
-  }
-  .savings-form .form-group-triple {
-    grid-template-columns: 1fr;
-  }
-  .savings-form .form-group-inline {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 1rem;
-  }
-  .savings-list {
-    grid-template-columns: 1fr;
-  }
-  .transaction-form .form-group-inline {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 1rem;
-  }
-  .form-group-inline .form-group {
-    margin-bottom: 0;
-  }
-  .reports-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* === NAVIGASI SIDEBAR === */
-.sidebar-nav {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  margin-bottom: 2rem;
-}
-.sidebar-nav a {
-  text-decoration: none;
-  color: var(--color-text-muted);
-  font-size: 1.1rem;
-  font-weight: 500;
-  padding: 0.75rem 1rem;
-  border-radius: var(--radius-medium); /* BARU */
-}
-.sidebar-nav a:hover {
-  background-color: var(--color-bg-light);
-  color: var(--color-text);
-}
-.sidebar-nav a.active {
-  background-color: var(--color-primary);
-  color: var(--color-bg-dark); /* BARU */
-  font-weight: 600;
-}
-
-/* === TOMBOL LINK & HALAMAN AKUN === */
-.btn-link-full {
-  display: block;
-  text-align: center;
-  width: 100%;
-  padding: 0.75rem;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--color-primary);
-  background-color: var(--color-bg-light);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-medium); /* BARU */
-  text-decoration: none;
-  margin-top: 1.5rem;
-  transition: background-color 0.2s;
-}
-.btn-link-full:hover {
-  background-color: var(--color-border);
-}
-.accounts-page h2 {
-  margin-top: 0;
-  font-size: 2rem;
-}
-.accounts-page > p {
-  font-size: 1.1rem;
-  color: var(--color-text-muted);
-  margin-bottom: 2rem;
-}
-.account-form {
-  margin-bottom: 1.5rem;
-}
-.account-list {
-  margin-top: 1.5rem;
-}
-.account-actions {
-  display: flex;
-  gap: 0.5rem;
-  margin-top: 1rem;
-}
-.account-actions button {
-  width: 100%;
-  font-size: 0.9rem;
-  padding: 0.5rem;
-  border-radius: var(--radius-medium); /* BARU */
-}
-.account-actions .btn-delete {
-  background-color: var(--color-accent-error);
-}
-
-/* === HALAMAN LAPORAN === */
-.reports-page h2 {
-  margin-top: 0;
-  font-size: 2rem;
-}
-.reports-page > p {
-  font-size: 1.1rem;
-  color: var(--color-text-muted);
-  margin-bottom: 2rem;
-}
-.reports-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1.5rem;
-}
-@media (min-width: 1024px) {
-  .reports-grid {
-    grid-template-columns: 2fr 1fr; /* Grafik garis lebih besar */
-  }
-}
-.chart-container {
-  padding: 1.5rem;
-  position: relative;
-  min-height: 300px;
-}
-.list-item-details span {
-  display: flex;
-  gap: 0.5rem; /* Beri jarak antara tanggal dan nama akun */
-}
-
-/* === OCR LOADING OVERLAY === */
-.ocr-loading-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(30, 30, 30, 0.85);
-  backdrop-filter: blur(2px);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  z-index: 10;
-  border-radius: var(--radius-large); /* BARU */
-  color: var(--color-text);
-}
-.ocr-loading-overlay .btn-spinner {
-  width: 30px;
-  height: 30px;
-  border-width: 4px;
-  border: 4px solid rgba(255, 255, 255, 0.3);
-  border-top-color: #ffffff;
-}
-.ocr-loading-overlay p {
-  margin-top: 1rem;
-  font-weight: 500;
-  font-size: 0.9rem;
-  color: var(--color-text-muted);
-}
-
-/* === ENHANCEMENT HALAMAN LOGIN === */
-.auth-main-content {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem;
-  /* [BARU] Gradient disesuaikan dengan tema */
-  background: radial-gradient(ellipse at 100% 100%, rgba(0, 224, 198, 0.1) 0%, transparent 50%),
-              linear-gradient(135deg, var(--color-bg-dark) 0%, #1a1e29 100%);
-}
-@media (max-width: 768px) {
-  .auth-main-content {
-    display: none;
-  }
-}
-.auth-branding {
-  max-width: 450px;
-  text-align: left;
-}
-.auth-branding h1 {
-  font-size: 3rem;
-  font-weight: 700;
-  color: var(--color-text);
-  margin: 0;
-}
-.auth-branding p {
-  font-size: 1.5rem;
-  color: var(--color-text-muted);
-  line-height: 1.5;
-  margin-top: 1rem;
-}
-.auth-welcome {
-  font-size: 1.1rem;
-  font-weight: 500;
-  color: var(--color-text-muted);
-  margin-bottom: 0.25rem;
-}
-.auth-form-container h2 {
-  font-size: 2rem;
-  font-weight: 600; /* BARU */
-  margin-bottom: 2rem;
-}
-.form-input-wrapper {
-  position: relative;
-  width: 100%;
-}
-.input-icon {
-  position: absolute;
-  left: 1rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--color-text-muted);
-  font-size: 1.1rem;
-  pointer-events: none; /* Biarkan klik menembus ikon */
-}
-.form-group .form-input-wrapper input {
-  padding-left: 3rem !important; /* Ruang untuk ikon */
-}
-.password-wrapper .form-input-wrapper input[type="password"],
-.password-wrapper .form-input-wrapper input[type="text"] {
-  padding-right: 60px !important; 
-}
-.password-wrapper .password-toggle-btn {
-  position: absolute;
-  right: 5px;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 2;
-}
-.auth-extra-links {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 1.25rem;
-}
-.auth-forgot-password {
-  font-size: 0.9rem;
-  color: var(--color-primary);
-  text-decoration: none;
-}
-.auth-forgot-password:hover {
-  text-decoration: underline;
-}
-.auth-switch-page {
-  text-align: center;
-  margin-top: 1.5rem;
-  font-size: 1rem;
-}
-.auth-form-container p.auth-switch-page a {
-  font-weight: 600;
-}
-.auth-error-box {
-  background-color: rgba(248, 113, 113, 0.1);
-  border: 1px solid var(--color-accent-error);
-  padding: 0.75rem 1rem;
-  border-radius: var(--radius-medium); /* BARU */
-  margin-bottom: 1.25rem;
-}
-.auth-error-box p {
-  color: var(--color-text);
-  font-weight: 500;
-  margin: 0;
-  text-align: center;
-}
-.auth-form-container p.error {
-  display: none;
-}
-
-/* === SKELETON LOADING === */
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
-}
-.skeleton-loader {
-  animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-.skeleton-card {
-  background-color: var(--color-bg-light); 
-  padding: 1.5rem;
-  border-radius: var(--radius-large); /* BARU */
-  border: 1px solid var(--color-border);
-  box-shadow: var(--shadow-small); /* BARU */
-}
-.skeleton-line {
-  height: 1rem;
-  background-color: var(--color-border);
-  border-radius: var(--radius-small); /* BARU */
-  margin-bottom: 0.75rem;
-}
-.skeleton-line.h-1-5 { height: 1.5rem; margin-bottom: 1rem; }
-.skeleton-line.w-75 { width: 75%; }
-.skeleton-line.w-50 { width: 50%; }
-.skeleton-line.w-25 { width: 25%; }
-.page-spinner-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 250px;
-}
-.page-spinner {
-  width: 50px;
-  height: 50px;
-  border-width: 5px;
-  border: 5px solid var(--color-border);
-  border-radius: 50%;
-  border-top-color: var(--color-primary); /* BARU */
-  animation: spin 1s linear infinite; 
-}
-
-/* === Animasi Geser Bulan === */
-.dashboard-content-wrapper {
-  overflow-x: hidden;
-  position: relative;
-}
-@keyframes slideInFromLeft {
-  0% { transform: translateX(100%); opacity: 0; }
-  100% { transform: translateX(0); opacity: 1; }
-}
-@keyframes slideInFromRight {
-  0% { transform: translateX(-100%); opacity: 0; }
-  100% { transform: translateX(0); opacity: 1; }
-}
-.dashboard-grid {
-  transition: opacity 0.3s;
-}
-.dashboard-grid.slide-in-left {
-  animation: slideInFromLeft 0.3s ease-out forwards;
-}
-.dashboard-grid.slide-in-right {
-  animation: slideInFromRight 0.3s ease-out forwards;
-}
-/* naanas/money-tracker-frontend/src/index.css */
-
 /* === [BARU] Variabel Non-Warna (Berlaku di semua tema) === */
 :root {
   /* Font & Ukuran */
@@ -1569,6 +40,10 @@ button:disabled {
   --gradient-auth: radial-gradient(ellipse at 100% 100%, rgba(0, 224, 198, 0.1) 0%, transparent 50%),
                    linear-gradient(135deg, var(--color-bg-dark) 0%, #1a1e29 100%);
   --gradient-mobile: radial-gradient(circle at 50% 1%, rgba(0, 224, 198, 0.1) 0%, transparent 50%);
+  
+  /* Variabel Glow untuk Tema Dark */
+  --color-primary-glow: rgba(0, 224, 198, 0.4);
+  --color-primary-glow-shadow: rgba(0, 224, 198, 0.2);
 }
 
 /* === [BARU] TEMA LIGHT === */
@@ -1586,7 +61,7 @@ button:disabled {
   --color-primary-hover: #007d6c;   /* Primary hover */
   --color-button-text: #ffffff;    /* Teks putih di atas tombol teal */
 
-  /* Aksen tetap sama */
+  /* Aksen */
   --color-accent-income: #16a34a;
   --color-accent-expense: #dc2626;
   --color-accent-error: #dc2626;
@@ -1596,6 +71,10 @@ button:disabled {
   --gradient-main: none;
   --gradient-auth: linear-gradient(135deg, #ffffff 0%, #f0f2f5 100%);
   --gradient-mobile: none;
+  
+  /* Variabel Glow untuk Tema Light */
+  --color-primary-glow: rgba(0, 163, 140, 0.3);
+  --color-primary-glow-shadow: rgba(0, 163, 140, 0.25);
 }
 
 
@@ -1691,11 +170,7 @@ a {
 .form-group select:focus {
   outline: none;
   border-color: var(--color-primary);
-  /* [BARU] Variabel untuk box-shadow */
-  box-shadow: 0 0 0 3px var(--color-primary-glow, rgba(0, 224, 198, 0.4)); 
-}
-:root[data-theme='light'] {
-  --color-primary-glow: rgba(0, 163, 140, 0.3);
+  box-shadow: 0 0 0 3px var(--color-primary-glow); 
 }
 .form-group .error-text {
   color: var(--color-accent-error);
@@ -1723,7 +198,7 @@ button {
   font-weight: 600;
   font-family: inherit;
   background-color: var(--color-primary);
-  color: var(--color-button-text); /* Variabel BARU */
+  color: var(--color-button-text);
   cursor: pointer;
   transition: all 0.25s ease;
   width: 100%;
@@ -1732,11 +207,7 @@ button:hover:not(:disabled) {
   background-color: var(--color-primary-hover);
   filter: none;
   transform: translateY(-2px);
-  /* [BARU] Variabel untuk shadow glow */
-  box-shadow: 0 6px 12px var(--color-primary-glow-shadow, rgba(0, 224, 198, 0.2)); 
-}
-:root[data-theme='light'] {
-   --color-primary-glow-shadow: rgba(0, 163, 140, 0.25);
+  box-shadow: 0 6px 12px var(--color-primary-glow-shadow); 
 }
 button:disabled {
   background-color: var(--color-border);
@@ -1807,7 +278,7 @@ button:disabled {
   color: var(--color-text-muted);
   word-break: break-all;
   margin-bottom: 1rem;
-  margin-top: 1.5rem; /* [BARU] Jarak dari toggle */
+  margin-top: 1.5rem;
 }
 .logout-btn {
   background-color: var(--color-accent-error);
@@ -1912,6 +383,9 @@ button:disabled {
   transform: translateY(-4px);
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.25);
 }
+:root[data-theme='light'] .card {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
 :root[data-theme='light'] .card:hover {
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
 }
@@ -1968,6 +442,18 @@ button:disabled {
   .card-budget-pocket {
     grid-column: span 2 / span 2; 
   }
+}
+.card-budget .budget-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9em;
+  color: var(--color-text-muted);
+}
+.card-budget .budget-info.total {
+  font-size: 1em;
+  font-weight: bold;
+  color: var(--color-text);
+  margin-top: 0.5rem;
 }
 .progress-bar-container {
   width: 100%;
@@ -2029,14 +515,57 @@ button:disabled {
   box-shadow: 0 4px 10px rgba(0,0,0,0.3);
   border-color: var(--color-primary);
 }
+:root[data-theme='light'] .pocket-item {
+   box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+:root[data-theme='light'] .pocket-item:hover {
+   box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
 .pocket-delete-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  font-weight: bold;
+  line-height: 1;
   background-color: var(--color-border);
   color: var(--color-text-muted);
+  border-radius: 50%;
+  border: none;
+  opacity: 0.5;
+  transition: all 0.2s ease-in-out;
+}
+.pocket-item:hover .pocket-delete-btn {
+  opacity: 1;
 }
 .pocket-delete-btn:hover {
   background-color: var(--color-accent-error);
   color: white;
   transform: scale(1.1);
+}
+.pocket-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+.pocket-title {
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+.pocket-remaining {
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+.pocket-remaining.expense {
+  color: var(--color-accent-error);
+  font-weight: 500;
 }
 .progress-bar-container.small {
   height: 8px;
@@ -2045,8 +574,42 @@ button:disabled {
 .progress-bar-fill.expense {
   background-color: var(--color-accent-expense);
 }
+.pocket-footer {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+}
+.pocket-footer .total {
+  color: var(--color-text-muted);
+}
+.budget-details-list {
+  max-height: 150px;
+  overflow-y: auto;
+  margin-top: 1.5rem;
+  border-top: 1px solid var(--color-border);
+}
+.budget-details-list .list-item.clickable {
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+}
+.budget-details-list .list-item.clickable:hover {
+  background-color: var(--color-bg-light);
+}
+
+/* Card: Form Transaksi */
+.form-group-inline {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  margin-bottom: 1.25rem;
+}
+.form-group-inline .form-group {
+  margin-bottom: 0;
+  flex-grow: 1;
+}
 .btn-new-category {
   height: 47px;
+  flex-shrink: 0;
   padding: 0 1rem;
   background-color: var(--color-bg-light);
   border: 1px solid var(--color-border);
@@ -2079,6 +642,41 @@ button:disabled {
 .card-list .list-item:last-child {
   border-bottom: none;
 }
+.card-list .list-item .list-item-details {
+  display: flex;
+  flex-direction: column;
+  padding-left: 30px; 
+  flex-grow: 1;
+}
+.card-list .list-item-details strong {
+  font-size: 1em;
+  font-weight: 500;
+}
+.card-list .list-item-details span {
+  font-size: 0.85em;
+  color: var(--color-text-muted);
+}
+.btn-delete-item {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  font-weight: bold;
+  line-height: 1;
+  background-color: transparent;
+  color: var(--color-text-muted);
+  border-radius: 50%;
+  border: none;
+  opacity: 0; 
+  transition: all 0.2s ease-in-out;
+}
 .list-item:hover .btn-delete-item {
   opacity: 1; 
 }
@@ -2086,12 +684,18 @@ button:disabled {
   background-color: var(--color-accent-error);
   color: white;
 }
+.card-list.full-height-card {
+  grid-row: span 2; 
+  display: flex;
+  flex-direction: column;
+}
 .card-list.full-height-card ul {
   flex-grow: 1;
   overflow-y: auto; 
   max-height: 600px; 
   padding-right: 10px; 
 }
+
 
 /* === MODAL & ANIMASI === */
 .modal-backdrop {
@@ -2105,6 +709,9 @@ button:disabled {
   justify-content: center;
   align-items: center;
   z-index: 1000;
+}
+:root[data-theme='light'] .modal-backdrop {
+  background-color: rgba(0, 0, 0, 0.6);
 }
 .modal-content {
   background-color: var(--color-bg-medium);
@@ -2121,12 +728,25 @@ button:disabled {
   from { opacity: 0; transform: translateY(-20px); }
   to { opacity: 1; transform: translateY(0); }
 }
+.modal-content h2 {
+  margin-top: 0;
+  text-align: center;
+}
 .modal-content input.color-picker {
+  width: 100%;
+  height: 47px;
+  padding: 0.2rem;
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-medium);
 }
 .modal-actions {
+  display: flex;
+  justify-content: flex-end;
   gap: 1rem;
   margin-top: 2rem;
+}
+.modal-actions button {
+  width: auto;
 }
 
 /* Animasi Verifikasi */
@@ -2150,22 +770,16 @@ button:disabled {
   height: 20px;
   border-width: 3px;
   margin: 0 auto;
-  border: 3px solid rgba(0, 0, 0, 0.3);
+  border: 3px solid var(--color-button-text, #10121a);
+  border-color: rgba(var(--color-button-text), 0.3);
   border-radius: 50%;
-  border-top-color: var(--color-bg-dark);
+  border-top-color: var(--color-button-text, #10121a);
   animation: spin 1s linear infinite;
 }
-:root[data-theme='light'] .btn-spinner {
-  border: 3px solid rgba(255, 255, 255, 0.4);
-  border-top-color: #ffffff;
-}
 .btn-secondary .btn-spinner {
-   border: 3px solid rgba(255, 255, 255, 0.3);
-   border-top-color: #ffffff;
-}
-:root[data-theme='light'] .btn-secondary .btn-spinner {
-   border: 3px solid rgba(0, 0, 0, 0.3);
-   border-top-color: var(--color-bg-dark);
+   border: 3px solid var(--color-text, #f0f2f5);
+   border-color: rgba(var(--color-text), 0.3);
+   border-top-color: var(--color-text, #f0f2f5);
 }
 
 @keyframes spin {
@@ -2424,6 +1038,9 @@ button:disabled {
   z-index: 2000;
   opacity: 0;
   animation: modal-fade-in 0.3s ease forwards;
+}
+:root[data-theme='light'] .success-animation-overlay {
+  background-color: rgba(0, 0, 0, 0.6);
 }
 .success-animation-overlay .checkmark-wrapper {
   width: 100px;
@@ -2986,13 +1603,12 @@ button:disabled {
   animation: slideInFromRight 0.3s ease-out forwards;
 }
 
-/* === [BARU] CSS UNTUK THEME TOGGLE === */
+/* === CSS UNTUK THEME TOGGLE (Responsif) === */
 .theme-switch {
   position: relative;
   display: inline-block;
   width: 60px;
   height: 34px;
-  margin-bottom: 1rem;
 }
 .theme-switch input { 
   opacity: 0;
@@ -3036,51 +1652,65 @@ input:checked + .theme-slider .slider-icon {
   background-color: var(--color-bg-dark);
   border-color: var(--color-primary-hover);
 }
-/* ... (SEMUA CSS ANDA DARI SEBELUMNYA) ... */
-
-
-/* === [BARU] CSS UNTUK THEME TOGGLE (Responsif) === */
-
-/* Logika Desktop: Sembunyikan toggle di header mobile */
-.mobile-header .theme-switch {
-  display: none;
+:root[data-theme='light'] input:checked + .theme-slider {
+  background-color: var(--color-bg-light);
+  border-color: var(--color-border);
 }
-/* Pastikan toggle di sidebar terlihat di desktop */
+:root[data-theme='light'] input:checked + .theme-slider .slider-icon {
+  background-color: var(--color-bg-medium);
+  border-color: var(--color-border);
+}
+:root[data-theme='light'] .theme-slider {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary-hover);
+}
+:root[data-theme='light'] .slider-icon {
+  background-color: #fff;
+  border-color: var(--color-primary-hover);
+}
+:root[data-theme='light'] input:checked + .theme-slider .slider-icon {
+   transform: translateX(26px);
+}
+
+/* [DESKTOP] Toggle di Sidebar */
 .sidebar-footer .theme-switch {
   display: inline-block;
   margin-bottom: 1rem;
+}
+/* [DESKTOP] Sembunyikan toggle mobile (yang ada di main-content) */
+.main-content > .theme-switch {
+  display: none;
 }
 
 
 /* === MEDIA QUERIES (MOBILE) === */
 @media (max-width: 768px) {
-
   /* ... (semua style mobile Anda yang lain) ... */
-
+  
+  .main-content {
+    padding-bottom: 100px; /* Perbanyak ruang untuk FAB */
+  }
+  
   /* [BARU] Logika Mobile: */
-
-  /* 1. Sembunyikan toggle di sidebar (karena sidebarnya sendiri disembunyikan) */
+  /* 1. Sembunyikan toggle di sidebar */
   .sidebar-footer .theme-switch {
     display: none;
   }
   
-  /* 2. Tampilkan toggle di header mobile */
-  .mobile-header .theme-switch {
+  /* 2. Tampilkan toggle di main-content sebagai FAB (Floating Action Button) */
+  .main-content > .theme-switch {
     display: inline-block;
-    width: 50px; /* Perkecil sedikit */
-    height: 28px;
+    position: fixed;
+    bottom: 80px; /* 60px (nav) + 20px (padding) */
+    right: 20px;
+    z-index: 999;
+    
+    /* Styling tambahan untuk FAB */
+    box-shadow: var(--shadow-medium);
+    border-radius: 34px;
   }
-  .mobile-header .theme-slider {
-    border-radius: 28px;
-  }
-  .mobile-header .slider-icon {
-    height: 22px;
-    width: 22px;
-    left: 2px;
-    bottom: 2px;
-    font-size: 14px;
-  }
-  .mobile-header input:checked + .theme-slider .slider-icon {
-    transform: translateX(22px);
+  
+  :root[data-theme='light'] .main-content > .theme-switch {
+     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   }
 }
