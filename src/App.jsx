@@ -9,20 +9,24 @@ import AuthLayout from './components/AuthLayout';
 // [BARU] Impor halaman baru
 import Accounts from './pages/Accounts';
 import Reports from './pages/Reports';
-import MainLayout from './components/MainLayout'; // [BARU] Layout baru
+import MainLayout from './components/MainLayout';
+// [BARU] Impor halaman ResetPassword
+import ResetPassword from './pages/ResetPassword';
 
 function App() {
   return (
     <Routes>
-      {/* Rute Publik (Login & Register) */}
+      {/* Rute Publik (Login, Register, Reset Password) */}
       <Route element={<AuthLayout />}>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        {/* [BARU] Tambahkan rute untuk reset password di sini */}
+        <Route path="/reset-password" element={<ResetPassword />} />
       </Route>
 
       <Route path="/auth/callback" element={<AuthCallback />} />
 
-      {/* [MODIFIKASI] Rute Privat sekarang menggunakan MainLayout */}
+      {/* Rute Privat (Dashboard, Akun, Laporan) */}
       <Route
         path="/"
         element={
@@ -31,11 +35,8 @@ function App() {
           </PrivateRoute>
         }
       >
-        {/* Rute default (Dashboard) */}
         <Route index element={<Dashboard />} /> 
         <Route path="dashboard" element={<Dashboard />} />
-        
-        {/* [BARU] Rute untuk fitur baru */}
         <Route path="accounts" element={<Accounts />} />
         <Route path="reports" element={<Reports />} />
       </Route>
