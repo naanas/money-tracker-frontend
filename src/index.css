@@ -104,43 +104,90 @@ a {
   transition: color 0.2s ease-in-out, background-color 0.2s ease-in-out;
 }
 
-/* === AUTH LAYOUT (LOGIN/REGISTER) === */
+/* === [MODIFIKASI] AUTH LAYOUT (LOGIN/REGISTER) === */
 .auth-layout {
   display: flex;
+  flex-direction: column; /* Mengatur tumpukan vertikal */
+  align-items: center;    /* Pusatkan horizontal */
+  justify-content: center; /* Pusatkan vertikal */
   width: 100%;
-  height: 100vh;
+  min-height: 100vh; /* Pastikan mengisi layar */
+  padding: 2rem;          /* Beri padding untuk mobile */
+  background: var(--gradient-auth); /* Gunakan gradient di seluruh latar */
+  transition: background-image 0.3s ease;
 }
-.auth-sidebar {
+
+/* [BARU] Container untuk branding dan card */
+.auth-container {
   width: 100%;
-  max-width: 450px;
-  background-color: var(--color-bg-medium);
-  border-right: 1px solid var(--color-border);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: 2.5rem;
-  overflow-y: auto;
-  z-index: 1;
-  transition: background-color 0.3s ease, border-color 0.3s ease;
-}
-.auth-form-container {
-  width: 100%;
-  max-width: 400px;
+  max-width: 450px; /* Lebar maksimum konten */
   margin: 0 auto;
 }
-.auth-form-container form {
+
+/* [BARU] Styling untuk branding di atas */
+.auth-branding-top {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+.auth-branding-top h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0;
+}
+.auth-branding-top p {
+  font-size: 1.1rem;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+  margin-top: 0.5rem;
+}
+
+/* [BARU] Card yang membungkus form */
+.auth-card {
+  background-color: var(--color-bg-medium);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-large); /* Radius lebih besar */
+  padding: 2.5rem;
+  box-shadow: var(--shadow-medium);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+:root[data-theme='light'] .auth-card {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* [MODIFIKASI] .auth-form-container sekarang ada di dalam .auth-card */
+.auth-card .auth-form-container {
+  width: 100%;
+  max-width: 100%; /* Hapus max-width lama */
+  margin: 0;
+}
+
+.auth-card form {
   background-color: transparent;
   padding: 0;
   border: none;
   box-shadow: none;
   width: 100%;
 }
-.auth-form-container h2 {
-  text-align: left; 
+
+/* [MODIFIKASI] Judul form di dalam card */
+.auth-card h2 {
+  text-align: center; /* Pusatkan judul form */
   margin-top: 0;
-  margin-bottom: 2rem;
+  margin-bottom: 0.5rem; /* Kurangi margin bawah */
   font-size: 1.75rem;
 }
+
+/* [MODIFIKASI] Welcome text di dalam card */
+.auth-card .auth-welcome {
+  text-align: center; /* Pusatkan juga */
+  font-size: 1rem;
+  font-weight: 400;
+  color: var(--color-text-muted);
+  margin-bottom: 2rem; /* Beri jarak ke form */
+}
+
 
 /* === STYLING FORM UMUM === */
 .form-group {
@@ -223,17 +270,23 @@ button:disabled {
   transform: none;
   box-shadow: none;
 }
-.auth-form-container p {
-  text-align: left; 
+
+/* [MODIFIKASI] Teks link di bawah form */
+.auth-card p {
+  text-align: center; /* Pusatkan link "Daftar di sini" */
   margin-top: 1.5rem;
   font-size: 0.9rem;
   color: var(--color-text-muted);
 }
-.auth-form-container p a {
+.auth-card p a {
   color: var(--color-primary);
   text-decoration: none;
   font-weight: 500;
 }
+.auth-card p.auth-switch-page a {
+  font-weight: 600;
+}
+
 
 /* === HELPER & UTILITIES === */
 .error {
@@ -1128,16 +1181,26 @@ button:disabled {
 
 /* === MEDIA QUERIES (MOBILE) === */
 @media (max-width: 768px) {
+  /* [MODIFIKASI] Auth layout di mobile */
   .auth-layout {
-    flex-direction: column;
+    padding: 1rem;
+    justify-content: flex-start; /* Mulai dari atas di mobile */
+    padding-top: 3rem;
   }
-  .auth-sidebar {
-    width: 100%;
+  .auth-container {
     max-width: 100%;
-    height: 100vh;
-    border-right: none;
-    padding: 1.5rem;
   }
+  .auth-card {
+    padding: 2rem 1.5rem; /* Kurangi padding card di mobile */
+  }
+  .auth-branding-top h1 {
+    font-size: 2rem;
+  }
+  .auth-branding-top p {
+    font-size: 1rem;
+  }
+
+  /* Layout Dashboard */
   .dashboard-layout {
     flex-direction: column;
     height: auto;
@@ -1493,47 +1556,15 @@ button:disabled {
   color: var(--color-text-muted);
 }
 
-/* === ENHANCEMENT HALAMAN LOGIN === */
-.auth-main-content {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem;
-  background: var(--gradient-auth);
-  transition: background-image 0.3s ease;
-}
-@media (max-width: 768px) {
-  .auth-main-content {
-    display: none;
-  }
-}
-.auth-branding {
-  max-width: 450px;
-  text-align: left;
-}
-.auth-branding h1 {
-  font-size: 3rem;
-  font-weight: 700;
-  color: var(--color-text);
-  margin: 0;
-}
-.auth-branding p {
-  font-size: 1.5rem;
-  color: var(--color-text-muted);
-  line-height: 1.5;
-  margin-top: 1rem;
-}
+/* === [MODIFIKASI] ENHANCEMENT HALAMAN LOGIN === */
+/* Style .auth-welcome sudah diatur di dalam .auth-card */
 .auth-welcome {
   font-size: 1.1rem;
   font-weight: 500;
   color: var(--color-text-muted);
   margin-bottom: 0.25rem;
 }
-.auth-form-container h2 {
-  font-size: 2rem;
-  font-weight: 600;
-  margin-bottom: 2rem;
-}
+
 .form-input-wrapper {
   position: relative;
   width: 100%;
@@ -1574,14 +1605,14 @@ button:disabled {
 .auth-forgot-password:hover {
   text-decoration: underline;
 }
+
+/* Style .auth-switch-page sudah di-handle oleh .auth-card p */
 .auth-switch-page {
   text-align: center;
   margin-top: 1.5rem;
   font-size: 1rem;
 }
-.auth-form-container p.auth-switch-page a {
-  font-weight: 600;
-}
+
 .auth-error-box {
   background-color: rgba(248, 113, 113, 0.1);
   border: 1px solid var(--color-accent-error);
@@ -1599,9 +1630,11 @@ button:disabled {
   color: var(--color-accent-error);
   font-weight: 600;
 }
-.auth-form-container p.error {
+/* Sembunyikan error default jika .auth-error-box digunakan */
+.auth-card p.error {
   display: none;
 }
+
 
 /* === SKELETON LOADING === */
 @keyframes pulse {

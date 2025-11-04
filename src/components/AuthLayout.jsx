@@ -15,27 +15,26 @@ const AuthLayout = () => {
     return <Navigate to="/dashboard" replace />;
   }
 
-  // Jika belum login, tampilkan layout sidebar form
-  // dan render halaman (Login atau Register) di dalamnya
+  // === [MODIFIKASI] Layout diubah menjadi satu kolom terpusat ===
   return (
     <div className="auth-layout">
-      <div className="auth-sidebar">
-        <div className="auth-form-container">
-          <Outlet /> {/* Ini akan merender Login.jsx atau Register.jsx */}
-        </div>
-      </div>
-      
-      {/* === [PERUBAHAN DI SINI] === */}
-      <div className="auth-main-content">
-        {/* Tambahkan elemen branding di sisi kanan */}
-        <div className="auth-branding">
+      <div className="auth-container">
+        
+        {/* 1. Branding dipindah ke atas */}
+        <div className="auth-branding-top">
           <h1>💰 Money Tracker</h1>
           <p>Kendalikan keuangan Anda. Mulai dari langkah kecil.</p>
         </div>
+        
+        {/* 2. Form (Login/Register) di dalam card */}
+        <div className="auth-card">
+          <Outlet /> {/* Ini akan merender Login.jsx atau Register.jsx */}
+        </div>
+      
       </div>
-      {/* === [AKHIR PERUBAHAN] === */}
     </div>
   );
+  // === [AKHIR MODIFIKASI] ===
 };
 
 export default AuthLayout;
