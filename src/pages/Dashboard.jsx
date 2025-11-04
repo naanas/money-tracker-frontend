@@ -1,3 +1,4 @@
+// naanas/money-tracker-frontend/money-tracker-frontend-93f64fc0bdf098eeeda4e51adbfa651c35390e0c/src/pages/Dashboard.jsx
 import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -13,8 +14,10 @@ import CategoryForm from '../components/CategoryForm';
 import SavingsGoals from '../components/SavingsGoals'; 
 import TransferForm from '../components/TransferForm'; 
 import AccountSummary from '../components/AccountSummary'; 
+// [BARU] Impor modal detail
+import TransactionDetailModal from '../components/TransactionDetailModal';
 
-// [MODIFIKASI] Skeleton diganti spinner sederhana
+// ... (LoadingSpinner component)
 const LoadingSpinner = () => (
   <div className="page-spinner-container" style={{ minHeight: '50vh' }}>
     <div className="page-spinner"></div>
@@ -40,16 +43,14 @@ const Dashboard = () => {
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [budgetToEdit, setBudgetToEdit] = useState(null);
   
+  // [BARU] State untuk modal detail
+  const [selectedTransaction, setSelectedTransaction] = useState(null);
+
   const didMountRef = useRef(false); 
 
-  // === [STATE BARU] ===
-  // State untuk Tab
-  const [activeTab, setActiveTab] = useState('summary'); // summary, forms, budget, savings
-  // State untuk Menu Mobile
+  // ... (STATE BARU untuk Tab, Fab Menu, Animasi)
+  const [activeTab, setActiveTab] = useState('summary');
   const [isFabMenuOpen, setIsFabMenuOpen] = useState(false);
-  // === [AKHIR STATE BARU] ===
-
-  // State untuk Animasi & Geser (Tetap ada)
   const [animationClass, setAnimationClass] = useState('');
   const [touchStart, setTouchStart] = useState(null);
   const minSwipeDistance = 75; 
@@ -115,7 +116,8 @@ const Dashboard = () => {
     }
   }, []); 
 
-  // EFEK 1 (Tidak berubah)
+  // ... (EFEK 1 & EFEK 2 tidak berubah) ...
+  // EFEK 1
   useEffect(() => {
     setIsLoading(true); 
     fetchStaticData().then((staticDataStatus) => {
@@ -130,7 +132,7 @@ const Dashboard = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchStaticData]);
 
-  // EFEK 2 (Tidak berubah)
+  // EFEK 2
   useEffect(() => {
     if (didMountRef.current) {
       fetchMonthlyData(true); 
@@ -161,7 +163,7 @@ const Dashboard = () => {
     } catch (err) { console.error("Failed to re-fetch accounts:", err); }
   }, []);
 
-  // FUNGSI UPDATE UTAMA (Tidak berubah)
+  // ... (FUNGSI UPDATE UTAMA (handleDataUpdate) tidak berubah) ...
   const handleDataUpdate = async (options = {}) => {
     if (accounts.length > 0 && categories.length > 0) {
       await fetchMonthlyData(true); // true = refetch
@@ -280,14 +282,12 @@ const Dashboard = () => {
     }
   };
   
-  // === [FUNGSI BARU] ===
-  // Handler untuk mengubah tab
+  // --- (Fungsi Handler Tab (handleTabChange, getGridClass) tidak berubah) ---
   const handleTabChange = (tab) => {
     setActiveTab(tab);
     setIsFabMenuOpen(false); // Selalu tutup menu FAB setelah memilih
   };
 
-  // Helper untuk menentukan class grid
   const getGridClass = (tab) => {
     if (tab === 'summary') return 'summary-layout';
     if (tab === 'forms') return 'forms-layout';
@@ -295,15 +295,13 @@ const Dashboard = () => {
     if (tab === 'savings') return 'savings-layout';
     return '';
   };
-  // === [AKHIR FUNGSI BARU] ===
 
-
-  const showSkeleton = isLoading || isRefetching; // Ganti nama variabel
+  const showSkeleton = isLoading || isRefetching;
 
   return (
     <>
+      {/* ... (MonthNavigator dan Desktop Tab Navbar tidak berubah) ... */}
       <div className="month-navigator">
-        {/* ... (Isi MonthNavigator tidak berubah) ... */}
         <button onClick={handlePrevMonth} disabled={isRefetching || !!animationClass || isLoading}>&lt;</button>
         <DatePicker
           selected={selectedDate}
@@ -318,7 +316,6 @@ const Dashboard = () => {
         <button onClick={handleNextMonth} disabled={isRefetching || !!animationClass || isLoading}>&gt;</button>
       </div>
       
-      {/* === [BARU] Desktop Tab Navbar === */}
       <nav className="dashboard-tabs">
         <button 
           className={activeTab === 'summary' ? 'active' : ''}
@@ -350,30 +347,21 @@ const Dashboard = () => {
         </button>
       </nav>
 
-      {/* === [DIHAPUS] Mobile FAB Menu Dihapus === */}
-
-
       <div 
         className="dashboard-content-wrapper"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
-        {/* === [MODIFIKASI] Logika Render Utama === */}
-
-        {/* 1. Loading State */}
+        {/* === (Logika Render Utama (Loading, Error, No Accounts) tidak berubah) === */}
         {showSkeleton ? (
           <LoadingSpinner />
         ) : 
-        
-        /* 2. Error State */
         (error) ? (
           <div className="card" style={{textAlign: 'center', color: 'var(--color-text-muted)', marginTop: '2rem'}}>
             <p>Tidak dapat memuat data. Silakan coba lagi.</p>
             <p><i>{error}</i></p>
           </div>
         ) :
-
-        /* 3. No Accounts State */
         (accounts.length === 0) ? (
           <div className="card" style={{ textAlign: 'center', maxWidth: '600px', margin: '2rem auto' }}>
             <h2>Selamat Datang! 🎉</h2>
@@ -384,8 +372,6 @@ const Dashboard = () => {
             </Link>
           </div>
         ) :
-        
-        /* 4. Data Tampil (Berbasis Tab) */
         (
           <div 
             className={`dashboard-grid ${getGridClass(activeTab)} ${animationClass}`}
@@ -395,6 +381,7 @@ const Dashboard = () => {
             {/* --- TAB 1: SUMMARY --- */}
             {activeTab === 'summary' && (
               <>
+                {/* ... (card-summary dan AccountSummary tidak berubah) ... */}
                 {analytics ? (
                   <section className="card card-summary">
                     <h3>Ringkasan {formatMonthYear(selectedDate)}</h3>
@@ -429,25 +416,39 @@ const Dashboard = () => {
                   <ul>
                     {transactions.length > 0 ? (
                       transactions.map((t) => (
+                        // [MODIFIKASI] Item list-item dibuat clickable
                         <li key={t.id} className="list-item">
                           <button 
                             className="btn-delete-item"
                             title="Hapus transaksi ini"
-                            onClick={() => handleDeleteTransaction(t.id)}
+                            // [MODIFIKASI] Hentikan propagasi agar modal tidak terbuka
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteTransaction(t.id);
+                            }}
                           >
                             ✕
                           </button>
-                          <div className="list-item-details">
-                            <strong>{t.description || t.category}</strong>
-                            <span>
-                              {new Date(t.date).toLocaleDateString('id-ID', {day: '2-digit', month: 'short'})}
-                              {t.accounts ? ` • ${t.accounts.name}` : ''}
+                          
+                          {/* [BARU] Wrapper untuk area yang bisa diklik */}
+                          <div 
+                            className="list-item-clickable-area" 
+                            onClick={() => setSelectedTransaction(t)}
+                            title="Lihat Detail"
+                          >
+                            <div className="list-item-details">
+                              <strong>{t.description || t.category}</strong>
+                              <span>
+                                {new Date(t.date).toLocaleDateString('id-ID', {day: '2-digit', month: 'short'})}
+                                {/* Menampilkan nama akun sumber */}
+                                {t.accounts ? ` • ${t.accounts.name}` : ''}
+                              </span>
+                            </div>
+                            <span className={t.type}>
+                              {t.type === 'expense' ? '-' : '+'}
+                              {formatCurrency(t.amount)}
                             </span>
                           </div>
-                          <span className={t.type}>
-                            {t.type === 'expense' ? '-' : '+'}
-                            {formatCurrency(t.amount)}
-                          </span>
                         </li>
                       ))
                     ) : (
@@ -461,6 +462,7 @@ const Dashboard = () => {
             {/* --- TAB 2: FORMS (INPUT) --- */}
             {activeTab === 'forms' && (
               <>
+                {/* ... (TransactionForm dan TransferForm tidak berubah) ... */}
                 <section className="card card-form">
                   <h3>Tambah Transaksi Baru</h3>
                   <TransactionForm 
@@ -488,18 +490,14 @@ const Dashboard = () => {
             {/* --- TAB 3: BUDGET --- */}
             {activeTab === 'budget' && (
               <>
+                {/* ... (BudgetForm dan pocket-grid tidak berubah) ... */}
                 <section className="card card-budget-pocket">
                   <h3>Budget Pockets</h3>
                   {analytics ? (
                     <>
-                      {/* === [INI PERBAIKANNYA] === */}
-                      {/* Span persentase dihapus */}
                       <div className="budget-info total">
                         <span>Total Budget: {formatCurrency(totalBudget)}</span>
-                        {/* <span>{totalProgress.toFixed(0)}%</span>  <-- DIHAPUS */}
                       </div>
-                      {/* === [AKHIR PERBAIKAN] === */}
-
                       <div className="progress-bar-container">
                         <div 
                           className="progress-bar-fill" 
@@ -567,6 +565,7 @@ const Dashboard = () => {
             {/* --- TAB 4: SAVINGS --- */}
             {activeTab === 'savings' && (
               <>
+                {/* ... (SavingsGoals tidak berubah) ... */}
                 <SavingsGoals 
                   savingsGoals={filteredSavingsGoals} 
                   accounts={accounts} 
@@ -582,11 +581,20 @@ const Dashboard = () => {
         }
       </div> 
 
+      {/* ... (Render Modal CategoryForm tidak berubah) ... */}
       {isCategoryModalOpen && (
         <CategoryForm 
           existingCategories={categories}
           onClose={() => setIsCategoryModalOpen(false)}
           onSuccess={() => handleDataUpdate({ refetchCategories: true })} 
+        />
+      )}
+
+      {/* [BARU] Render Modal Detail Transaksi */}
+      {selectedTransaction && (
+        <TransactionDetailModal 
+          transaction={selectedTransaction} 
+          onClose={() => setSelectedTransaction(null)} 
         />
       )}
     </>
