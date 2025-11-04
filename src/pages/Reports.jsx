@@ -33,9 +33,9 @@ ChartJS.register(
   Filler
 );
 
-// --- OPSI CHART DIPINDAHKAN KE LUAR KOMPONEN ---
+// --- OPSI CHART (KONFIGURASI) ---
 
-// Opsi untuk Line Chart (Kontras)
+// Opsi untuk Line Chart
 const chartOptions = {
   responsive: true,
   maintainAspectRatio: false,
@@ -77,7 +77,7 @@ const chartOptions = {
   }
 };
 
-// Opsi untuk Doughnut Chart (Kontras)
+// Opsi untuk Doughnut Chart
 const pieOptions = {
     responsive: true,
     maintainAspectRatio: false,
@@ -151,7 +151,8 @@ const radarOptions = {
   }
 };
 
-// Halaman Laporan
+// --- KOMPONEN UTAMA ---
+
 const Reports = () => {
   const [trendData, setTrendData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -213,7 +214,6 @@ const Reports = () => {
       const chartLabels = Object.keys(categoryAgg);
       const chartData = Object.values(categoryAgg);
       
-      // Hasilkan warna acak untuk pie chart
       const pieColors = chartLabels.map(() => `hsl(${Math.floor(Math.random() * 360)}, 70%, 50%)`);
 
       setPieChartData({
@@ -257,8 +257,8 @@ const Reports = () => {
         <div className="reports-grid">
           
           {/* Chart 1: Line Chart (Full Width) */}
-          {/* [MODIFIKASI] Inline style dihapus */}
-          <div className="card chart-container"> 
+          {/* [PERBAIKAN] Menggunakan class, bukan inline style */}
+          <div className="card chart-container chart-container-full-width"> 
             <h3>Pemasukan vs Pengeluaran (6 Bulan)</h3>
             {lineChartData ? 
                 (<Line options={chartOptions} data={lineChartData} />) : 
@@ -267,7 +267,7 @@ const Reports = () => {
           </div>
           
           {/* Chart 2: Doughnut Chart */}
-          {/* [MODIFIKASI] Inline style dihapus */}
+          {/* [PERBAIKAN] Inline style dihapus */}
           <div className="card chart-container">
             <h3>Top Pengeluaran (6 Bulan)</h3>
             {pieChartData && pieChartData.datasets[0].data.length > 0 ? 
@@ -277,7 +277,7 @@ const Reports = () => {
           </div>
 
           {/* Chart 3: Radar Chart */}
-          {/* [MODIFIKASI] Inline style dihapus */}
+          {/* [PERBAIKAN] Inline style dihapus */}
           <div className="card chart-container">
             <h3>Sebaran Pengeluaran (6 Bulan)</h3>
             {radarChartData && radarChartData.datasets[0].data.length > 0 ? 
