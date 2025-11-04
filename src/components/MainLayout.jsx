@@ -57,6 +57,11 @@ const Sidebar = ({ onLogout, onReset }) => {
 const MainLayout = () => {
   const { logout } = useAuth();
   const [isResetting, setIsResetting] = useState(false);
+  
+  // === [STATE BARU] ===
+  // State untuk mengontrol menu dropdown mobile
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  // === [AKHIR STATE BARU] ===
 
   const handleResetTransactions = async () => {
     // ... (Fungsi ini tidak berubah) ...
@@ -77,6 +82,20 @@ const MainLayout = () => {
     setIsResetting(false); 
   };
 
+  // === [FUNGSI BARU] ===
+  // Wrapper untuk handle reset dari dropdown
+  const handleMobileMenuReset = () => {
+    handleResetTransactions();
+    setIsMobileMenuOpen(false);
+  };
+  
+  // Wrapper untuk handle logout dari dropdown
+  const handleMobileMenuLogout = () => {
+    logout();
+    setIsMobileMenuOpen(false);
+  };
+  // === [AKHIR FUNGSI BARU] ===
+
   return (
     <div className="dashboard-layout">
       <Sidebar 
@@ -85,18 +104,44 @@ const MainLayout = () => {
         isResetting={isResetting} 
       />
       
-      <main className="main-content">
+      {/* [MODIFIKASI] Tambah onClick di main-content untuk menutup dropdown */}
+      <main className="main-content" onClick={() => setIsMobileMenuOpen(false)}>
         <header className="mobile-header">
             <h1>💰 Money Tracker</h1>
+            
+            {/* === [MODIFIKASI] Blok Tombol Mobile === */}
             <div>
-              {/* [DIHAPUS] ThemeToggle dipindah dari sini */}
-              <button onClick={handleResetTransactions} className="btn-reset-mobile" title="Reset All Data">
-                Reset
-              </button>
-              <button onClick={logout} className="logout-btn-mobile">
-                Logout
-              </button>
+              {/* Tombol-tombol lama dihapus */}
+              {/* <button onClick={handleResetTransactions} ...>Reset</button> */}
+              {/* <button onClick={logout} ...>Logout</button> */}
+
+              {/* [BARU] Container Dropdown Menu */}
+              <div className="mobile-menu-container">
+                <button 
+                  className="mobile-menu-toggle" 
+                  onClick={(e) => {
+                    e.stopPropagation(); // Mencegah main-content onClick
+                    setIsMobileMenuOpen(!isMobileMenuOpen);
+                  }}
+                  title="Menu Opsi"
+                >
+                  ⋮ 
+                </button>
+                
+                {isMobileMenuOpen && (
+                  <div className="mobile-menu-dropdown" onClick={(e) => e.stopPropagation()}>
+                    <button onClick={handleMobileMenuReset} className="menu-item-reset">
+                      Reset Semua Data
+                    </button>
+                    <button onClick={handleMobileMenuLogout}>
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
+            {/* === [AKHIR MODIFIKASI] === */}
+            
             <nav className="mobile-nav">
                 <Link to="/dashboard">Dashboard</Link>
                 <Link to="/accounts">Akun</Link>
@@ -104,7 +149,7 @@ const MainLayout = () => {
             </nav>
         </header>
 
-        {/* [BARU] Toggle dipindah ke sini. Ini akan menjadi tombol melayang di mobile */}
+        {/* Toggle ini untuk FAB di kanan bawah */}
         <ThemeToggle />
 
         <Outlet />

@@ -1815,25 +1815,21 @@ input:checked + .theme-slider .slider-icon {
      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   }
 
-  /* 3. [DIHAPUS] .dashboard-tabs sekarang Tampil di mobile */
-  /*
+  /* 3. [MODIFIKASI] .dashboard-tabs sekarang Tampil di mobile */
   .dashboard-tabs {
-    display: none;
-  }
-  */
-  
-  /* 4. [DIHAPUS] FAB mobile tidak lagi ditampilkan */
-  /*
-  .mobile-fab-container {
     display: flex;
   }
-  */
+  
+  /* 4. [DIHAPUS] FAB mobile tidak lagi ditampilkan */
+  .mobile-fab-container {
+    display: none;
+  }
   
   /* 5. Pastikan Theme Toggle FAB (kanan bawah) tidak tumpang tindih */
   .main-content > .theme-switch {
     bottom: 80px; /* 60px (nav) + 20px (padding) */
     right: 20px;
-    z-index: 999; /* Pastikan di bawah backdrop (1000) */
+    z-index: 999;
   }
 }
 
@@ -1920,13 +1916,82 @@ input:checked + .theme-slider .slider-icon {
 }
 
 
-/* === [DIHAPUS] Semua style untuk FAB Menu === */
+/* === [MODIFIKASI] Mobile Dropdown Menu (Pojok Kanan Atas di Header) === */
+.mobile-menu-container {
+  position: relative;
+  display: inline-block;
+}
+
+.mobile-menu-toggle {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  font-size: 1.5rem;
+  line-height: 1;
+  font-weight: bold;
+  background: transparent;
+  color: var(--color-text-muted);
+  border: none;
+  border-radius: 50%;
+}
+.mobile-menu-toggle:hover {
+  background-color: var(--color-bg-light);
+  color: var(--color-text);
+  transform: none;
+  box-shadow: none;
+}
+
+.mobile-menu-dropdown {
+  position: absolute;
+  top: calc(100% + 10px); /* 10px below the toggle */
+  right: 0;
+  background-color: var(--color-bg-light); /* Lighter than header */
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-medium);
+  box-shadow: var(--shadow-medium);
+  width: 200px; /* Fixed width */
+  z-index: 101;
+  overflow: hidden; /* To clip the button radius */
+  animation: modal-fade-in 0.2s ease-out; /* Use existing animation */
+}
+
+.mobile-menu-dropdown button {
+  width: 100%;
+  background: transparent;
+  color: var(--color-text);
+  text-align: left;
+  padding: 0.75rem 1rem;
+  border-radius: 0;
+  border: none;
+  font-weight: 500;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.mobile-menu-dropdown button:last-child {
+  border-bottom: none;
+}
+
+.mobile-menu-dropdown button:hover {
+  background-color: var(--color-border);
+  transform: none;
+  box-shadow: none;
+}
+
+/* Make reset button have red text for caution */
+.mobile-menu-dropdown button.menu-item-reset {
+  color: var(--color-accent-error);
+  font-weight: 600;
+}
+.mobile-menu-dropdown button.menu-item-reset:hover {
+  background-color: rgba(248, 113, 113, 0.1); /* Red-ish hover */
+}
+
+/* [DIHAPUS] Semua style untuk FAB Menu */
 /*
 .mobile-fab-container { ... }
 .mobile-fab-menu { ... }
 .fab-menu-options { ... }
 .fab-menu-options button { ... }
-.fab-backdrop { ... }
 @keyframes fab-button-fade-in { ... }
 .fab-menu-options button:nth-child(n) { ... }
 */
