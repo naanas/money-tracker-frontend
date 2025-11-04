@@ -491,25 +491,22 @@ button:disabled {
 .card-budget-pocket {
   grid-column: span 1 / span 1;
 }
-/*
-@media (min-width: 1024px) {
-  .card-budget-pocket {
-    grid-column: span 2 / span 2; 
-  }
-}
-*/
-.card-budget .budget-info {
+
+/* === [PERBAIKAN] CSS Selector diubah ke .card-budget-pocket === */
+.card-budget-pocket .budget-info {
   display: flex;
   justify-content: space-between;
   font-size: 0.9em;
   color: var(--color-text-muted);
 }
-.card-budget .budget-info.total {
+.card-budget-pocket .budget-info.total {
   font-size: 1em;
   font-weight: bold;
   color: var(--color-text);
   margin-top: 0.5rem;
 }
+/* === [AKHIR PERBAIKAN] === */
+
 .progress-bar-container {
   width: 100%;
   height: 20px;
