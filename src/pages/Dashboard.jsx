@@ -494,7 +494,7 @@ const Dashboard = () => {
                     <>
                       <div className="budget-info total">
                         <span>Total Budget: {formatCurrency(totalBudget)}</span>
-                        <span>{totalProgress.toFixed(0)}%</span>
+                        <span>{totalProgress.toFixed(0)}</span>
                       </div>
                       <div className="progress-bar-container">
                         <div 
