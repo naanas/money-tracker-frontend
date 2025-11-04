@@ -1352,8 +1352,7 @@ button:disabled {
     grid-template-columns: 1fr;
   }
 
-  /* [MODIFIKASI] Sembunyikan FAB Theme Toggle di mobile */
-  /* Kita akan pindahkan ke dropdown nanti */
+  /* [DIHAPUS] Sembunyikan FAB Theme Toggle di mobile */
   .main-content > .theme-switch {
      display: none;
   }
@@ -1787,7 +1786,7 @@ input:checked + .theme-slider .slider-icon {
   display: inline-block;
   margin-bottom: 1rem;
 }
-/* [DESKTOP] Sembunyikan toggle mobile (yang ada di main-content) */
+/* [DIHAPUS] Sembunyikan toggle mobile (yang ada di main-content) */
 .main-content > .theme-switch {
   display: none;
 }
@@ -1798,7 +1797,7 @@ input:checked + .theme-slider .slider-icon {
   /* ... (semua style mobile Anda yang lain) ... */
   
   .main-content {
-    padding-bottom: 100px; /* Perbanyak ruang untuk nav & FAB */
+    padding-bottom: 100px; /* Ruang untuk nav & FAB */
   }
   
   /* [BARU] Logika Mobile: */
@@ -1807,22 +1806,12 @@ input:checked + .theme-slider .slider-icon {
     display: none;
   }
   
-  /* 2. Tampilkan toggle di main-content sebagai FAB (Floating Action Button) */
+  /* 2. [DIHAPUS] FAB Theme toggle tidak lagi ada */
+  /*
   .main-content > .theme-switch {
-    display: inline-block;
-    position: fixed;
-    bottom: 80px; /* 60px (nav) + 20px (padding) */
-    right: 20px;
-    z-index: 999; 
-    
-    /* Styling tambahan untuk FAB */
-    box-shadow: var(--shadow-medium);
-    border-radius: 34px;
+    ...
   }
-  
-  :root[data-theme='light'] .main-content > .theme-switch {
-     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  }
+  */
 
   /* 3. [MODIFIKASI] .dashboard-tabs sekarang Tampil di mobile */
   .dashboard-tabs {
@@ -1830,21 +1819,11 @@ input:checked + .theme-slider .slider-icon {
   }
   
   /* 4. [DIHAPUS] FAB mobile tidak lagi ditampilkan */
+  /*
   .mobile-fab-container {
     display: none;
   }
-  
-  /* 5. Pastikan Theme Toggle FAB (kanan bawah) tidak tumpang tindih */
-  .main-content > .theme-switch {
-    bottom: 80px; /* 60px (nav) + 20px (padding) */
-    right: 20px;
-    z-index: 999;
-  }
-  
-  /* [MODIFIKASI] Sembunyikan FAB Theme Toggle di mobile (karena dipindah ke dropdown) */
-  .main-content > .theme-switch {
-     display: none;
-  }
+  */
 }
 
 /* === [MODIFIKASI] STYLING UNTUK DASHBOARD TABS === */
@@ -1936,7 +1915,7 @@ input:checked + .theme-slider .slider-icon {
 }
 
 
-/* === [BARU] Mobile Dropdown Menu (Pojok Kanan Atas di Header) === */
+/* === [MODIFIKASI] Mobile Dropdown Menu (Pojok Kanan Atas di Header) === */
 .mobile-menu-container {
   position: relative;
   display: inline-block;
@@ -2004,4 +1983,21 @@ input:checked + .theme-slider .slider-icon {
 }
 .mobile-menu-dropdown button.menu-item-reset:hover {
   background-color: rgba(248, 113, 113, 0.1); /* Red-ish hover */
+}
+
+/* [BARU] Style untuk item ThemeToggle di dalam dropdown */
+.mobile-menu-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 1rem; /* Padding vertikal lebih kecil untuk switch */
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text);
+  font-weight: 500;
+  font-size: 1rem;
+}
+
+/* [BARU] Perkecil ukuran theme-switch di dalam menu */
+.mobile-menu-item .theme-switch {
+  transform: scale(0.8); /* 80% ukuran asli */
 }

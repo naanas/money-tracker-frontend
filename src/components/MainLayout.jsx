@@ -58,10 +58,8 @@ const MainLayout = () => {
   const { logout } = useAuth();
   const [isResetting, setIsResetting] = useState(false);
   
-  // === [STATE BARU] ===
   // State untuk mengontrol menu dropdown mobile
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  // === [AKHIR STATE BARU] ===
 
   const handleResetTransactions = async () => {
     // ... (Fungsi ini tidak berubah) ...
@@ -82,7 +80,6 @@ const MainLayout = () => {
     setIsResetting(false); 
   };
 
-  // === [FUNGSI BARU] ===
   // Wrapper untuk handle reset dari dropdown
   const handleMobileMenuReset = () => {
     handleResetTransactions();
@@ -94,7 +91,6 @@ const MainLayout = () => {
     logout();
     setIsMobileMenuOpen(false);
   };
-  // === [AKHIR FUNGSI BARU] ===
 
   return (
     <div className="dashboard-layout">
@@ -104,17 +100,11 @@ const MainLayout = () => {
         isResetting={isResetting} 
       />
       
-      {/* [MODIFIKASI] Tambah onClick di main-content untuk menutup dropdown */}
       <main className="main-content" onClick={() => setIsMobileMenuOpen(false)}>
         <header className="mobile-header">
             <h1>💰 Money Tracker</h1>
             
-            {/* === [MODIFIKASI] Blok Tombol Mobile === */}
             <div>
-              {/* Tombol-tombol lama dihapus */}
-              {/* <button onClick={handleResetTransactions} ...>Reset</button> */}
-              {/* <button onClick={logout} ...>Logout</button> */}
-
               {/* [BARU] Container Dropdown Menu */}
               <div className="mobile-menu-container">
                 <button 
@@ -130,6 +120,14 @@ const MainLayout = () => {
                 
                 {isMobileMenuOpen && (
                   <div className="mobile-menu-dropdown" onClick={(e) => e.stopPropagation()}>
+                    
+                    {/* === [BARU] TOMBOL THEME TOGGLE DITAMBAHKAN DI SINI === */}
+                    <div className="mobile-menu-item">
+                      <span>Ganti Tema</span>
+                      <ThemeToggle />
+                    </div>
+                    {/* === [AKHIR PENAMBAHAN] === */}
+
                     <button onClick={handleMobileMenuReset} className="menu-item-reset">
                       Reset Semua Data
                     </button>
@@ -140,7 +138,6 @@ const MainLayout = () => {
                 )}
               </div>
             </div>
-            {/* === [AKHIR MODIFIKASI] === */}
             
             <nav className="mobile-nav">
                 <Link to="/dashboard">Dashboard</Link>
@@ -149,8 +146,7 @@ const MainLayout = () => {
             </nav>
         </header>
 
-        {/* Toggle ini untuk FAB di kanan bawah */}
-        <ThemeToggle />
+        {/* [DIHAPUS] ThemeToggle yang melayang dihapus dari sini */}
 
         <Outlet />
       </main>
