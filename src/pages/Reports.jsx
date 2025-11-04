@@ -10,10 +10,13 @@ import {
   Title,
   Tooltip,
   Legend,
-  ArcElement
+  ArcElement,
+  // [BARU] Impor elemen untuk Radar Chart
+  RadialLinearScale,
+  Filler
 } from 'chart.js';
-import { Line, Doughnut } from 'react-chartjs-2';
-// [MODIFIKASI] Impor formatNumberInput
+// [MODIFIKASI] Impor Radar
+import { Line, Doughnut, Radar } from 'react-chartjs-2';
 import { formatCurrency, formatNumberInput } from '../utils/format';
 
 ChartJS.register(
@@ -25,9 +28,13 @@ ChartJS.register(
   Title,
   Tooltip,
   Legend,
-  ArcElement
+  ArcElement,
+  // [BARU] Registrasi elemen Radar Chart
+  RadialLinearScale,
+  Filler
 );
 
+// Opsi untuk Line Chart (tidak berubah)
 const chartOptions = {
   responsive: true,
   maintainAspectRatio: false,
@@ -46,7 +53,6 @@ const chartOptions = {
           if (label) {
             label += ': ';
           }
-          // Tooltip tetap pakai formatCurrency lengkap
           if (context.parsed.y !== null) {
             label += formatCurrency(context.parsed.y);
           }
@@ -63,17 +69,14 @@ const chartOptions = {
     y: {
       ticks: { 
         color: '#e1e1e1',
-        // === [INI PERBAIKANNYA] ===
-        // Menggunakan formatNumberInput (misal: 1.000.000)
-        // Bukan formatCurrency(value, '')
         callback: (value) => formatNumberInput(value)
-        // === [AKHIR PERBAIKAN] ===
       },
       grid: { color: '#3a3a3a' }
     }
   }
 };
 
+// Opsi untuk Doughnut Chart (tidak berubah)
 const pieOptions = {
     responsive: true,
     maintainAspectRatio: false,
@@ -92,7 +95,6 @@ const pieOptions = {
                     let label = context.label || '';
                     if (label) { label += ': '; }
                     if (context.parsed !== null) {
-                        // Tooltip tetap pakai formatCurrency lengkap
                         label += formatCurrency(context.parsed);
                     }
                     return label;
@@ -100,6 +102,53 @@ const pieOptions = {
             }
         }
     }
+};
+
+// === [BARU] Opsi untuk Radar Chart ===
+// Dibuat agar konsisten dengan tema gelap Anda
+const radarOptions = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: {
+      display: false, // Legenda di radar chart bisa terlalu ramai
+    },
+    tooltip: {
+      callbacks: {
+        label: function(context) {
+          let label = context.dataset.label || '';
+          if (label) {
+            label += ': ';
+          }
+          // Di radar chart, nilainya adalah 'r' (radius)
+          if (context.parsed.r !== null) {
+            label += formatCurrency(context.parsed.r);
+          }
+          return label;
+        }
+      }
+    }
+  },
+  scales: {
+    r: { // 'r' untuk skala Radial
+      angleLines: {
+        color: 'var(--color-border)' // Garis dari pusat
+      },
+      grid: {
+        color: 'var(--color-border)' // Grid melingkar
+      },
+      pointLabels: { // Label kategori (e.g., Grocery, Taxi)
+        color: 'var(--color-text)',
+        font: {
+          size: 12
+        }
+      },
+      ticks: {
+        display: false, // Sembunyikan angka di skala (e.g., 100k, 200k)
+        backdropColor: 'transparent'
+      }
+    }
+  }
 };
 
 // Halaman Laporan
@@ -111,6 +160,9 @@ const Reports = () => {
   // State untuk data chart
   const [lineChartData, setLineChartData] = useState(null);
   const [pieChartData, setPieChartData] = useState(null);
+  
+  // === [BARU] State untuk Radar Chart ===
+  const [radarChartData, setRadarChartData] = useState(null);
 
   const fetchTrends = useCallback(async () => {
     setLoading(true);
@@ -138,21 +190,21 @@ const Reports = () => {
           {
             label: 'Pemasukan',
             data: trendData.map(d => d.income),
-            borderColor: '#4ade80',
-            backgroundColor: '#4ade80',
+            borderColor: 'var(--color-accent-income)',
+            backgroundColor: 'var(--color-accent-income)',
             tension: 0.1
           },
           {
             label: 'Pengeluaran',
             data: trendData.map(d => d.expense),
-            borderColor: '#f87171',
-            backgroundColor: '#f87171',
+            borderColor: 'var(--color-accent-expense)',
+            backgroundColor: 'var(--color-accent-expense)',
             tension: 0.1
           }
         ]
       });
 
-      // 2. Data untuk Pie Chart (Agregat 6 bulan)
+      // 2. Data untuk Pie Chart & Radar Chart (Agregat 6 bulan)
       const categoryAgg = {};
       trendData.forEach(month => {
         Object.keys(month.categories).forEach(category => {
@@ -160,19 +212,35 @@ const Reports = () => {
         });
       });
       
-      const pieLabels = Object.keys(categoryAgg);
-      const pieData = Object.values(categoryAgg);
+      const chartLabels = Object.keys(categoryAgg);
+      const chartData = Object.values(categoryAgg);
       
       // Hasilkan warna acak untuk pie chart
-      const pieColors = pieLabels.map(() => `hsl(${Math.floor(Math.random() * 360)}, 70%, 50%)`);
+      const pieColors = chartLabels.map(() => `hsl(${Math.floor(Math.random() * 360)}, 70%, 50%)`);
 
       setPieChartData({
-        labels: pieLabels,
+        labels: chartLabels,
         datasets: [{
-          data: pieData,
+          data: chartData,
           backgroundColor: pieColors,
-          borderColor: '#1e1e1e',
+          borderColor: 'var(--color-bg-medium)',
           borderWidth: 2
+        }]
+      });
+
+      // === [BARU] 3. Data untuk Radar Chart ===
+      setRadarChartData({
+        labels: chartLabels, // Label yang sama
+        datasets: [{
+          label: 'Pengeluaran 6 Bulan',
+          data: chartData, // Data yang sama
+          backgroundColor: 'rgba(0, 224, 198, 0.2)', // Area dalam (transparan)
+          borderColor: 'var(--color-primary)', // Garis luar (solid)
+          borderWidth: 2,
+          pointBackgroundColor: 'var(--color-primary)',
+          pointBorderColor: '#fff',
+          pointHoverBackgroundColor: '#fff',
+          pointHoverBorderColor: 'var(--color-primary)'
         }]
       });
 
@@ -188,15 +256,19 @@ const Reports = () => {
       {error && <p className="error">{error}</p>}
       
       {!loading && !error && (
+        // [MODIFIKASI] Grid diubah untuk menampung 3 chart
         <div className="reports-grid">
-          <div className="card chart-container" style={{height: '400px'}}>
-            <h3>Pemasukan vs Pengeluaran</h3>
+          
+          {/* Chart 1: Line Chart (Full Width) */}
+          <div className="card chart-container" style={{height: '400px', gridColumn: 'span 1 / -1'}}> 
+            <h3>Pemasukan vs Pengeluaran (6 Bulan)</h3>
             {lineChartData ? 
                 (<Line options={chartOptions} data={lineChartData} />) : 
                 (<p>Data tidak cukup.</p>)
             }
           </div>
           
+          {/* Chart 2: Doughnut Chart */}
           <div className="card chart-container" style={{height: '400px'}}>
             <h3>Top Pengeluaran (6 Bulan)</h3>
             {pieChartData && pieChartData.datasets[0].data.length > 0 ? 
@@ -204,6 +276,17 @@ const Reports = () => {
                 (<p>Tidak ada data pengeluaran.</p>)
             }
           </div>
+
+          {/* === [BARU] Chart 3: Radar Chart === */}
+          <div className="card chart-container" style={{height: '400px'}}>
+            <h3>Sebaran Pengeluaran (6 Bulan)</h3>
+            {radarChartData && radarChartData.datasets[0].data.length > 0 ? 
+                (<Radar options={radarOptions} data={radarChartData} />) : 
+                (<p>Tidak ada data pengeluaran.</p>)
+            }
+          </div>
+          {/* === [AKHIR CHART BARU] === */}
+
         </div>
       )}
     </div>

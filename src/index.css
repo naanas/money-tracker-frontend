@@ -1351,6 +1351,12 @@ button:disabled {
   .reports-grid {
     grid-template-columns: 1fr;
   }
+
+  /* [MODIFIKASI] Sembunyikan FAB Theme Toggle di mobile */
+  /* Kita akan pindahkan ke dropdown nanti */
+  .main-content > .theme-switch {
+     display: none;
+  }
 }
 
 /* === NAVIGASI SIDEBAR === */
@@ -1507,11 +1513,14 @@ button:disabled {
   grid-template-columns: 1fr;
   gap: 1.5rem;
 }
+/* === [MODIFIKASI] Grid Laporan untuk Desktop === */
 @media (min-width: 1024px) {
   .reports-grid {
-    grid-template-columns: 2fr 1fr;
+    grid-template-columns: 1fr 1fr; /* [DIUBAH] 2 kolom sama besar */
   }
+  /* Chart container pertama (Line) akan span 2 kolom (d-handle di JSX) */
 }
+
 .chart-container {
   padding: 1.5rem;
   position: relative;
@@ -1789,7 +1798,7 @@ input:checked + .theme-slider .slider-icon {
   /* ... (semua style mobile Anda yang lain) ... */
   
   .main-content {
-    padding-bottom: 100px; /* Perbanyak ruang untuk FAB */
+    padding-bottom: 100px; /* Perbanyak ruang untuk nav & FAB */
   }
   
   /* [BARU] Logika Mobile: */
@@ -1830,6 +1839,11 @@ input:checked + .theme-slider .slider-icon {
     bottom: 80px; /* 60px (nav) + 20px (padding) */
     right: 20px;
     z-index: 999;
+  }
+  
+  /* [MODIFIKASI] Sembunyikan FAB Theme Toggle di mobile (karena dipindah ke dropdown) */
+  .main-content > .theme-switch {
+     display: none;
   }
 }
 
@@ -1883,7 +1897,7 @@ input:checked + .theme-slider .slider-icon {
   margin-top: 0; /* Margin atas sudah diatur oleh .dashboard-tabs */
 }
 
-/* [BARU] Layout grid spesifik per tab (HANYA DESKTOP) */
+/* [MODIFIKASI] Layout grid spesifik per tab (HANYA DESKTOP) */
 @media (min-width: 1024px) {
   /* Layout untuk Tab Ringkasan */
   .dashboard-grid.summary-layout {
@@ -1913,10 +1927,16 @@ input:checked + .theme-slider .slider-icon {
     max-width: 1000px; /* Agar tidak terlalu lebar di layar besar */
     margin: 0 auto;
   }
+  
+  /* [MODIFIKASI] Grid Laporan untuk Desktop */
+  .reports-grid {
+    grid-template-columns: 1fr 1fr; /* [DIUBAH] 2 kolom sama besar */
+  }
+  /* Chart container pertama (Line) akan span 2 kolom (d-handle di JSX) */
 }
 
 
-/* === [MODIFIKASI] Mobile Dropdown Menu (Pojok Kanan Atas di Header) === */
+/* === [BARU] Mobile Dropdown Menu (Pojok Kanan Atas di Header) === */
 .mobile-menu-container {
   position: relative;
   display: inline-block;
@@ -1985,13 +2005,3 @@ input:checked + .theme-slider .slider-icon {
 .mobile-menu-dropdown button.menu-item-reset:hover {
   background-color: rgba(248, 113, 113, 0.1); /* Red-ish hover */
 }
-
-/* [DIHAPUS] Semua style untuk FAB Menu */
-/*
-.mobile-fab-container { ... }
-.mobile-fab-menu { ... }
-.fab-menu-options { ... }
-.fab-menu-options button { ... }
-@keyframes fab-button-fade-in { ... }
-.fab-menu-options button:nth-child(n) { ... }
-*/
