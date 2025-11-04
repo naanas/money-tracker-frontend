@@ -117,7 +117,7 @@ const Login = () => {
       <div className="form-group">
         <label>Email</label>
         <div className="form-input-wrapper">
-          <span className="input-icon">✉️</span> 
+           
           <input
             type="email"
             value={email}
@@ -135,7 +135,7 @@ const Login = () => {
         <label>Password</label>
         <div className="password-wrapper">
           <div className="form-input-wrapper">
-            <span className="input-icon">🔒</span>
+            
             <input
               type={showPassword ? 'text' : 'password'}
               value={password}
