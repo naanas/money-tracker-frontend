@@ -102,7 +102,8 @@ const pieOptions = {
     }
 };
 
-// Opsi untuk Radar Chart (Kontras)
+// === [MODIFIKASI] Opsi untuk Radar Chart ===
+// Mengubah warna grid dan angle lines menjadi merah
 const radarOptions = {
   responsive: true,
   maintainAspectRatio: false,
@@ -128,13 +129,13 @@ const radarOptions = {
   scales: {
     r: {
       angleLines: {
-        color: 'var(--color-border)'
+        color: 'var(--color-accent-error)' // [DIUBAH] Menjadi merah
       },
       grid: {
-        color: 'var(--color-border)'
+        color: 'var(--color-accent-error)' // [DIUBAH] Menjadi merah
       },
       pointLabels: {
-        color: 'var(--color-text)',
+        color: 'var(--color-text)', // [SUDAH BENAR] Putih/Hitam
         font: {
           size: 12
         }
@@ -184,7 +185,6 @@ const Reports = () => {
           {
             label: 'Pemasukan',
             data: trendData.map(d => d.income),
-            // === [MODIFIKASI] Warna di-hardcode agar tidak hitam ===
             borderColor: '#4ade80', // Hijau
             backgroundColor: '#4ade80',
             tension: 0.1
@@ -192,7 +192,6 @@ const Reports = () => {
           {
             label: 'Pengeluaran',
             data: trendData.map(d => d.expense),
-            // === [MODIFIKASI] Warna di-hardcode agar tidak hitam ===
             borderColor: '#f87171', // Merah
             backgroundColor: '#f87171',
             tension: 0.1
@@ -211,7 +210,7 @@ const Reports = () => {
       const chartLabels = Object.keys(categoryAgg);
       const chartData = Object.values(categoryAgg);
       
-      // Hasilkan warna acak untuk pie chart (Ini sudah kontras)
+      // Hasilkan warna acak untuk pie chart
       const pieColors = chartLabels.map(() => `hsl(${Math.floor(Math.random() * 360)}, 70%, 50%)`);
 
       setPieChartData({
@@ -219,7 +218,6 @@ const Reports = () => {
         datasets: [{
           data: chartData,
           backgroundColor: pieColors,
-          // Garis pemisah di Doughnut
           borderColor: 'var(--color-border)', 
           borderWidth: 2
         }]
@@ -231,7 +229,6 @@ const Reports = () => {
         datasets: [{
           label: 'Pengeluaran 6 Bulan',
           data: chartData, 
-          // === [MODIFIKASI] Warna di-hardcode agar tidak hitam ===
           backgroundColor: 'rgba(0, 224, 198, 0.2)', // Area Teal (transparan)
           borderColor: '#00e0c6', // Garis Teal
           borderWidth: 2,
