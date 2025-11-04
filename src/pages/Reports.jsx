@@ -32,6 +32,7 @@ ChartJS.register(
 );
 
 // Opsi untuk Line Chart (Kontras)
+// Opsi ini menggunakan variabel CSS dan sepertinya berfungsi
 const chartOptions = {
   responsive: true,
   maintainAspectRatio: false,
@@ -183,15 +184,17 @@ const Reports = () => {
           {
             label: 'Pemasukan',
             data: trendData.map(d => d.income),
-            borderColor: 'var(--color-accent-income)',
-            backgroundColor: 'var(--color-accent-income)',
+            // === [MODIFIKASI] Warna di-hardcode agar tidak hitam ===
+            borderColor: '#4ade80', // Hijau
+            backgroundColor: '#4ade80',
             tension: 0.1
           },
           {
             label: 'Pengeluaran',
             data: trendData.map(d => d.expense),
-            borderColor: 'var(--color-accent-expense)',
-            backgroundColor: 'var(--color-accent-expense)',
+            // === [MODIFIKASI] Warna di-hardcode agar tidak hitam ===
+            borderColor: '#f87171', // Merah
+            backgroundColor: '#f87171',
             tension: 0.1
           }
         ]
@@ -216,8 +219,7 @@ const Reports = () => {
         datasets: [{
           data: chartData,
           backgroundColor: pieColors,
-          // === [INI PERBAIKANNYA] ===
-          // Diubah dari 'var(--color-bg-medium)' menjadi 'var(--color-border)'
+          // Garis pemisah di Doughnut
           borderColor: 'var(--color-border)', 
           borderWidth: 2
         }]
@@ -229,13 +231,14 @@ const Reports = () => {
         datasets: [{
           label: 'Pengeluaran 6 Bulan',
           data: chartData, 
-          backgroundColor: 'var(--color-primary-glow)',
-          borderColor: 'var(--color-primary)',
+          // === [MODIFIKASI] Warna di-hardcode agar tidak hitam ===
+          backgroundColor: 'rgba(0, 224, 198, 0.2)', // Area Teal (transparan)
+          borderColor: '#00e0c6', // Garis Teal
           borderWidth: 2,
-          pointBackgroundColor: 'var(--color-primary)',
-          pointBorderColor: 'var(--color-text)',
-          pointHoverBackgroundColor: 'var(--color-text)',
-          pointHoverBorderColor: 'var(--color-primary)'
+          pointBackgroundColor: '#00e0c6',
+          pointBorderColor: '#ffffff',
+          pointHoverBackgroundColor: '#ffffff',
+          pointHoverBorderColor: '#00e0c6'
         }]
       });
 
