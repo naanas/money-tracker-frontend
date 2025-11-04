@@ -1,15 +1,14 @@
 // naanas/money-tracker-frontend/src/components/TransactionForm.jsx
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import axiosClient from '../api/axiosClient';
 import { createWorker } from 'tesseract.js';
 import { formatNumberInput, parseNumberInput, parseReceiptText } from '../utils/format';
-// [BARU] Impor supabase client dan hook auth
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../contexts/AuthContext';
 
 const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCategoryModal, selectedDate, isRefetching }) => {
-  const { user } = useAuth(); // <-- BARU
+  const { user } = useAuth(); 
   
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState('');
@@ -24,15 +23,18 @@ const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCateg
   const [date, setDate] = useState(getInitialDate);
   
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false); // Loading untuk submit
   
-  // [BARU] State untuk file struk yang akan di-upload
-  const [receiptFile, setReceiptFile] = useState(null);
+  // === [STATE BARU UNTUK FLOW GABUNGAN] ===
+  // State untuk URL struk yang berhasil di-upload
+  const [receiptUrl, setReceiptUrl] = useState(null); 
+  // State untuk loading OCR + Upload
+  const [isProcessing, setIsProcessing] = useState(false); 
+  const [processingStatus, setProcessingStatus] = useState(''); 
+  // ==========================================
   
-  const [isOcrLoading, setIsOcrLoading] = useState(false);
-  const [ocrStatus, setOcrStatus] = useState(''); 
-  const fileInputRef = useRef(null); // Ref untuk OCR
-  const receiptInputRef = useRef(null); // <-- BARU: Ref untuk upload struk
+  const fileInputRef = useRef(null); 
+  const workerRef = useRef(null);
 
   const currentCategories = categories.filter(c => c.type === type && c.name !== 'Transfer');
 
@@ -46,39 +48,45 @@ const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCateg
     setCategory('');
   }, [type]);
 
-  // ... (fungsi initializeWorker, handleScanClick, handleFileChange tidak berubah) ...
-  const initializeWorker = async () => {
+  // === [PERBAIKAN BUG OCR] ===
+  const initializeWorker = useCallback(async () => {
     try {
-      setOcrStatus('Memuat mesin OCR & bahasa...');
-      
-      workerRef.current = await createWorker('ind', 1, {
-        logger: m => {
-          if (m.status === 'loading language model' || m.status === 'initializing tesseract' || m.status === 'loading tesseract core') {
-            setOcrStatus(`Inisialisasi... (${Math.round(m.progress * 100)}%)`);
-          } else if (m.status === 'recognizing text') {
-            setOcrStatus(`Membaca gambar... (${Math.round(m.progress * 100)}%)`);
+      // Hanya inisialisasi jika workerRef.current belum ada
+      if (workerRef.current === null) { 
+        setProcessingStatus('Memuat mesin OCR...');
+        workerRef.current = await createWorker('ind', 1, {
+          logger: m => {
+            if (m.status === 'loading language model' || m.status === 'initializing tesseract' || m.status === 'loading tesseract core') {
+              setProcessingStatus(`Inisialisasi... (${Math.round(m.progress * 100)}%)`);
+            } else if (m.status === 'recognizing text') {
+              setProcessingStatus(`Membaca gambar... (${Math.round(m.progress * 100)}%)`);
+            }
           }
-        }
-      });
-      
-      setOcrStatus(''); 
+        });
+        setProcessingStatus(''); 
+      }
     } catch (err) {
       console.error("Gagal inisialisasi worker OCR", err);
-      setError("Gagal memuat fitur OCR. Coba refresh.");
-      setOcrStatus('');
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      setError(`Gagal memuat fitur OCR: ${errorMsg}. Coba refresh.`);
+      setProcessingStatus('');
     }
-  };
+  }, []); // Dependensi kosong, hanya dibuat sekali
 
   useEffect(() => {
     initializeWorker();
     
     return () => {
       workerRef.current?.terminate();
+      workerRef.current = null; // Set ke null saat unmount
     }
-  }, []); 
+  }, [initializeWorker]); 
+  // === [AKHIR PERBAIKAN BUG OCR] ===
 
-  const handleScanClick = () => {
-    if (!workerRef.current || ocrStatus.includes('Memuat') || ocrStatus.includes('Inisialisasi')) {
+
+  // === [LOGIKA UTAMA YANG BARU: GABUNGAN OCR + UPLOAD] ===
+  const handleScanAndUpload = () => {
+    if (!workerRef.current || processingStatus.includes('Memuat') || processingStatus.includes('Inisialisasi')) {
       alert("Mesin OCR sedang disiapkan... Harap tunggu sebentar.");
       return;
     }
@@ -87,37 +95,66 @@ const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCateg
 
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
-    if (!file || !workerRef.current) return;
+    if (!file || !workerRef.current || !user) return;
 
-    setIsOcrLoading(true);
+    setIsProcessing(true);
     setError('');
+    setReceiptUrl(null); // Reset URL sebelumnya
 
     try {
-      const { data: { text } } = await workerRef.current.recognize(file);
+      // Siapkan nama file unik untuk Supabase
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/${new Date().getTime()}.${fileExt}`;
+      const bucketName = 'receipts';
+
+      // Jalankan KEDUA proses secara paralel
+      setProcessingStatus('Memindai & Mengupload...');
+
+      const uploadPromise = supabase.storage
+        .from(bucketName)
+        .upload(fileName, file);
       
-      setOcrStatus('Memproses hasil...');
+      const ocrPromise = workerRef.current.recognize(file);
+
+      // Tunggu keduanya selesai
+      const [uploadResult, ocrResult] = await Promise.all([uploadPromise, ocrPromise]);
+
+      // --- Proses Hasil Upload ---
+      if (uploadResult.error) {
+        throw new Error(`Gagal upload struk: ${uploadResult.error.message}`);
+      }
+      const { data: urlData } = supabase.storage
+        .from(bucketName)
+        .getPublicUrl(uploadResult.data.path);
+      
+      setReceiptUrl(urlData.publicUrl); // Simpan URL untuk di-submit
+
+      // --- Proses Hasil OCR ---
+      const { data: { text } } = ocrResult;
+      setProcessingStatus('Memproses hasil...');
       const parsedData = parseReceiptText(text); 
 
       setAmount(parsedData.amount.toString());
       setDescription(parsedData.description);
       setType('expense'); 
 
-      setOcrStatus('');
+      setProcessingStatus('Sukses! Data terisi dan struk tersimpan.');
 
     } catch (err) {
-      console.error(err);
-      setError('Gagal memindai nota. Coba lagi.');
-      setOcrStatus('');
+      console.error("Gagal memproses struk:", err);
+      setError(err.message || 'Gagal memproses struk. Coba lagi.');
+      setProcessingStatus(''); // Hapus status jika error
     }
     
-    setIsOcrLoading(false);
+    setIsProcessing(false);
     if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      fileInputRef.current.value = ''; // Selalu reset input file
     }
   };
+  // === [AKHIR LOGIKA UTAMA] ===
 
 
-  // === [MODIFIKASI] Fungsi handleSubmit ===
+  // === [MODIFIKASI] handleSubmit sekarang lebih sederhana ===
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!category && currentCategories.length > 0) {
@@ -129,39 +166,11 @@ const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCateg
       return;
     }
 
-    setLoading(true);
+    setLoading(true); // Gunakan loading submit
     setError('');
     
-    let uploadedReceiptUrl = null; // Tipe data URL
-
     try {
-      // 1. Handle upload file jika ada
-      if (receiptFile && user) {
-        setError('Mengupload struk...'); // Tampilkan status
-        
-        const fileExt = receiptFile.name.split('.').pop();
-        const fileName = `${user.id}/${new Date().getTime()}.${fileExt}`;
-        const bucketName = 'receipts'; // Ganti jika nama bucket Anda berbeda
-
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from(bucketName)
-          .upload(fileName, receiptFile);
-        
-        if (uploadError) {
-          // Jika upload gagal, hentikan proses
-          throw new Error(`Gagal upload struk: ${uploadError.message}`);
-        }
-
-        // 2. Dapatkan URL publik dari file yang di-upload
-        const { data: urlData } = supabase.storage
-          .from(bucketName)
-          .getPublicUrl(uploadData.path);
-        
-        uploadedReceiptUrl = urlData.publicUrl;
-        setError(''); // Hapus status "Mengupload"
-      }
-
-      // 3. Kirim data ke backend (termasuk URL jika ada)
+      // Langsung kirim data ke backend, termasuk receiptUrl (bisa null jika tidak ada)
       await axiosClient.post('/api/transactions', {
         amount: parseFloat(amount),
         category: category || (type === 'expense' ? 'Other Expenses' : 'Other Income'),
@@ -169,38 +178,36 @@ const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCateg
         description,
         date,
         account_id: accountId, 
-        receipt_url: uploadedReceiptUrl, // <-- Kirim URL ke backend
+        receipt_url: receiptUrl, // Kirim URL yang sudah disimpan di state
       });
       
-      // 4. Sukses, bersihkan form
+      // Sukses, bersihkan form
       setAmount('');
       setCategory('');
       setDescription('');
-      setReceiptFile(null); // <-- Bersihkan state file
-      if (receiptInputRef.current) { // <-- Reset input file
-        receiptInputRef.current.value = '';
-      }
+      setReceiptUrl(null); // Bersihkan state URL
+      setProcessingStatus(''); // Bersihkan status upload/scan
       onTransactionAdded(); 
       
     } catch (err) {
-      // Tangkap error (bisa dari upload atau dari post)
-      setError(err.message || err.response?.data?.error || 'Gagal menambah transaksi');
+      setError(err.response?.data?.error || 'Gagal menambah transaksi');
     }
     setLoading(false);
   };
   
-  const isLoading = loading || isRefetching || isOcrLoading || ocrStatus.includes('Memuat') || ocrStatus.includes('Inisialisasi');
+  // Gabungkan semua kondisi loading
+  const isLoading = loading || isRefetching || isProcessing;
 
   return (
     <form onSubmit={handleSubmit} className="transaction-form" style={{ position: 'relative' }}>
-      {(isOcrLoading || ocrStatus.includes('Memuat') || ocrStatus.includes('Inisialisasi')) && (
+      {isProcessing && ( // Ganti overlay loading
         <div className="ocr-loading-overlay">
           <div className="btn-spinner"></div>
-          <p>{ocrStatus || 'Memindai Nota...'}</p>
+          <p>{processingStatus || 'Memproses...'}</p>
         </div>
       )}
 
-      {/* Input untuk OCR (tersembunyi) */}
+      {/* === [MODIFIKASI] Hanya satu input file === */}
       <input
         type="file"
         accept="image/*"
@@ -208,20 +215,28 @@ const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCateg
         onChange={handleFileChange}
         style={{ display: 'none' }}
       />
-      {/* Tombol untuk memicu OCR */}
+      {/* === [MODIFIKASI] Hanya satu tombol === */}
       <button 
         type="button" 
         className="btn-secondary" 
-        onClick={handleScanClick}
+        onClick={handleScanAndUpload}
         disabled={isLoading}
         style={{ marginBottom: '1rem', background: 'var(--color-bg-light)' }}
       >
-        📸 Pindai Nota (OCR)
+        📸 Pindai / Upload Struk
       </button>
+
+      {/* Tampilkan pesan status jika ada (bukan error) */}
+      {processingStatus && !isProcessing && !error && (
+        <p className="success" style={{textAlign: 'center', margin: '-0.5rem 0 1rem 0'}}>
+          {processingStatus}
+        </p>
+      )}
 
       {error && <p className="error">{error}</p>}
       
-      {/* ... (Form radio, Akun, Jumlah, Kategori tidak berubah) ... */}
+      {/* ... (Sisa form tidak berubah) ... */}
+      
       <div className="form-group-radio">
          <label>
           <input 
@@ -308,31 +323,11 @@ const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCateg
           </div>
       </div>
       
-      {/* === [INPUT BARU DITAMBAHKAN DI SINI] === */}
-      <div className="form-group" style={{marginBottom: '1.25rem'}}>
-        <label>Lampirkan Foto Struk (Opsional)</label>
-        <input 
-          type="file" 
-          accept="image/*" 
-          onChange={(e) => setReceiptFile(e.target.files[0])}
-          ref={receiptInputRef}
-          disabled={isLoading}
-          // Tambahkan sedikit style agar konsisten
-          style={{
-            backgroundColor: 'var(--color-bg-light)', 
-            border: '1px solid var(--color-border)', 
-            padding: '0.5rem', 
-            borderRadius: 'var(--radius-medium)',
-            width: '100%',
-            color: 'var(--color-text-muted)',
-            fontSize: '0.9rem'
-          }}
-        />
-      </div>
-      {/* === [AKHIR INPUT BARU] === */}
+      {/* === [MODIFIKASI] Input file manual dihapus === */}
+      {/* Input file manual tidak diperlukan lagi */}
       
       <button type="submit" disabled={isLoading}>
-        {isLoading ? <div className="btn-spinner"></div> : 'Tambah'}
+        {loading ? <div className="btn-spinner"></div> : 'Tambah'}
       </button>
     </form>
   );
