@@ -31,8 +31,7 @@ ChartJS.register(
   Filler
 );
 
-// === [MODIFIKASI] Opsi untuk Line Chart ===
-// Semua warna hardcoded diubah menjadi variabel CSS
+// Opsi untuk Line Chart (Kontras)
 const chartOptions = {
   responsive: true,
   maintainAspectRatio: false,
@@ -40,7 +39,7 @@ const chartOptions = {
     legend: {
       position: 'bottom',
       labels: {
-        color: 'var(--color-text)', // [DIUBAH]
+        color: 'var(--color-text)',
         font: { size: 12 }
       }
     },
@@ -61,20 +60,20 @@ const chartOptions = {
   },
   scales: {
     x: {
-      ticks: { color: 'var(--color-text)' }, // [DIUBAH]
-      grid: { color: 'var(--color-border)' } // [DIUBAH]
+      ticks: { color: 'var(--color-text)' },
+      grid: { color: 'var(--color-border)' }
     },
     y: {
       ticks: { 
-        color: 'var(--color-text)', // [DIUBAH]
+        color: 'var(--color-text)',
         callback: (value) => formatNumberInput(value)
       },
-      grid: { color: 'var(--color-border)' } // [DIUBAH]
+      grid: { color: 'var(--color-border)' }
     }
   }
 };
 
-// === [MODIFIKASI] Opsi untuk Doughnut Chart ===
+// Opsi untuk Doughnut Chart (Kontras)
 const pieOptions = {
     responsive: true,
     maintainAspectRatio: false,
@@ -82,7 +81,7 @@ const pieOptions = {
         legend: {
             position: 'right',
              labels: {
-                color: 'var(--color-text)', // [DIUBAH]
+                color: 'var(--color-text)',
                 font: { size: 12 },
                 boxWidth: 20
             }
@@ -102,8 +101,7 @@ const pieOptions = {
     }
 };
 
-// === [MODIFIKASI] Opsi untuk Radar Chart ===
-// Opsi ini sudah benar menggunakan variabel, tidak ada perubahan
+// Opsi untuk Radar Chart (Kontras)
 const radarOptions = {
   responsive: true,
   maintainAspectRatio: false,
@@ -185,7 +183,6 @@ const Reports = () => {
           {
             label: 'Pemasukan',
             data: trendData.map(d => d.income),
-            // [MODIFIKASI] Menggunakan variabel CSS
             borderColor: 'var(--color-accent-income)',
             backgroundColor: 'var(--color-accent-income)',
             tension: 0.1
@@ -193,7 +190,6 @@ const Reports = () => {
           {
             label: 'Pengeluaran',
             data: trendData.map(d => d.expense),
-            // [MODIFIKASI] Menggunakan variabel CSS
             borderColor: 'var(--color-accent-expense)',
             backgroundColor: 'var(--color-accent-expense)',
             tension: 0.1
@@ -220,8 +216,9 @@ const Reports = () => {
         datasets: [{
           data: chartData,
           backgroundColor: pieColors,
-          // [MODIFIKASI] Border disamakan dengan background card
-          borderColor: 'var(--color-bg-medium)',
+          // === [INI PERBAIKANNYA] ===
+          // Diubah dari 'var(--color-bg-medium)' menjadi 'var(--color-border)'
+          borderColor: 'var(--color-border)', 
           borderWidth: 2
         }]
       });
@@ -232,13 +229,12 @@ const Reports = () => {
         datasets: [{
           label: 'Pengeluaran 6 Bulan',
           data: chartData, 
-          // [MODIFIKASI] Menggunakan variabel CSS
           backgroundColor: 'var(--color-primary-glow)',
           borderColor: 'var(--color-primary)',
           borderWidth: 2,
           pointBackgroundColor: 'var(--color-primary)',
-          pointBorderColor: 'var(--color-text)', // [DIUBAH]
-          pointHoverBackgroundColor: 'var(--color-text)', // [DIUBAH]
+          pointBorderColor: 'var(--color-text)',
+          pointHoverBackgroundColor: 'var(--color-text)',
           pointHoverBorderColor: 'var(--color-primary)'
         }]
       });
