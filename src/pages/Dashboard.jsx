@@ -350,28 +350,7 @@ const Dashboard = () => {
         </button>
       </nav>
 
-      {/* === [MODIFIKASI] Mobile FAB Menu (Pojok Kiri Bawah) === */}
-      <div className="mobile-fab-container">
-        {isFabMenuOpen && (
-          <>
-            
-            <div className="fab-menu-options">
-              {/* Tombol-tombol ini akan mendapat animasi stagger dari CSS */}
-              <button onClick={() => handleTabChange('summary')}>Ringkasan</button>
-              <button onClick={() => handleTabChange('forms')}>Input</button>
-              <button onClick={() => handleTabChange('budget')}>Budget</button>
-              <button onClick={() => handleTabChange('savings')}>Tabungan</button>
-            </div>
-          </>
-        )}
-        <button 
-          className="mobile-fab-menu" 
-          onClick={() => setIsFabMenuOpen(!isFabMenuOpen)}
-          disabled={showSkeleton}
-        >
-          {isFabMenuOpen ? '✕' : '☰'}
-        </button>
-      </div>
+      
 
 
       <div 

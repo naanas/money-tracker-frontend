@@ -1815,15 +1815,19 @@ input:checked + .theme-slider .slider-icon {
      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   }
 
-  /* 3. Sembunyikan tab desktop */
+  /* 3. [DIHAPUS] .dashboard-tabs sekarang Tampil di mobile */
+  /*
   .dashboard-tabs {
     display: none;
   }
+  */
   
-  /* 4. Tampilkan FAB mobile */
+  /* 4. [DIHAPUS] FAB mobile tidak lagi ditampilkan */
+  /*
   .mobile-fab-container {
-    display: flex; /* [DIUBAH] dari block ke flex */
+    display: flex;
   }
+  */
   
   /* 5. Pastikan Theme Toggle FAB (kanan bawah) tidak tumpang tindih */
   .main-content > .theme-switch {
@@ -1916,86 +1920,13 @@ input:checked + .theme-slider .slider-icon {
 }
 
 
-/* === [MODIFIKASI] Mobile FAB Menu (Pojok Kiri Bawah) === */
-.mobile-fab-container {
-  display: none; /* Sembunyi di desktop */
-  position: fixed; /* [DIUBAH] Pastikan posisinya fixed */
-  bottom: 80px; /* 60px (nav) + 20px (padding) */
-  left: 20px;
-  z-index: 1001; /* [DIUBAH] Paling atas */
-  display: flex;
-  flex-direction: column-reverse; /* Tombol utama di bawah, menu di atasnya */
-  align-items: start;
-}
-.mobile-fab-menu {
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  background-color: var(--color-primary);
-  color: var(--color-button-text);
-  font-size: 1.5rem;
-  line-height: 1;
-  padding: 0;
-  box-shadow: var(--shadow-medium);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1002; /* Di atas menu options */
-}
-.mobile-fab-menu:hover {
-  transform: none;
-  box-shadow: var(--shadow-medium);
-}
-.fab-menu-options {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
-  /* [DIHAPUS] Hapus animasi fade-in lama */
-  /* animation: modal-fade-in 0.2s ease; */
-}
-.fab-menu-options button {
-  width: auto;
-  padding: 0.75rem 1.5rem;
-  background-color: var(--color-bg-medium); /* [DIUBAH] Opaque */
-  color: var(--color-text);
-  border: 1px solid var(--color-border);
-  box-shadow: var(--shadow-small);
-  text-align: left;
-  font-weight: 500;
-  
-  /* [BARU] Properti untuk animasi stagger */
-  opacity: 0;
-  transform: translateY(10px) scale(0.95);
-  animation: fab-button-fade-in 0.3s ease-out forwards;
-}
-.fab-menu-options button:hover {
-  background-color: var(--color-bg-light);
-  transform: none;
-  box-shadow: var(--shadow-small);
-}
-
-/* [DIHAPUS] Backdrop untuk FAB Menu */
+/* === [DIHAPUS] Semua style untuk FAB Menu === */
 /*
-.fab-backdrop {
-  ...
-}
+.mobile-fab-container { ... }
+.mobile-fab-menu { ... }
+.fab-menu-options { ... }
+.fab-menu-options button { ... }
+.fab-backdrop { ... }
+@keyframes fab-button-fade-in { ... }
+.fab-menu-options button:nth-child(n) { ... }
 */
-
-/* [BARU] Keyframe untuk animasi tombol FAB */
-@keyframes fab-button-fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(10px) scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-/* [BARU] Stagger delay menggunakan nth-child (dibalik karena flex-direction: column-reverse) */
-.fab-menu-options button:nth-child(1) { animation-delay: 0.2s; } /* Ringkasan (paling atas) */
-.fab-menu-options button:nth-child(2) { animation-delay: 0.15s; } /* Input */
-.fab-menu-options button:nth-child(3) { animation-delay: 0.1s; } /* Budget */
-.fab-menu-options button:nth-child(4) { animation-delay: 0.05s; } /* Tabungan (paling bawah) */
