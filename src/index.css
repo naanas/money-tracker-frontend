@@ -1526,28 +1526,25 @@ button:disabled {
   grid-template-columns: 1fr;
   gap: 1.5rem;
 }
-
-/* [PERBAIKAN] Pindahkan container chart ke media query */
-.chart-container {
-  padding: 1.5rem;
-  position: relative;
-  /* [DIUBAH] Menggunakan min-height 400px agar seragam */
-  min-height: 400px;
-}
-
-/* [PERBAIKAN] Aturan grid untuk Laporan HANYA di desktop */
+/* === [MODIFIKASI] Grid Laporan untuk Desktop === */
 @media (min-width: 1024px) {
-  /* ... (semua style @media lain di atas) ... */
+  /* ... (style .summary-layout, .forms-layout, dll. tetap di sini) ... */
 
   .reports-grid {
     grid-template-columns: 1fr 1fr; 
   }
-  /* [PERBAIKAN] Atur chart full-width agar span 2 kolom */
-  .chart-container-full-width {
+  /* [BARU] Atur chart pertama (Line) agar span 2 kolom */
+  .reports-grid .chart-container:first-child {
     grid-column: span 1 / -1;
   }
 }
 
+.chart-container {
+  padding: 1.5rem;
+  position: relative;
+  /* [MODIFIKASI] Menggunakan min-height agar konsisten */
+  min-height: 400px;
+}
 .list-item-details span {
   display: flex;
   gap: 0.5rem;
@@ -1886,10 +1883,7 @@ input:checked + .theme-slider .slider-icon {
   color: var(--color-text-muted);
 }
 
-/* [BARU] Container untuk konten tab */
-.dashboard-content {
-  /* Konten di dalam .dashboard-content-wrapper */
-}
+
 
 /* [MODIFIKASI] dashboard-grid sekarang adalah layout dasar 1 kolom */
 .dashboard-grid {
@@ -1930,12 +1924,12 @@ input:checked + .theme-slider .slider-icon {
     margin: 0 auto;
   }
   
-  /* [PERBAIKAN] Grid Laporan untuk Desktop */
+  /* [MODIFIKASI] Grid Laporan untuk Desktop */
   .reports-grid {
-    grid-template-columns: 1fr 1fr; 
+    grid-template-columns: 1fr 1fr;
   }
-  /* [PERBAIKAN] Atur chart full-width agar span 2 kolom */
-  .chart-container-full-width {
+  /* [BARU] Atur chart pertama (Line) agar span 2 kolom */
+  .reports-grid .chart-container:first-child {
     grid-column: span 1 / -1;
   }
 }

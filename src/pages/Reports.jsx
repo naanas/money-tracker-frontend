@@ -1,5 +1,3 @@
-// naanas/money-tracker-frontend/money-tracker-frontend-93f64fc0bdf098eeeda4e51adbfa651c35390e0c/src/pages/Reports.jsx
-
 import React, { useState, useEffect, useCallback } from 'react';
 import axiosClient from '../api/axiosClient';
 import {
@@ -33,9 +31,8 @@ ChartJS.register(
   Filler
 );
 
-// --- OPSI CHART (KONFIGURASI) ---
-
-// Opsi untuk Line Chart
+// Opsi untuk Line Chart (Kontras)
+// Opsi ini menggunakan variabel CSS dan sepertinya berfungsi
 const chartOptions = {
   responsive: true,
   maintainAspectRatio: false,
@@ -77,7 +74,7 @@ const chartOptions = {
   }
 };
 
-// Opsi untuk Doughnut Chart
+// Opsi untuk Doughnut Chart (Kontras)
 const pieOptions = {
     responsive: true,
     maintainAspectRatio: false,
@@ -105,7 +102,8 @@ const pieOptions = {
     }
 };
 
-// Opsi untuk Radar Chart
+// === [MODIFIKASI] Opsi untuk Radar Chart ===
+// Mengubah warna grid dan angle lines menjadi merah
 const radarOptions = {
   responsive: true,
   maintainAspectRatio: false,
@@ -130,15 +128,14 @@ const radarOptions = {
   },
   scales: {
     r: {
-      // [PERBAIKAN] Warna diubah dari merah (error) ke warna border standar
       angleLines: {
-        color: 'var(--color-border)' 
+        color: 'var(--color-accent-error)' // [DIUBAH] Menjadi merah
       },
       grid: {
-        color: 'var(--color-border)' 
+        color: 'var(--color-accent-error)' // [DIUBAH] Menjadi merah
       },
       pointLabels: {
-        color: 'var(--color-text)',
+        color: 'var(--color-text)', // [SUDAH BENAR] Putih/Hitam
         font: {
           size: 12
         }
@@ -151,8 +148,7 @@ const radarOptions = {
   }
 };
 
-// --- KOMPONEN UTAMA ---
-
+// Halaman Laporan
 const Reports = () => {
   const [trendData, setTrendData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -214,6 +210,7 @@ const Reports = () => {
       const chartLabels = Object.keys(categoryAgg);
       const chartData = Object.values(categoryAgg);
       
+      // Hasilkan warna acak untuk pie chart
       const pieColors = chartLabels.map(() => `hsl(${Math.floor(Math.random() * 360)}, 70%, 50%)`);
 
       setPieChartData({
@@ -257,8 +254,7 @@ const Reports = () => {
         <div className="reports-grid">
           
           {/* Chart 1: Line Chart (Full Width) */}
-          {/* [PERBAIKAN] Menggunakan class, bukan inline style */}
-          <div className="card chart-container chart-container-full-width"> 
+          <div className="card chart-container" style={{height: '400px', gridColumn: 'span 1 / -1'}}> 
             <h3>Pemasukan vs Pengeluaran (6 Bulan)</h3>
             {lineChartData ? 
                 (<Line options={chartOptions} data={lineChartData} />) : 
@@ -267,8 +263,7 @@ const Reports = () => {
           </div>
           
           {/* Chart 2: Doughnut Chart */}
-          {/* [PERBAIKAN] Inline style dihapus */}
-          <div className="card chart-container">
+          <div className="card chart-container" style={{height: '400px'}}>
             <h3>Top Pengeluaran (6 Bulan)</h3>
             {pieChartData && pieChartData.datasets[0].data.length > 0 ? 
                 (<Doughnut options={pieOptions} data={pieChartData} />) : 
@@ -277,8 +272,7 @@ const Reports = () => {
           </div>
 
           {/* Chart 3: Radar Chart */}
-          {/* [PERBAIKAN] Inline style dihapus */}
-          <div className="card chart-container">
+          <div className="card chart-container" style={{height: '400px'}}>
             <h3>Sebaran Pengeluaran (6 Bulan)</h3>
             {radarChartData && radarChartData.datasets[0].data.length > 0 ? 
                 (<Radar options={radarOptions} data={radarChartData} />) : 
