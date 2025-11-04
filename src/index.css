@@ -1804,7 +1804,7 @@ input:checked + .theme-slider .slider-icon {
     position: fixed;
     bottom: 80px; /* 60px (nav) + 20px (padding) */
     right: 20px;
-    z-index: 999; /* [DIUBAH] z-index agar di bawah backdrop */
+    z-index: 999; 
     
     /* Styling tambahan untuk FAB */
     box-shadow: var(--shadow-medium);
@@ -1822,7 +1822,7 @@ input:checked + .theme-slider .slider-icon {
   
   /* 4. Tampilkan FAB mobile */
   .mobile-fab-container {
-    display: block;
+    display: flex; /* [DIUBAH] dari block ke flex */
   }
   
   /* 5. Pastikan Theme Toggle FAB (kanan bawah) tidak tumpang tindih */
@@ -1975,20 +1975,12 @@ input:checked + .theme-slider .slider-icon {
   box-shadow: var(--shadow-small);
 }
 
-/* [BARU] Backdrop untuk FAB Menu */
+/* [DIHAPUS] Backdrop untuk FAB Menu */
+/*
 .fab-backdrop {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.7);
-  z-index: 1000; /* Di bawah FAB container (1001), tapi di atas segalanya (999) */
-  animation: modal-fade-in 0.3s ease;
+  ...
 }
-:root[data-theme='light'] .fab-backdrop {
-  background-color: rgba(0, 0, 0, 0.6);
-}
+*/
 
 /* [BARU] Keyframe untuk animasi tombol FAB */
 @keyframes fab-button-fade-in {

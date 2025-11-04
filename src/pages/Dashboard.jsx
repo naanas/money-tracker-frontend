@@ -354,11 +354,6 @@ const Dashboard = () => {
       <div className="mobile-fab-container">
         {isFabMenuOpen && (
           <>
-            {/* [BARU] Backdrop untuk memfokuskan menu */}
-            <div 
-              className="fab-backdrop" 
-              onClick={() => setIsFabMenuOpen(false)}
-            ></div>
             
             <div className="fab-menu-options">
               {/* Tombol-tombol ini akan mendapat animasi stagger dari CSS */}
