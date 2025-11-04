@@ -350,7 +350,7 @@ const Dashboard = () => {
         </button>
       </nav>
 
-      
+      {/* === [DIHAPUS] Mobile FAB Menu Dihapus === */}
 
 
       <div 
@@ -492,10 +492,14 @@ const Dashboard = () => {
                   <h3>Budget Pockets</h3>
                   {analytics ? (
                     <>
+                      {/* === [INI PERBAIKANNYA] === */}
+                      {/* Span persentase dihapus */}
                       <div className="budget-info total">
                         <span>Total Budget: {formatCurrency(totalBudget)}</span>
-                        <span>{totalProgress.toFixed(0)}</span>
+                        {/* <span>{totalProgress.toFixed(0)}%</span>  <-- DIHAPUS */}
                       </div>
+                      {/* === [AKHIR PERBAIKAN] === */}
+
                       <div className="progress-bar-container">
                         <div 
                           className="progress-bar-fill" 
