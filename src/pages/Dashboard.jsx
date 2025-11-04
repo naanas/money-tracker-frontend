@@ -350,15 +350,24 @@ const Dashboard = () => {
         </button>
       </nav>
 
-      {/* === [BARU] Mobile FAB Menu (Pojok Kiri Bawah) === */}
+      {/* === [MODIFIKASI] Mobile FAB Menu (Pojok Kiri Bawah) === */}
       <div className="mobile-fab-container">
         {isFabMenuOpen && (
-          <div className="fab-menu-options">
-            <button onClick={() => handleTabChange('summary')}>Ringkasan</button>
-            <button onClick={() => handleTabChange('forms')}>Input</button>
-            <button onClick={() => handleTabChange('budget')}>Budget</button>
-            <button onClick={() => handleTabChange('savings')}>Tabungan</button>
-          </div>
+          <>
+            {/* [BARU] Backdrop untuk memfokuskan menu */}
+            <div 
+              className="fab-backdrop" 
+              onClick={() => setIsFabMenuOpen(false)}
+            ></div>
+            
+            <div className="fab-menu-options">
+              {/* Tombol-tombol ini akan mendapat animasi stagger dari CSS */}
+              <button onClick={() => handleTabChange('summary')}>Ringkasan</button>
+              <button onClick={() => handleTabChange('forms')}>Input</button>
+              <button onClick={() => handleTabChange('budget')}>Budget</button>
+              <button onClick={() => handleTabChange('savings')}>Tabungan</button>
+            </div>
+          </>
         )}
         <button 
           className="mobile-fab-menu" 
