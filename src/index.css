@@ -1,4 +1,4 @@
-/* naanas/money-tracker-frontend/src/index.css */
+/* naanas/money-tracker-frontend/money-tracker-frontend-93f64fc0bdf098eeeda4e51adbfa651c35390e0c/src/index.css */
 
 /* === [BARU] Variabel Non-Warna (Berlaku di semua tema) === */
 :root {
@@ -681,15 +681,14 @@ button:disabled {
 .card-list .list-item {
   position: relative; 
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem 0.5rem;
+  /* Hapus padding, akan ditangani oleh wrapper */
+  padding: 0; 
   border-bottom: 1px solid var(--color-border);
-  transition: background-color 0.2s ease;
   border-radius: var(--radius-small);
 }
+/* Hapus hover dari list-item */
 .card-list .list-item:hover {
-  background-color: var(--color-bg-light);
+  background-color: transparent;
 }
 .card-list .list-item:last-child {
   border-bottom: none;
@@ -697,7 +696,8 @@ button:disabled {
 .card-list .list-item .list-item-details {
   display: flex;
   flex-direction: column;
-  padding-left: 30px; 
+  /* Hapus padding-left, ditangani oleh wrapper */
+  padding-left: 0; 
   flex-grow: 1;
 }
 .card-list .list-item-details strong {
@@ -713,6 +713,7 @@ button:disabled {
   left: 0;
   top: 50%;
   transform: translateY(-50%);
+  z-index: 5; /* Pastikan di atas area klik */
   width: 24px;
   height: 24px;
   padding: 0;
@@ -747,6 +748,22 @@ button:disabled {
   overflow-y: auto; 
   max-height: 600px; 
   padding-right: 10px; 
+}
+/* [BARU] Wrapper di dalam list item yang bisa diklik */
+.list-item-clickable-area {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-grow: 1;
+  padding: 1rem 0.5rem;
+  /* Tambahkan padding kiri untuk memberi ruang bagi tombol hapus */
+  padding-left: 30px; 
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  border-radius: var(--radius-small);
+}
+.list-item-clickable-area:hover {
+  background-color: var(--color-bg-light);
 }
 
 
@@ -1511,16 +1528,22 @@ button:disabled {
 }
 /* === [MODIFIKASI] Grid Laporan untuk Desktop === */
 @media (min-width: 1024px) {
+  /* ... (style .summary-layout, .forms-layout, dll. tetap di sini) ... */
+
   .reports-grid {
-    grid-template-columns: 1fr 1fr; /* [DIUBAH] 2 kolom sama besar */
+    grid-template-columns: 1fr 1fr; 
   }
-  /* Chart container pertama (Line) akan span 2 kolom (d-handle di JSX) */
+  /* [BARU] Atur chart pertama (Line) agar span 2 kolom */
+  .reports-grid .chart-container:first-child {
+    grid-column: span 1 / -1;
+  }
 }
 
 .chart-container {
   padding: 1.5rem;
   position: relative;
-  min-height: 300px;
+  /* [MODIFIKASI] Menggunakan min-height agar konsisten */
+  min-height: 400px;
 }
 .list-item-details span {
   display: flex;
@@ -1860,10 +1883,6 @@ input:checked + .theme-slider .slider-icon {
   color: var(--color-text-muted);
 }
 
-/* [BARU] Container untuk konten tab */
-.dashboard-content {
-  /* Konten di dalam .dashboard-content-wrapper */
-}
 
 /* [MODIFIKASI] dashboard-grid sekarang adalah layout dasar 1 kolom */
 .dashboard-grid {
@@ -1906,9 +1925,12 @@ input:checked + .theme-slider .slider-icon {
   
   /* [MODIFIKASI] Grid Laporan untuk Desktop */
   .reports-grid {
-    grid-template-columns: 1fr 1fr; /* [DIUBAH] 2 kolom sama besar */
+    grid-template-columns: 1fr 1fr;
   }
-  /* Chart container pertama (Line) akan span 2 kolom (d-handle di JSX) */
+  /* [BARU] Atur chart pertama (Line) agar span 2 kolom */
+  .reports-grid .chart-container:first-child {
+    grid-column: span 1 / -1;
+  }
 }
 
 
@@ -1999,83 +2021,6 @@ input:checked + .theme-slider .slider-icon {
   transform: scale(0.8); /* 80% ukuran asli */
 }
 
-/* naanas/money-tracker-frontend/money-tracker-frontend-93f64fc0bdf098eeeda4e51adbfa651c35390e0c/src/index.css */
-
-/* ... (semua style yang ada sebelumnya) ... */
-
-/* [MODIFIKASI] Styling untuk List Transaksi agar bisa diklik */
-.card-list .list-item {
-  position: relative; 
-  display: flex;
-  /* Hapus padding, akan ditangani oleh wrapper */
-  padding: 0; 
-  border-bottom: 1px solid var(--color-border);
-  border-radius: var(--radius-small);
-}
-/* Hapus hover dari list-item */
-.card-list .list-item:hover {
-  background-color: transparent;
-}
-.card-list .list-item:last-child {
-  border-bottom: none;
-}
-.card-list .list-item .list-item-details {
-  display: flex;
-  flex-direction: column;
-  /* Hapus padding-left, ditangani oleh wrapper */
-  padding-left: 0; 
-  flex-grow: 1;
-}
-
-/* [BARU] Wrapper di dalam list item yang bisa diklik */
-.list-item-clickable-area {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-grow: 1;
-  padding: 1rem 0.5rem;
-  /* Tambahkan padding kiri untuk memberi ruang bagi tombol hapus */
-  padding-left: 30px; 
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-  border-radius: var(--radius-small);
-}
-.list-item-clickable-area:hover {
-  background-color: var(--color-bg-light);
-}
-
-.card-list .list-item .btn-delete-item {
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 5; /* Pastikan di atas area klik */
-  /* ... (style btn-delete-item lainnya tetap sama) ... */
-  width: 24px;
-  height: 24px;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.2rem;
-  font-weight: bold;
-  line-height: 1;
-  background-color: transparent;
-  color: var(--color-text-muted);
-  border-radius: 50%;
-  border: none;
-  opacity: 0; 
-  transition: all 0.2s ease-in-out;
-}
-.list-item:hover .btn-delete-item {
-  opacity: 1; 
-}
-.btn-delete-item:hover {
-  background-color: var(--color-accent-error);
-  color: white;
-}
-
-
 /* === [BARU] STYLING UNTUK MODAL DETAIL TRANSAKSI === */
 .transaction-detail-modal {
   max-width: 450px; /* Sedikit lebih lebar dari modal kategori */
@@ -2144,5 +2089,3 @@ input:checked + .theme-slider .slider-icon {
 .receipt-image:hover {
   transform: scale(1.02);
 }
-
-/* ... (sisa style, @media queries, dll.) ... */

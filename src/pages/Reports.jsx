@@ -1,3 +1,5 @@
+// naanas/money-tracker-frontend/money-tracker-frontend-93f64fc0bdf098eeeda4e51adbfa651c35390e0c/src/pages/Reports.jsx
+
 import React, { useState, useEffect, useCallback } from 'react';
 import axiosClient from '../api/axiosClient';
 import {
@@ -31,8 +33,9 @@ ChartJS.register(
   Filler
 );
 
+// --- OPSI CHART DIPINDAHKAN KE LUAR KOMPONEN ---
+
 // Opsi untuk Line Chart (Kontras)
-// Opsi ini menggunakan variabel CSS dan sepertinya berfungsi
 const chartOptions = {
   responsive: true,
   maintainAspectRatio: false,
@@ -102,8 +105,7 @@ const pieOptions = {
     }
 };
 
-// === [MODIFIKASI] Opsi untuk Radar Chart ===
-// Mengubah warna grid dan angle lines menjadi merah
+// Opsi untuk Radar Chart
 const radarOptions = {
   responsive: true,
   maintainAspectRatio: false,
@@ -128,14 +130,15 @@ const radarOptions = {
   },
   scales: {
     r: {
+      // [PERBAIKAN] Warna diubah dari merah (error) ke warna border standar
       angleLines: {
-        color: 'var(--color-accent-error)' // [DIUBAH] Menjadi merah
+        color: 'var(--color-border)' 
       },
       grid: {
-        color: 'var(--color-accent-error)' // [DIUBAH] Menjadi merah
+        color: 'var(--color-border)' 
       },
       pointLabels: {
-        color: 'var(--color-text)', // [SUDAH BENAR] Putih/Hitam
+        color: 'var(--color-text)',
         font: {
           size: 12
         }
@@ -254,7 +257,8 @@ const Reports = () => {
         <div className="reports-grid">
           
           {/* Chart 1: Line Chart (Full Width) */}
-          <div className="card chart-container" style={{height: '400px', gridColumn: 'span 1 / -1'}}> 
+          {/* [MODIFIKASI] Inline style dihapus */}
+          <div className="card chart-container"> 
             <h3>Pemasukan vs Pengeluaran (6 Bulan)</h3>
             {lineChartData ? 
                 (<Line options={chartOptions} data={lineChartData} />) : 
@@ -263,7 +267,8 @@ const Reports = () => {
           </div>
           
           {/* Chart 2: Doughnut Chart */}
-          <div className="card chart-container" style={{height: '400px'}}>
+          {/* [MODIFIKASI] Inline style dihapus */}
+          <div className="card chart-container">
             <h3>Top Pengeluaran (6 Bulan)</h3>
             {pieChartData && pieChartData.datasets[0].data.length > 0 ? 
                 (<Doughnut options={pieOptions} data={pieChartData} />) : 
@@ -272,7 +277,8 @@ const Reports = () => {
           </div>
 
           {/* Chart 3: Radar Chart */}
-          <div className="card chart-container" style={{height: '400px'}}>
+          {/* [MODIFIKASI] Inline style dihapus */}
+          <div className="card chart-container">
             <h3>Sebaran Pengeluaran (6 Bulan)</h3>
             {radarChartData && radarChartData.datasets[0].data.length > 0 ? 
                 (<Radar options={radarOptions} data={radarChartData} />) : 
