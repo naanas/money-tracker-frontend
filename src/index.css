@@ -418,9 +418,9 @@ button:disabled {
 /* Grid Dashboard */
 .dashboard-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  grid-template-columns: 1fr; /* [DIUBAH] Default 1 kolom */
   gap: 1.5rem;
-  margin-top: 2rem;
+  margin-top: 0; /* [DIUBAH] Margin atas diatur oleh tabs */
 }
 
 /* Kartu dengan style baru */
@@ -491,11 +491,13 @@ button:disabled {
 .card-budget-pocket {
   grid-column: span 1 / span 1;
 }
+/*
 @media (min-width: 1024px) {
   .card-budget-pocket {
     grid-column: span 2 / span 2; 
   }
 }
+*/
 .card-budget .budget-info {
   display: flex;
   justify-content: space-between;
@@ -738,7 +740,8 @@ button:disabled {
   color: white;
 }
 .card-list.full-height-card {
-  grid-row: span 2; 
+  /* [DIUBAH] Tidak lagi span 2 row by default */
+  /* grid-row: span 2; */
   display: flex;
   flex-direction: column;
 }
@@ -1114,11 +1117,13 @@ button:disabled {
 .card-savings {
   grid-column: span 1;
 }
+/*
 @media (min-width: 1024px) {
   .card-savings {
     grid-column: span 2 / span 2; 
   }
 }
+*/
 .savings-form .form-group-triple {
     grid-template-columns: 1fr;
     gap: 1rem;
@@ -1808,5 +1813,160 @@ input:checked + .theme-slider .slider-icon {
   
   :root[data-theme='light'] .main-content > .theme-switch {
      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+}
+
+/* === [BARU] STYLING UNTUK DASHBOARD TABS === */
+
+.dashboard-tabs {
+  display: flex;
+  gap: 0.5rem;
+  background-color: var(--color-bg-medium);
+  padding: 0.5rem;
+  border-radius: var(--radius-medium);
+  margin-bottom: 1.5rem;
+  overflow-x: auto; /* Memastikan bisa di-scroll di mobile jika tab terlalu banyak */
+}
+.dashboard-tabs button {
+  width: 100%; /* Lebar penuh dibagi rata */
+  background-color: var(--color-bg-light);
+  color: var(--color-text-muted);
+  font-weight: 500;
+  border: none;
+  padding: 0.75rem 1rem;
+  white-space: nowrap; /* Mencegah teks tab terpotong */
+}
+.dashboard-tabs button:hover {
+  background-color: var(--color-border);
+  color: var(--color-text);
+  transform: none;
+  box-shadow: none;
+}
+.dashboard-tabs button.active {
+  background-color: var(--color-primary);
+  color: var(--color-button-text);
+  font-weight: 600;
+  box-shadow: 0 4px 10px var(--color-primary-glow-shadow);
+}
+.dashboard-tabs button:disabled {
+  background-color: var(--color-border);
+  color: var(--color-text-muted);
+}
+
+/* [BARU] Container untuk konten tab */
+.dashboard-content {
+  /* Konten di dalam .dashboard-content-wrapper */
+}
+
+/* [MODIFIKASI] dashboard-grid sekarang adalah layout dasar 1 kolom */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  margin-top: 0; /* Margin atas sudah diatur oleh .dashboard-tabs */
+}
+
+/* [BARU] Layout grid spesifik per tab (HANYA DESKTOP) */
+@media (min-width: 1024px) {
+  /* Layout untuk Tab Ringkasan */
+  .dashboard-grid.summary-layout {
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  }
+  .dashboard-grid.summary-layout .card-summary { 
+    grid-column: span 1; 
+  }
+  .dashboard-grid.summary-layout .card-list { 
+    grid-column: span 1 / -1; 
+    grid-row: span 2; 
+  }
+  .dashboard-grid.summary-layout .account-summary { 
+    grid-column: span 1; 
+  }
+
+  /* Layout untuk Tab Input Form */
+  .dashboard-grid.forms-layout {
+    grid-template-columns: 1fr 1fr;
+    align-items: start; /* Mencegah card meregang tinggi */
+  }
+
+  /* Layout untuk Tab Budget & Tabungan (dibuat lebih sempit) */
+  .dashboard-grid.budget-layout,
+  .dashboard-grid.savings-layout {
+    grid-template-columns: 1fr;
+    max-width: 1000px; /* Agar tidak terlalu lebar di layar besar */
+    margin: 0 auto;
+  }
+}
+
+
+/* [BARU] Mobile FAB Menu (Pojok Kiri Bawah) */
+.mobile-fab-container {
+  display: none; /* Sembunyi di desktop */
+  position: fixed;
+  bottom: 80px; /* 60px (nav) + 20px (padding) */
+  left: 20px;
+  z-index: 998;
+}
+.mobile-fab-menu {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background-color: var(--color-primary);
+  color: var(--color-button-text);
+  font-size: 1.5rem;
+  line-height: 1;
+  padding: 0;
+  box-shadow: var(--shadow-medium);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.mobile-fab-menu:hover {
+  transform: none;
+  box-shadow: var(--shadow-medium);
+}
+.fab-menu-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  animation: modal-fade-in 0.2s ease; /* Animasi muncul */
+}
+.fab-menu-options button {
+  width: auto;
+  padding: 0.75rem 1.5rem;
+  background-color: var(--color-bg-medium);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-small);
+  text-align: left;
+  font-weight: 500;
+}
+.fab-menu-options button:hover {
+  background-color: var(--color-bg-light);
+  transform: none;
+  box-shadow: var(--shadow-small);
+}
+
+
+/* [MODIFIKASI] Media Query Mobile */
+@media (max-width: 768px) {
+  /* ... (style mobile lainnya) ... */
+  
+  /* Sembunyikan tab desktop */
+  .dashboard-tabs {
+    display: none;
+  }
+  
+  /* Tampilkan FAB mobile */
+  .mobile-fab-container {
+    display: block;
+  }
+  
+  /* Pastikan Theme Toggle FAB (kanan bawah) tidak tumpang tindih */
+  .main-content > .theme-switch {
+    bottom: 80px; /* 60px (nav) + 20px (padding) */
+    right: 20px;
+    z-index: 999; 
   }
 }
