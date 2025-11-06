@@ -2090,3 +2090,80 @@ input:checked + .theme-slider .slider-icon {
 .receipt-image:hover {
   transform: scale(1.02);
 }
+
+/* === [PERBAIKAN] Mempercantik Navigasi Bulan === */
+
+.month-navigator {
+  /* Perkecil jarak antar elemen agar lebih menyatu */
+  gap: 0.5rem;
+  padding: 0.75rem; /* Sesuaikan padding container */
+}
+
+.month-navigator button {
+  /* 1. Buat bentuknya jadi kotak */
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  
+  /* 2. Atur radius (sesuai container) & border */
+  border-radius: var(--radius-medium);
+  border: 1px solid var(--color-border);
+  background-color: var(--color-bg-light);
+  color: var(--color-text-muted);
+
+  /* 3. Pusatkan ikon panah (< >) */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1;
+
+  /* 4. Pastikan transisi mulus */
+  transition: all 0.2s ease-out;
+}
+
+.month-navigator button:hover:not(:disabled) {
+  /* 5. Efek hover yang lebih "pop" */
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-button-text);
+  /* Gunakan transform dan shadow dari style utama */
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px var(--color-primary-glow-shadow);
+}
+
+.month-navigator button:active:not(:disabled) {
+  /* 6. Efek saat ditekan */
+  transform: translateY(0px) scale(0.98);
+  box-shadow: none;
+}
+
+.month-navigator button:disabled {
+  /* 7. Style disabled yang lebih jelas */
+  background-color: var(--color-bg-medium);
+  color: var(--color-border);
+  border-color: var(--color-border);
+  opacity: 0.7;
+  transform: none;
+  box-shadow: none;
+}
+
+.month-picker-input {
+  /* 8. Beri sedikit padding agar bisa di-hover */
+  padding: 0.25rem 0.5rem;
+  width: 200px; /* Sedikit lebih sempit */
+}
+
+/* 9. Penyesuaian untuk Mobile */
+@media (max-width: 768px) {
+  .month-navigator button {
+    width: 40px;
+    height: 40px;
+    font-size: 1.25rem;
+  }
+  .month-picker-input {
+    width: 170px;
+    font-size: 1.25rem !important;
+  }
+}
