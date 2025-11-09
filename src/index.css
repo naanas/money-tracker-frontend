@@ -1,6 +1,3 @@
-/* naanas/money-tracker-frontend/src/index.css */
-
-/* === [BARU] Variabel Non-Warna (Berlaku di semua tema) === */
 :root {
   /* Font & Ukuran */
   --font-body: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
@@ -217,17 +214,33 @@ a {
   font-size: 0.85rem;
   margin-top: 0.25rem;
 }
+
+/* [PERBAIKAN] Radio Button Group yang lebih rapi */
 .form-group-radio {
   display: flex;
   gap: 1rem;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 0.75rem;
+  background-color: var(--color-bg-light);
+  border-radius: var(--radius-medium);
+  border: 1px solid var(--color-border);
 }
 .form-group-radio label {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   cursor: pointer;
+  font-weight: 500;
+  margin-bottom: 0; /* Override default label margin */
+  flex: 1; /* Agar area klik lebih luas */
 }
+.form-group-radio input[type="radio"] {
+  width: 1.2rem;
+  height: 1.2rem;
+  accent-color: var(--color-primary);
+  cursor: pointer;
+}
+
 
 /* === TOMBOL UTAMA === */
 button {
@@ -785,7 +798,6 @@ button:disabled {
   justify-content: center;
   align-items: center;
   z-index: 1000;
-  /* [BARU] Pastikan backdrop menutupi semuanya dan siap untuk scrolling di dalamnya jika konten terlalu tinggi */
   padding: 1rem; 
 }
 :root[data-theme='light'] .modal-backdrop {
@@ -802,9 +814,8 @@ button:disabled {
   animation: modal-fade-in 0.3s ease;
   transition: background-color 0.3s ease, border-color 0.3s ease;
 
-  /* === [PERBAIKAN UTAMA UNTUK SEMUA MODAL] === */
-  max-height: 90vh; /* Maksimal tinggi 90% dari layar */
-  overflow-y: auto; /* Scroll vertikal jika kontennya panjang */
+  max-height: 90vh; 
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
 }
@@ -817,13 +828,18 @@ button:disabled {
   margin-top: 0;
   text-align: center;
 }
-.modal-content input.color-picker {
+
+/* [PERBAIKAN] Tampilan Input Warna yang lebih konsisten */
+.modal-content input[type="color"] {
   width: 100%;
-  height: 47px;
-  padding: 0.2rem;
+  height: 47px; /* Samakan dengan input text */
+  padding: 0.25rem 0.5rem;
+  background-color: var(--color-bg-light);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-medium);
+  cursor: pointer;
 }
+
 .modal-actions {
   display: flex;
   justify-content: flex-end;
@@ -953,18 +969,23 @@ button:disabled {
   text-align: center;
   margin-bottom: 1rem;
 }
+
+/* [PERBAIKAN] Daftar kategori agar scroll lebih baik */
 .category-list-modal {
-  max-height: 200px;
+  flex-grow: 1;
+  min-height: 150px;
+  max-height: 30vh; /* Gunakan unit viewport agar responsif */
   overflow-y: auto;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-medium);
   background-color: var(--color-bg-dark);
+  padding: 0.5rem;
 }
 .category-list-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.75rem 1rem;
+  padding: 0.75rem 0.5rem;
   border-bottom: 1px solid var(--color-border);
 }
 .category-list-item:last-child {
@@ -976,7 +997,7 @@ button:disabled {
   gap: 0.75rem;
   cursor: pointer; 
   flex-grow: 1;
-  padding: 0.25rem;
+  padding: 0.5rem;
   border-radius: var(--radius-small);
   transition: background-color 0.2s;
 }
@@ -985,14 +1006,15 @@ button:disabled {
 }
 .category-icon {
   display: inline-flex;
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   align-items: center;
   justify-content: center;
-  font-size: 0.9rem;
+  font-size: 1.1rem;
   color: #000;
   background-color: #fff;
+  flex-shrink: 0;
 }
 .category-type {
   font-size: 0.8em;
@@ -1005,13 +1027,20 @@ button:disabled {
   color: var(--color-accent-expense);
 }
 .btn-delete-category {
-  width: auto;
-  padding: 0.2rem 0.6rem;
-  font-size: 1rem;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
   font-weight: bold;
   background-color: var(--color-bg-light);
   color: var(--color-accent-error);
   border: 1px solid var(--color-border);
+  border-radius: var(--radius-small);
+  flex-shrink: 0;
+  margin-left: 0.5rem;
 }
 .btn-delete-category:hover {
   background-color: var(--color-accent-expense);
@@ -1311,13 +1340,11 @@ button:disabled {
     padding: 1rem;
   }
 
-  /* === [PERBAIKAN KHUSUS MOBILE MODAL] === */
   .modal-content {
-    max-width: 95%; /* Gunakan hampir seluruh lebar layar */
-    padding: 1.5rem; /* Padding lebih kecil untuk hemat ruang */
-    max-height: 85vh; /* Beri sedikit ruang di atas/bawah */
+    max-width: 95%; 
+    padding: 1.5rem; 
+    max-height: 85vh; 
   }
-  /* === [AKHIR PERBAIKAN] === */
 
   .modal-actions {
     flex-direction: column;
