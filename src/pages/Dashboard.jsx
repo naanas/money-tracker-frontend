@@ -1,4 +1,4 @@
-// naanas/money-tracker-frontend/src/pages/Dashboard.jsx
+// naanas/money-tracker-frontend/money-tracker-frontend-93f64fc0bdf098eeeda4e51adbfa651c35390e0c/src/pages/Dashboard.jsx
 import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -14,9 +14,10 @@ import CategoryForm from '../components/CategoryForm';
 import SavingsGoals from '../components/SavingsGoals'; 
 import TransferForm from '../components/TransferForm'; 
 import AccountSummary from '../components/AccountSummary'; 
+// [BARU] Impor modal detail
 import TransactionDetailModal from '../components/TransactionDetailModal';
 
-// Komponen Loading Kecil
+// ... (LoadingSpinner component)
 const LoadingSpinner = () => (
   <div className="page-spinner-container" style={{ minHeight: '50vh' }}>
     <div className="page-spinner"></div>
@@ -41,17 +42,20 @@ const Dashboard = () => {
   const [error, setError] = useState('');
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [budgetToEdit, setBudgetToEdit] = useState(null);
+  
+  // [BARU] State untuk modal detail
   const [selectedTransaction, setSelectedTransaction] = useState(null);
 
   const didMountRef = useRef(false); 
 
-  // State Tab & Animasi
+  // ... (STATE BARU untuk Tab, Fab Menu, Animasi)
   const [activeTab, setActiveTab] = useState('summary');
+  const [isFabMenuOpen, setIsFabMenuOpen] = useState(false);
   const [animationClass, setAnimationClass] = useState('');
   const [touchStart, setTouchStart] = useState(null);
   const minSwipeDistance = 75; 
 
-  // --- FETCH DATA BULANAN ---
+  // --- (Semua fungsi data fetching (fetchMonthlyData, fetchStaticData) tidak berubah) ---
   const fetchMonthlyData = useCallback(async (isRefetch = false) => {
     if (isRefetch) {
       setIsRefetching(true);
@@ -65,13 +69,12 @@ const Dashboard = () => {
     const params = { month, year }; 
 
     try {
-      // Jangan fetch jika belum punya akun/kategori dasar (untuk pengguna baru)
       if (accounts.length === 0 || categories.length === 0) {
-         if (!isLoading) {
-             setAnalytics(null);
-             setTransactions([]);
-         }
-         return;
+        if (!isLoading) { 
+           setAnalytics(null);
+           setTransactions([]);
+        }
+        return; 
       }
 
       const [analyticsRes, transactionsRes] = await Promise.all([
@@ -87,9 +90,8 @@ const Dashboard = () => {
       setIsLoading(false); 
       setIsRefetching(false);
     }
-  }, [selectedDate, accounts.length, categories.length]); // Hapus isLoading dari dependency biar gak loop
+  }, [selectedDate, accounts, categories, isLoading]); 
 
-  // --- FETCH DATA STATIS (Awal Load) ---
   const fetchStaticData = useCallback(async () => {
     try {
       const [categoriesRes, savingsRes, accountsRes] = await Promise.all([
@@ -108,25 +110,29 @@ const Dashboard = () => {
       };
     } catch (err) {
       console.error("Failed to fetch static data:", err);
-      setError('Gagal memuat data awal. Periksa koneksi internet Anda.');
+      setError(err.response?.data?.error || 'Gagal mengambil data statis');
       setIsLoading(false); 
       return { success: false, hasAccounts: false, hasCategories: false };
     }
   }, []); 
 
-  // EFEK 1: Initial Load
+  // ... (EFEK 1 & EFEK 2 tidak berubah) ...
+  // EFEK 1
   useEffect(() => {
-    fetchStaticData().then((status) => {
-      if (status.success && status.hasAccounts && status.hasCategories) {
+    setIsLoading(true); 
+    fetchStaticData().then((staticDataStatus) => {
+      if (staticDataStatus.success && staticDataStatus.hasAccounts && staticDataStatus.hasCategories) {
         fetchMonthlyData(false); 
       } else {
         setIsLoading(false); 
+        setAnalytics(null);
+        setTransactions([]);
       }
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [fetchStaticData]);
 
-  // EFEK 2: Saat Ganti Bulan
+  // EFEK 2
   useEffect(() => {
     if (didMountRef.current) {
       fetchMonthlyData(true); 
@@ -135,39 +141,43 @@ const Dashboard = () => {
     }
   }, [selectedDate, fetchMonthlyData]); 
 
-  // --- FUNGSI REFETCH PARTIAL ---
-  const refetchCategories = async () => {
-    const res = await axiosClient.get('/api/categories');
-    setCategories(res.data.data);
-  };
-  const refetchSavings = async () => {
-     const res = await axiosClient.get('/api/savings');
-     setAllSavingsGoals(res.data.data);
-  };
-  const refetchAccounts = async () => {
+  // --- (Semua fungsi refetch (refetchCategories, dll) tidak berubah) ---
+  const refetchCategories = useCallback(async () => {
+    try {
+      const res = await axiosClient.get('/api/categories');
+      setCategories(res.data.data);
+    } catch (err) { console.error("Failed to re-fetch categories:", err); }
+  }, []);
+
+  const refetchSavings = useCallback(async () => {
+    try {
+      const res = await axiosClient.get('/api/savings');
+      setAllSavingsGoals(res.data.data); 
+    } catch (err) { console.error("Failed to re-fetch savings:", err); }
+  }, []);
+
+  const refetchAccounts = useCallback(async () => {
+    try {
       const res = await axiosClient.get('/api/accounts');
-      setAccounts(res.data.data);
-  };
+      setAccounts(res.data.data); 
+    } catch (err) { console.error("Failed to re-fetch accounts:", err); }
+  }, []);
 
-  // --- HANDLE DATA UPDATE UTAMA ---
+  // ... (FUNGSI UPDATE UTAMA (handleDataUpdate) tidak berubah) ...
   const handleDataUpdate = async (options = {}) => {
-    // Trigger animasi sukses dulu biar kerasa responsif
-    triggerSuccessAnimation();
-    setBudgetToEdit(null);
-
-    // Lakukan refetch di background
-    const promises = [];
     if (accounts.length > 0 && categories.length > 0) {
-        promises.push(fetchMonthlyData(true));
+      await fetchMonthlyData(true); // true = refetch
     }
-    if (options.refetchCategories) promises.push(refetchCategories());
-    if (options.refetchSavings) promises.push(refetchSavings());
-    if (options.refetchAccounts) promises.push(refetchAccounts());
     
-    await Promise.all(promises);
+    if (options.refetchCategories) await refetchCategories();
+    if (options.refetchSavings) await refetchSavings();
+    if (options.refetchAccounts) await refetchAccounts();
+    
+    triggerSuccessAnimation(); 
+    setBudgetToEdit(null); 
   };
 
-  // --- MEMOS ---
+  // --- (Semua Memos (totalBalance, dll) tidak berubah) ---
   const totalBalance = useMemo(() => {
     return accounts.reduce((sum, acc) => sum + parseFloat(acc.current_balance), 0);
   }, [accounts]);
@@ -175,11 +185,14 @@ const Dashboard = () => {
   const filteredSavingsGoals = useMemo(() => {
     const goals = allSavingsGoals;
     const selectedMonthStart = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
+    
     return goals.filter(goal => {
       if (!goal.target_date) return true;
       const targetDate = new Date(goal.target_date);
-      // Tampilkan jika target date masih di masa depan atau di bulan ini
-      return targetDate >= selectedMonthStart;
+      const targetMonthStart = new Date(targetDate.getFullYear(), targetDate.getMonth(), 1);
+      if (selectedMonthStart > targetMonthStart) return false;
+      if (selectedMonthStart < targetMonthStart) return false; 
+      return true; 
     });
   }, [allSavingsGoals, selectedDate]);
 
@@ -187,40 +200,20 @@ const Dashboard = () => {
     if (!analytics) return [];
     const budgetDetails = analytics.budget?.details || [];
     const expenses = analytics.expenses_by_category || {};
-    
-    // 1. Masukkan budget yang beneran ada
     const pockets = budgetDetails.map(budget => {
       const spent = expenses[budget.category_name] || 0;
-      return { 
-          ...budget, 
-          spent, 
-          remaining: budget.amount - spent, 
-          progress: budget.amount > 0 ? (spent / budget.amount) * 100 : 0,
-          isVirtual: false
-      };
+      return { ...budget, spent, remaining: budget.amount - spent, progress: budget.amount > 0 ? (spent / budget.amount) * 100 : 0 };
     });
-
-    // 2. Masukkan "Virtual Pockets" (kategori yg ada pengeluaran tapi gak ada budget)
     const existingBudgetNames = new Set(pockets.map(p => p.category_name));
     Object.keys(expenses).forEach(categoryName => {
       if (!existingBudgetNames.has(categoryName)) { 
-        pockets.push({ 
-            id: `virtual-${categoryName}`, 
-            category_name: categoryName, 
-            amount: 0, 
-            spent: expenses[categoryName], 
-            remaining: -expenses[categoryName], 
-            progress: 100,
-            isVirtual: true 
-        });
+        pockets.push({ id: `virtual-${categoryName}`, category_name: categoryName, amount: 0, spent: expenses[categoryName], remaining: -expenses[categoryName], progress: 100 });
       }
     });
-
-    // Sort biar yang Real ada di atas, Virtual di bawah
-    return pockets.sort((a, b) => (a.isVirtual === b.isVirtual) ? 0 : a.isVirtual ? 1 : -1);
+    return pockets;
   }, [analytics]);
 
-  // --- VARIABLES ---
+  // --- (Variabel ringkasan (totalIncome, dll) tidak berubah) ---
   const totalIncome = analytics?.summary?.total_income || 0;
   const totalExpensesFiltered = analytics?.summary?.total_expenses || 0;
   const totalTransferredToSavings = analytics?.summary?.total_transferred_to_savings || 0;
@@ -230,7 +223,7 @@ const Dashboard = () => {
   const totalProgress = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
   const currentBalance = totalIncome - totalSpent; 
 
-  // --- HANDLERS ---
+  // --- (Semua Handler (handlePrevMonth, handleDelete, dll) tidak berubah) ---
   const handlePrevMonth = () => {
     if (isRefetching || animationClass || isLoading) return; 
     setAnimationClass('slide-in-right');
@@ -242,77 +235,74 @@ const Dashboard = () => {
     setSelectedDate(prevDate => new Date(prevDate.getFullYear(), prevDate.getMonth() + 1, 1));
   };
 
-  const handleTouchStart = (e) => setTouchStart(e.targetTouches[0].clientX);
+  const handleTouchStart = (e) => {
+    if (isRefetching || animationClass || isLoading) return;
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
   const handleTouchEnd = (e) => {
-    if (touchStart === null) return;
-    const deltaX = e.changedTouches[0].clientX - touchStart;
-    if (deltaX > minSwipeDistance) handlePrevMonth();
-    else if (deltaX < -minSwipeDistance) handleNextMonth();
+    if (touchStart === null || isRefetching || animationClass || isLoading) return;
+    
+    const touchEnd = e.changedTouches[0].clientX;
+    const deltaX = touchEnd - touchStart;
+    
+    if (deltaX > minSwipeDistance) {
+      handlePrevMonth();
+    } else if (deltaX < -minSwipeDistance) {
+      handleNextMonth();
+    }
+    
     setTouchStart(null);
   };
 
-  // === [PERBAIKAN UTAMA: OPTIMISTIC DELETE] ===
   const handleDeleteBudget = async (e, budgetId) => {
     e.stopPropagation(); 
     if (!window.confirm('Yakin ingin menghapus budget pocket ini?')) return;
-    
-    // 1. Optimistic Update: Langsung hapus dari state lokal agar UI responsif
-    setAnalytics(prev => {
-        if(!prev) return prev;
-        return {
-            ...prev,
-            budget: {
-                ...prev.budget,
-                details: prev.budget.details.filter(b => b.id !== budgetId)
-            }
-        }
-    });
-
+    setError('');
+    setIsRefetching(true); 
     try {
-      // 2. Request hapus ke server di background
       await axiosClient.delete(`/api/budgets/${budgetId}`);
-      // 3. Refetch diam-diam untuk memastikan data sinkron
-      fetchMonthlyData(true);
+      handleDataUpdate(); 
     } catch (err) {
-      console.error("Gagal hapus budget:", err);
-      alert("Gagal menghapus budget dari server. Data akan dimuat ulang.");
-      fetchMonthlyData(true); // Revert jika gagal
+      setError(err.response?.data?.error || 'Gagal menghapus budget');
+      setIsRefetching(false);
     }
   };
 
   const handleDeleteTransaction = async (transactionId) => {
     if (!window.confirm('Yakin ingin menghapus transaksi ini?')) return;
-    
-    // Optimistic remove transaction from list
-    setTransactions(prev => prev.filter(t => t.id !== transactionId));
-
+    setError('');
+    setIsRefetching(true); 
     try {
       await axiosClient.delete(`/api/transactions/${transactionId}`);
       handleDataUpdate({ refetchAccounts: true, refetchSavings: true });
     } catch (err) {
-        alert('Gagal menghapus transaksi.');
-        fetchMonthlyData(true); // Revert
+      setError(err.response?.data?.error || 'Gagal menghapus transaksi');
+      setIsRefetching(false);
     }
   };
   
-  const handleTabChange = (tab) => setActiveTab(tab);
-  const getGridClass = (tab) => {
-    switch(tab) {
-        case 'summary': return 'summary-layout';
-        case 'forms': return 'forms-layout';
-        case 'budget': return 'budget-layout';
-        case 'savings': return 'savings-layout';
-        default: return '';
-    }
+  // --- (Fungsi Handler Tab (handleTabChange, getGridClass) tidak berubah) ---
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    setIsFabMenuOpen(false); // Selalu tutup menu FAB setelah memilih
   };
 
-  const showSkeleton = isLoading; // Hanya tampilkan skeleton saat initial load penuh
+  const getGridClass = (tab) => {
+    if (tab === 'summary') return 'summary-layout';
+    if (tab === 'forms') return 'forms-layout';
+    if (tab === 'budget') return 'budget-layout';
+    if (tab === 'savings') return 'savings-layout';
+    return '';
+  };
+
+  const showSkeleton = isLoading || isRefetching;
 
   return (
     <>
-      {/* NAVIGASI BULAN */}
+      {/* ... (MonthNavigator dan Desktop Tab Navbar tidak berubah) ... */}
       <div className="month-navigator">
-        <button onClick={handlePrevMonth} disabled={!!animationClass || isLoading}>&lt;</button>
+        <button onClick={handlePrevMonth} disabled={isRefetching || !!animationClass || isLoading}>&lt;</button>
         <DatePicker
           selected={selectedDate}
           onChange={(date) => setSelectedDate(date)}
@@ -321,98 +311,160 @@ const Dashboard = () => {
           showFullMonthYearPicker
           className="month-picker-input"
           popperPlacement="bottom"
-          disabled={!!animationClass || isLoading}
+          disabled={isRefetching || !!animationClass || isLoading}
         />
-        <button onClick={handleNextMonth} disabled={!!animationClass || isLoading}>&gt;</button>
+        <button onClick={handleNextMonth} disabled={isRefetching || !!animationClass || isLoading}>&gt;</button>
       </div>
       
-      {/* TAB NAVIGASI (Desktop/Mobile) */}
       <nav className="dashboard-tabs">
-        {['summary', 'forms', 'budget', 'savings'].map(tab => (
-             <button 
-                key={tab}
-                className={activeTab === tab ? 'active' : ''}
-                onClick={() => handleTabChange(tab)}
-                disabled={showSkeleton}
-             >
-               {tab === 'summary' ? 'Ringkasan' : 
-                tab === 'forms' ? 'Input Transaksi' : 
-                tab.charAt(0).toUpperCase() + tab.slice(1)}
-             </button>
-        ))}
+        <button 
+          className={activeTab === 'summary' ? 'active' : ''}
+          onClick={() => handleTabChange('summary')}
+          disabled={showSkeleton}
+        >
+          Ringkasan
+        </button>
+        <button 
+          className={activeTab === 'forms' ? 'active' : ''}
+          onClick={() => handleTabChange('forms')}
+          disabled={showSkeleton}
+        >
+          Input Transaksi
+        </button>
+        <button 
+          className={activeTab === 'budget' ? 'active' : ''}
+          onClick={() => handleTabChange('budget')}
+          disabled={showSkeleton}
+        >
+          Budget
+        </button>
+        <button 
+          className={activeTab === 'savings' ? 'active' : ''}
+          onClick={() => handleTabChange('savings')}
+          disabled={showSkeleton}
+        >
+          Tabungan
+        </button>
       </nav>
 
-      {/* KONTEN DASHBOARD */}
       <div 
-        className={`dashboard-content-wrapper ${isRefetching ? 'is-refreshing' : ''}`}
+        className="dashboard-content-wrapper"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
+        {/* === (Logika Render Utama (Loading, Error, No Accounts) tidak berubah) === */}
         {showSkeleton ? (
           <LoadingSpinner />
-        ) : error ? (
+        ) : 
+        (error) ? (
           <div className="card" style={{textAlign: 'center', color: 'var(--color-text-muted)', marginTop: '2rem'}}>
-            <p>Gagal memuat data.</p>
-            <button onClick={() => window.location.reload()} className="btn-secondary" style={{marginTop: '1rem', width: 'auto'}}>Coba Lagi</button>
+            <p>Tidak dapat memuat data. Silakan coba lagi.</p>
+            <p><i>{error}</i></p>
           </div>
-        ) : accounts.length === 0 ? (
+        ) :
+        (accounts.length === 0) ? (
           <div className="card" style={{ textAlign: 'center', maxWidth: '600px', margin: '2rem auto' }}>
             <h2>Selamat Datang! 🎉</h2>
-            <p>Anda belum memiliki akun (sumber dana).</p>
-            <Link to="/accounts" className="btn-link-full" style={{backgroundColor: 'var(--color-primary)', color: 'var(--color-button-text)'}}>
+            <p>Anda belum memiliki akun. Akun adalah tempat Anda menyimpan uang (misal: Bank, E-Wallet, atau Tunai).</p>
+            <p style={{ marginBottom: '1.5rem' }}>Silakan buat akun pertama Anda untuk memulai.</p>
+            <Link to="/accounts" className="btn-link-full" style={{ marginTop: 0, backgroundColor: 'var(--color-primary)', color: 'var(--color-button-text)' }}>
               Buat Akun Pertama
             </Link>
           </div>
-        ) : (
+        ) :
+        (
           <div 
             className={`dashboard-grid ${getGridClass(activeTab)} ${animationClass}`}
             onAnimationEnd={() => setAnimationClass('')} 
           >
             
-            {/* === TAB 1: SUMMARY === */}
-            {activeTab === 'summary' && analytics && (
+            {/* --- TAB 1: SUMMARY --- */}
+            {activeTab === 'summary' && (
               <>
-                <section className="card card-summary">
-                  <h3>Ringkasan {formatMonthYear(selectedDate)}</h3>
-                  <div className="summary-item"><span>Pemasukan</span><span className="income">{formatCurrency(totalIncome)}</span></div>
-                  <div className="summary-item"><span>Pengeluaran</span><span className="expense">{formatCurrency(totalExpensesFiltered)}</span></div>
-                  <div className="summary-item"><span>Ditabung</span><span className="income">{formatCurrency(totalTransferredToSavings)}</span></div>
-                  <hr />
-                  <div className="summary-item total"><span>Sisa (Bulan Ini)</span><span>{formatCurrency(currentBalance)}</span></div>
-                  <div className="summary-item total" style={{fontSize: "1.1em", marginTop: "0.5rem", opacity: 0.8}}>
-                      <span>Total Saldo Aset</span><span>{formatCurrency(totalBalance)}</span>
-                  </div>
-                </section>
+                {/* ... (card-summary dan AccountSummary tidak berubah) ... */}
+                {analytics ? (
+                  <section className="card card-summary">
+                    <h3>Ringkasan {formatMonthYear(selectedDate)}</h3>
+                    <div className="summary-item">
+                      <span>Total Pemasukan</span>
+                      <span className="income">{formatCurrency(totalIncome)}</span>
+                    </div>
+                    <div className="summary-item">
+                      <span>Total Pengeluaran</span>
+                      <span className="expense">{formatCurrency(totalExpensesFiltered)}</span>
+                    </div>
+                    <div className="summary-item">
+                      <span>Dana Ditabung</span>
+                      <span className="income">{formatCurrency(totalTransferredToSavings)}</span>
+                    </div>
+                    <hr />
+                    <div className="summary-item total">
+                      <span>Sisa Uang (Bulan Ini)</span>
+                      <span>{formatCurrency(currentBalance)}</span>
+                    </div>
+                    <div className="summary-item total" style={{fontSize: "1.2em", marginTop: "0.5rem"}}>
+                      <span>Total Saldo (Semua Akun)</span>
+                      <span>{formatCurrency(totalBalance)}</span>
+                    </div>
+                  </section>
+                ) : <p>Tidak ada data ringkasan.</p>}
 
                 <AccountSummary accounts={accounts} />
 
                 <section className="card card-list full-height-card">
-                  <h3>Riwayat Transaksi</h3>
-                  {transactions.length > 0 ? (
-                    <ul>
-                      {transactions.map((t) => (
+                  <h3>Transaksi {formatMonthYear(selectedDate)}</h3>
+                  <ul>
+                    {transactions.length > 0 ? (
+                      transactions.map((t) => (
+                        // [MODIFIKASI] Item list-item dibuat clickable
                         <li key={t.id} className="list-item">
-                          <button className="btn-delete-item" onClick={(e) => { e.stopPropagation(); handleDeleteTransaction(t.id); }}>✕</button>
-                          <div className="list-item-clickable-area" onClick={() => setSelectedTransaction(t)}>
+                          <button 
+                            className="btn-delete-item"
+                            title="Hapus transaksi ini"
+                            // [MODIFIKASI] Hentikan propagasi agar modal tidak terbuka
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteTransaction(t.id);
+                            }}
+                          >
+                            ✕
+                          </button>
+                          
+                          {/* [BARU] Wrapper untuk area yang bisa diklik */}
+                          <div 
+                            className="list-item-clickable-area" 
+                            onClick={() => setSelectedTransaction(t)}
+                            title="Lihat Detail"
+                          >
                             <div className="list-item-details">
                               <strong>{t.description || t.category}</strong>
-                              <span>{new Date(t.date).toLocaleDateString('id-ID', {day:'2-digit', month:'short'})} • {t.accounts?.name}</span>
+                              <span>
+                                {new Date(t.date).toLocaleDateString('id-ID', {day: '2-digit', month: 'short'})}
+                                {/* Menampilkan nama akun sumber */}
+                                {t.accounts ? ` • ${t.accounts.name}` : ''}
+                              </span>
                             </div>
-                            <span className={t.type}>{t.type === 'expense' ? '-' : '+'}{formatCurrency(t.amount)}</span>
+                            <span className={t.type}>
+                              {t.type === 'expense' ? '-' : '+'}
+                              {formatCurrency(t.amount)}
+                            </span>
                           </div>
                         </li>
-                      ))}
-                    </ul>
-                  ) : <p style={{textAlign: 'center', color: 'var(--color-text-muted)', padding: '1rem'}}>Belum ada transaksi bulan ini.</p>}
+                      ))
+                    ) : (
+                      <p>Belum ada transaksi di bulan ini.</p>
+                    )}
+                  </ul>
                 </section>
               </>
             )}
 
-            {/* === TAB 2: FORMS === */}
+            {/* --- TAB 2: FORMS (INPUT) --- */}
             {activeTab === 'forms' && (
               <>
+                {/* ... (TransactionForm dan TransferForm tidak berubah) ... */}
                 <section className="card card-form">
-                  <h3>Catat Transaksi</h3>
+                  <h3>Tambah Transaksi Baru</h3>
                   <TransactionForm 
                     categories={categories} 
                     accounts={accounts} 
@@ -422,90 +474,114 @@ const Dashboard = () => {
                     isRefetching={isRefetching} 
                   />
                 </section>
+
                 <section className="card card-form">
-                  <h3>Pindah Dana (Transfer)</h3>
-                  <TransferForm accounts={accounts} onTransferAdded={() => handleDataUpdate({ refetchAccounts: true })} isRefetching={isRefetching} selectedDate={selectedDate} />
+                  <h3>Transfer Antar Akun</h3>
+                  <TransferForm
+                    accounts={accounts}
+                    onTransferAdded={() => handleDataUpdate({ refetchAccounts: true })}
+                    isRefetching={isRefetching}
+                    selectedDate={selectedDate}
+                  />
                 </section>
               </>
             )}
             
-            {/* === TAB 3: BUDGET === */}
-            {activeTab === 'budget' && analytics && (
-              <section className="card card-budget-pocket">
-                <h3>Budget Pockets</h3>
-                <div className="budget-info total">
-                   <span>Total Budget: {formatCurrency(totalBudget)}</span>
-                </div>
-                <div className="progress-bar-container">
-                  <div className="progress-bar-fill" style={{width: `${Math.min(totalProgress, 100)}%`, backgroundColor: totalRemaining < 0 ? 'var(--color-accent-expense)' : 'var(--color-primary)'}}></div>
-                </div>
-                <div className="pocket-footer" style={{marginTop: '0.25rem'}}>
-                    <span className="expense">{formatCurrency(totalSpent)} Terpakai</span>
-                    <span className={`total ${totalRemaining < 0 ? 'expense' : ''}`}>
-                        {totalRemaining < 0 ? `Over ${formatCurrency(Math.abs(totalRemaining))}` : `Sisa ${formatCurrency(totalRemaining)}`}
-                    </span>
-                </div>
-                
-                <BudgetForm 
-                  categories={categories} 
-                  onBudgetSet={handleDataUpdate}
-                  budgetToEdit={budgetToEdit}
-                  onClearEdit={() => setBudgetToEdit(null)}
-                  selectedDate={selectedDate} 
-                  isRefetching={isRefetching} 
-                />
-                
-                <div className="pocket-grid">
-                  {budgetPockets.map(pocket => (
-                    <div 
-                      className="pocket-item" 
-                      key={pocket.id || pocket.category_name} 
-                      onClick={() => !pocket.isVirtual && setBudgetToEdit(pocket)}
-                      style={pocket.isVirtual ? { opacity: 0.7, borderStyle: 'dashed' } : {}}
-                      title={pocket.isVirtual ? "Ini adalah 'Virtual Pocket' karena ada pengeluaran tanpa budget." : "Klik untuk edit budget ini"}
-                    >
-                        {!pocket.isVirtual && (
-                          <button className="pocket-delete-btn" onClick={(e) => handleDeleteBudget(e, pocket.id)}>✕</button>
-                        )}
-                        <div className="pocket-header">
-                          <span className="pocket-title">{pocket.category_name} {pocket.isVirtual && '*'}</span>
-                          <span className={`pocket-remaining ${pocket.remaining < 0 ? 'expense' : ''}`}>
-                            {pocket.remaining < 0 ? 'Over!' : `${formatCurrency(pocket.remaining)}`}
-                          </span>
-                        </div>
-                        <div className="progress-bar-container small">
-                          <div className={`progress-bar-fill ${pocket.progress > 100 ? 'expense' : ''}`} style={{ width: `${Math.min(pocket.progress, 100)}%` }}></div>
-                        </div>
-                        <div className="pocket-footer">
-                          <span className="expense">{formatCurrency(pocket.spent)}</span>
-                          <span className="total"> / {formatCurrency(pocket.amount)}</span>
-                        </div>
-                    </div>
-                  ))}
-                </div>
-                {budgetPockets.some(p => p.isVirtual) && (
-                    <p style={{fontSize: '0.8rem', color: 'var(--color-text-muted)', marginTop: '1rem'}}>
-                        * Kategori dengan tanda bintang adalah Virtual Pocket (ada pengeluaran tapi belum ada budget).
-                    </p>
-                )}
-              </section>
+            {/* --- TAB 3: BUDGET --- */}
+            {activeTab === 'budget' && (
+              <>
+                {/* ... (BudgetForm dan pocket-grid tidak berubah) ... */}
+                <section className="card card-budget-pocket">
+                  <h3>Budget Pockets</h3>
+                  {analytics ? (
+                    <>
+                      <div className="budget-info total">
+                        <span>Total Budget: {formatCurrency(totalBudget)}</span>
+                      </div>
+                      <div className="progress-bar-container">
+                        <div 
+                          className="progress-bar-fill" 
+                          style={{ 
+                            width: `${Math.min(totalProgress, 100)}%`,
+                            backgroundColor: totalRemaining < 0 ? 'var(--color-accent-expense)' : 'var(--color-primary)'
+                          }} 
+                        ></div>
+                      </div>
+                      <div className="pocket-footer" style={{marginTop: '0.25rem'}}>
+                          <span className="expense">{formatCurrency(totalSpent)}</span>
+                          <span className="total"> / {formatCurrency(totalBudget)}</span>
+                      </div>
+                    </>
+                  ) : <p>Memuat info budget...</p>}
+                  
+                  <BudgetForm 
+                    categories={categories} 
+                    onBudgetSet={handleDataUpdate}
+                    budgetToEdit={budgetToEdit}
+                    onClearEdit={() => setBudgetToEdit(null)}
+                    selectedDate={selectedDate} 
+                    isRefetching={isRefetching} 
+                  />
+                  <div className="pocket-grid">
+                    {budgetPockets.map(pocket => (
+                      <div 
+                        className="pocket-item" 
+                        key={pocket.id || pocket.category_name} 
+                        onClick={() => pocket.id.startsWith('virtual-') ? null : setBudgetToEdit(pocket)}
+                        title={pocket.id.startsWith('virtual-') ? "Kategori ini tidak di-budget" : "Klik untuk edit"}
+                      >
+                          {!pocket.id.startsWith('virtual-') && (
+                            <button 
+                              className="pocket-delete-btn"
+                              onClick={(e) => handleDeleteBudget(e, pocket.id)}
+                              title="Hapus Budget Ini"
+                            >
+                              ✕
+                            </button>
+                          )}
+                          <div className="pocket-header">
+                            <span className="pocket-title">{pocket.category_name}</span>
+                            <span className={`pocket-remaining ${pocket.remaining < 0 ? 'expense' : ''}`}>
+                              {pocket.remaining < 0 ? 'Over!' : `${formatCurrency(pocket.remaining)} sisa`}
+                            </span>
+                          </div>
+                          <div className="progress-bar-container small">
+                            <div 
+                              className={`progress-bar-fill ${pocket.progress > 100 ? 'expense' : ''}`}
+                              style={{ width: `${Math.min(pocket.progress, 100)}%` }}
+                            ></div>
+                          </div>
+                          <div className="pocket-footer">
+                            <span className="expense">{formatCurrency(pocket.spent)}</span>
+                            <span className="total"> / {formatCurrency(pocket.amount)}</span>
+                          </div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              </>
             )}
 
-            {/* === TAB 4: SAVINGS === */}
+            {/* --- TAB 4: SAVINGS --- */}
             {activeTab === 'savings' && (
+              <>
+                {/* ... (SavingsGoals tidak berubah) ... */}
                 <SavingsGoals 
                   savingsGoals={filteredSavingsGoals} 
                   accounts={accounts} 
                   onDataUpdate={() => handleDataUpdate({ refetchSavings: true, refetchAccounts: true })} 
                   isRefetching={isRefetching}
                 />
+              </>
             )}
 
           </div>
-        )}
+        )
+        
+        }
       </div> 
 
-      {/* MODALS */}
+      {/* ... (Render Modal CategoryForm tidak berubah) ... */}
       {isCategoryModalOpen && (
         <CategoryForm 
           existingCategories={categories}
@@ -513,6 +589,8 @@ const Dashboard = () => {
           onSuccess={() => handleDataUpdate({ refetchCategories: true })} 
         />
       )}
+
+      {/* [BARU] Render Modal Detail Transaksi */}
       {selectedTransaction && (
         <TransactionDetailModal 
           transaction={selectedTransaction} 
