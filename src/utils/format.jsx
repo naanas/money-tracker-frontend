@@ -43,101 +43,125 @@ export const formatMonthYear = (date) => {
   });
 };
 
-// === [FUNGSI PARSER YANG DIPERBAIKI TOTAL] ===
+// === [FUNGSI PARSER BARU YANG LEBIH CANGGIH] ===
 
 /**
- * Helper untuk membersihkan string angka.
- * Ini akan menghapus semua titik dan koma.
- * "75,400" -> "75400"
- * "100.500" -> "100500"
+ * Membersihkan string agar hanya menyisakan angka dan titik desimal standar.
+ * Mengubah 'O'/'o' menjadi '0', 'l'/'I' menjadi '1' untuk koreksi OCR dasar.
  */
-const cleanNumberString = (numStr) => {
-  if (!numStr) return '';
-  return numStr.replace(/[.,]/g, '');
+const normalizeAmount = (str) => {
+  if (!str) return 0;
+  // 1. Ganti karakter yang sering salah dibaca OCR sebagai angka
+  let cleaned = str.replace(/[Oo]/g, '0').replace(/[ilIj]/g, '1');
+  // 2. Hapus semua karakter KECUALI angka, koma, dan titik
+  cleaned = cleaned.replace(/[^0-9,.]/g, '');
+  // 3. Hapus semua titik dan koma (asumsi struk IDR bulat tanpa desimal sen)
+  cleaned = cleaned.replace(/[.,]/g, '');
+  
+  return parseFloat(cleaned) || 0;
 };
 
 /**
- * Fungsi untuk mengekstrak data dari teks nota.
- * Versi ini jauh lebih canggih untuk menghindari kesalahan baca.
+ * Mencoba mengekstrak tanggal dari teks dengan regex berbagai format umum di Indonesia.
+ */
+const extractDate = (text) => {
+    // Regex untuk format DD/MM/YYYY, DD-MM-YYYY, YYYY-MM-DD
+    const dateRegex = /(\d{1,2}[./-]\d{1,2}[./-]\d{2,4})|(\d{4}[./-]\d{1,2}[./-]\d{1,2})/;
+    const match = text.match(dateRegex);
+    if (match) {
+        try {
+            let dateStr = match[0].replace(/[./]/g, '-');
+            const parts = dateStr.split('-');
+            // Jika format DD-MM-YYYY (tahun di belakang), ubah ke YYYY-MM-DD
+            if (parts[0].length <= 2 && parts[2].length === 4) {
+                return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+            }
+             // Jika sudah YYYY-MM-DD atau format lain yang bisa diparse langsung
+            return new Date(dateStr).toISOString().split('T')[0];
+        } catch (e) {
+            return null; // Gagal parse tanggal
+        }
+    }
+    return null;
+};
+
+/**
+ * Fungsi utama untuk membaca teks struk.
+ * Strategi: Cari tanggal, cari nama toko di atas, dan cari TOTAL dari bawah ke atas.
  */
 export const parseReceiptText = (text) => {
   let amount = 0;
-  let description = 'Nota Terbaca'; // Default
-  const lines = text.split('\n');
+  let description = 'Belanja';
+  let date = null;
 
   try {
-    // 1. Dapatkan Deskripsi (baris pertama, bersihkan dari no telp)
-    if (lines.length > 0 && lines[0].trim() !== '') {
-      description = lines[0].trim()
-        .replace(/\b\d{10,13}\b/g, '') // Hapus no telp 10-13 digit
-        .trim();
+    const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+
+    // --- 1. CARI TANGGAL ---
+    date = extractDate(text);
+
+    // --- 2. CARI DESKRIPSI (Nama Toko) ---
+    // Biasanya ada di 5 baris pertama. Hindari baris yang terlihat seperti no telp/tanggal.
+    for (let i = 0; i < Math.min(lines.length, 5); i++) {
+        const line = lines[i];
+        if (line.length < 3 || line.match(/\d{4}/) || line.match(/Telp|Fax/i)) continue;
+        // Bersihkan kata-kata umum di header struk
+        description = line.replace(/Selamat Datang|Welcome|To|Di/gi, '').trim();
+        if (description) break;
     }
 
-    // 2. Cari TOTAL (Prioritas 1)
-    // Regex: (TOTAL|JUMLAH|TAGIHAN) [spasi/titikdua] [Rp opsional] [ANGKA]
-    const totalRegex = /\b(TOTAL|JUMLAH|TAGIHAN)\b\s*[:\s]*\s*Rp?\s*([\d.,]+)/i;
-    const totalMatch = text.match(totalRegex);
-    if (totalMatch && totalMatch[2]) {
-      const amountStr = cleanNumberString(totalMatch[2]); // "75,400" -> "75400"
-      amount = parseFloat(amountStr);
-      return { amount: amount, description: description.substring(0, 50) };
-    }
+    // --- 3. CARI TOTAL (STRATEGI: BACA DARI BAWAH) ---
+    const grandTotalKeywords = /(TOTAL|JUMLAH|TAGIHAN|AMOUNT|NET|GRAND|HARGA JUAL)/i;
+    // Kata kunci penjebak yang bukan total belanja
+    const excludeKeywords = /(TUNAI|CASH|KEMBALI|CHANGE|DISKON|DISC|HEMAT|VOUCHER|CARD|DEBIT|KREDIT|BCA|MANDIRI|BRI|BNI)/i;
+    const taxKeywords = /(PAJAK|TAX|PPN|PB1)/i;
 
-    // 3. Cari HARGA JUAL (Prioritas 2)
-    const hargaJualRegex = /\b(HARGA JUAL)\b\s*[:\s]*\s*Rp?\s*([\d.,]+)/i;
-    const jualMatch = text.match(hargaJualRegex);
-    if (jualMatch && jualMatch[2]) {
-      const amountStr = cleanNumberString(jualMatch[2]); // "77,400" -> "77400"
-      amount = parseFloat(amountStr);
-      return { amount: amount, description: description.substring(0, 50) };
-    }
+    let potentialTotals = [];
 
-    // 4. Fallback: Cari angka terbesar (Prioritas 3)
-    let maxAmount = 0;
-    const amountRegex = /([\d.,]+)/g;
-    let allNumbers = text.match(amountRegex) || [];
-    
-    // Kata kunci di baris yang harus diabaikan
-    const ignoreKeywords = /(TUNAI|KEMBALI|DPP|PPN|HEMAT|KCNG|AYAM|0811|811333)/i;
+    for (let i = lines.length - 1; i >= 0; i--) {
+        const line = lines[i];
+        if (!/\d/.test(line)) continue; // Skip jika tidak ada angka
+        if (excludeKeywords.test(line)) continue; // Skip jika ada kata terlarang
 
-    allNumbers.forEach(numStr => {
-      const cleanedNumStr = cleanNumberString(numStr); // "75,400" -> "75400", "0811..." -> "0811..."
-
-      // Filter 1: Bukan nomor telepon (terlalu panjang)
-      if (cleanedNumStr.length >= 10) { 
-        return; // Skip
-      }
-      // Filter 2: Bukan angka item (terlalu kecil)
-      if (cleanedNumStr.length < 4) { // Anggap total minimal 1.000
-        return;
-      }
-
-      // Filter 3: Cek seluruh baris tempat angka ini ditemukan
-      try {
-        const lineRegex = new RegExp(`.*${numStr.replace('.', '\\.').replace(',', ',')}.*`, "i");
-        const lineMatch = text.match(lineRegex);
-        if (lineMatch && lineMatch[0].match(ignoreKeywords)) {
-          return; // Skip baris yang mengandung TUNAI, KEMBALI, PPN, atau bagian dari no telp
+        if (grandTotalKeywords.test(line) && !taxKeywords.test(line)) {
+            // Prioritas TINGGI (2): Ada kata "TOTAL"
+            // Ambil angka paling kanan di baris ini
+            const words = line.split(/\s+/);
+            for (let j = words.length - 1; j >= 0; j--) {
+                 const val = normalizeAmount(words[j]);
+                 if (val >= 500) { // Minimal Rp 500 agar tidak salah ambil angka kecil/qty
+                     potentialTotals.push({ val, priority: 2 });
+                     break; 
+                 }
+            }
         }
-      } catch (e) {
-        // Abaikan error regex jika numStr mengandung karakter aneh
-      }
+        else if (i > lines.length / 2) { 
+             // Prioritas RENDAH (1): Tidak ada kata "TOTAL", tapi ada angka besar di paruh bawah struk
+             const val = normalizeAmount(line);
+             // Filter angka yang masuk akal untuk total belanja
+             if (val >= 1000 && val < 100000000 && line.length < 30) {
+                 potentialTotals.push({ val, priority: 1 });
+             }
+        }
+    }
 
-      const num = parseFloat(cleanedNumStr);
-      if (num > maxAmount) {
-        maxAmount = num;
-      }
+    // Urutkan: Prioritas tertinggi dulu, jika sama ambil nilai terbesar (asumsi total adalah angka terbesar yang valid)
+    potentialTotals.sort((a, b) => {
+        if (b.priority !== a.priority) return b.priority - a.priority;
+        return b.val - a.val;
     });
 
-    amount = maxAmount;
-
-    return {
-      amount: amount || 0,
-      description: description.substring(0, 50) // Batasi panjang deskripsi
-    };
+    if (potentialTotals.length > 0) {
+        amount = potentialTotals[0].val;
+    }
 
   } catch (error) {
-    console.error("Error parsing receipt text:", error);
-    return { amount: 0, description: 'Gagal parsing nota' };
+    console.error("Parsing error:", error);
   }
+
+  return {
+    amount,
+    description: description.substring(0, 30), // Batasi panjang deskripsi
+    date
+  };
 };
