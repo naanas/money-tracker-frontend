@@ -215,7 +215,7 @@ a {
   margin-top: 0.25rem;
 }
 
-/* [PERBAIKAN] Radio Button Group yang lebih rapi */
+/* Radio Button Group */
 .form-group-radio {
   display: flex;
   gap: 1rem;
@@ -231,8 +231,8 @@ a {
   gap: 0.5rem;
   cursor: pointer;
   font-weight: 500;
-  margin-bottom: 0; /* Override default label margin */
-  flex: 1; /* Agar area klik lebih luas */
+  margin-bottom: 0; 
+  flex: 1; 
 }
 .form-group-radio input[type="radio"] {
   width: 1.2rem;
@@ -255,6 +255,7 @@ button {
   cursor: pointer;
   transition: all 0.25s ease;
   width: 100%;
+  position: relative; /* Penting untuk spinner absolut */
 }
 button:hover:not(:disabled) {
   background-color: var(--color-primary-hover);
@@ -267,6 +268,22 @@ button:disabled {
   color: var(--color-text-muted);
   cursor: not-allowed;
 }
+
+/* [BARU] Tombol Loading Stabil */
+/* Gunakan kelas .is-loading pada button saat state loading aktif */
+button.is-loading {
+  color: transparent !important;
+  pointer-events: none;
+}
+button.is-loading .btn-spinner {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  margin-left: -10px; /* Setengah dari width 20px */
+  margin-top: -10px;  /* Setengah dari height 20px */
+  opacity: 1 !important; /* Pastikan spinner tetap terlihat walau teks transparan */
+}
+
 .btn-secondary {
   background-color: var(--color-bg-light);
   border: 1px solid var(--color-border);
@@ -449,6 +466,17 @@ button:disabled {
   grid-template-columns: 1fr; 
   gap: 1.5rem;
   margin-top: 0; 
+}
+
+/* [BARU] Wrapper Dashboard untuk Transisi Halus */
+.dashboard-content-wrapper {
+  overflow-x: hidden;
+  position: relative;
+  transition: opacity 0.2s ease;
+}
+.dashboard-content-wrapper.is-refreshing {
+  opacity: 0.6;
+  pointer-events: none;
 }
 
 /* Kartu dengan style baru */
@@ -829,10 +857,10 @@ button:disabled {
   text-align: center;
 }
 
-/* [PERBAIKAN] Tampilan Input Warna yang lebih konsisten */
+/* Tampilan Input Warna */
 .modal-content input[type="color"] {
   width: 100%;
-  height: 47px; /* Samakan dengan input text */
+  height: 47px; 
   padding: 0.25rem 0.5rem;
   background-color: var(--color-bg-light);
   border: 1px solid var(--color-border);
@@ -970,11 +998,11 @@ button:disabled {
   margin-bottom: 1rem;
 }
 
-/* [PERBAIKAN] Daftar kategori agar scroll lebih baik */
+/* Daftar kategori agar scroll lebih baik */
 .category-list-modal {
   flex-grow: 1;
   min-height: 150px;
-  max-height: 30vh; /* Gunakan unit viewport agar responsif */
+  max-height: 30vh; 
   overflow-y: auto;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-medium);
@@ -1703,14 +1731,38 @@ button:disabled {
 }
 
 
-/* === SKELETON LOADING === */
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+/* === SKELETON LOADING (SHIMMER EFFECT) === */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
 }
+
 .skeleton-loader {
-  animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  background: #f0f2f5; /* Warna dasar (light theme) */
+  background-image: linear-gradient(
+    90deg,
+    var(--color-bg-light) 25%,
+    var(--color-border) 37%, 
+    var(--color-bg-light) 63%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite linear;
 }
+
+:root[data-theme='dark'] .skeleton-loader {
+  background: var(--color-bg-light);
+  background-image: linear-gradient(
+    90deg,
+    var(--color-bg-light) 25%,
+    var(--color-border) 37%,
+    var(--color-bg-light) 63%
+  );
+}
+
 .skeleton-card {
   background-color: var(--color-bg-light); 
   padding: 1.5rem;
@@ -1720,7 +1772,6 @@ button:disabled {
 }
 .skeleton-line {
   height: 1rem;
-  background-color: var(--color-border);
   border-radius: var(--radius-small);
   margin-bottom: 0.75rem;
 }
@@ -1746,10 +1797,6 @@ button:disabled {
 }
 
 /* === Animasi Geser Bulan === */
-.dashboard-content-wrapper {
-  overflow-x: hidden;
-  position: relative;
-}
 @keyframes slideInFromLeft {
   0% { transform: translateX(100%); opacity: 0; }
   100% { transform: translateX(0); opacity: 1; }
