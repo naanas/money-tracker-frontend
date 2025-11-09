@@ -1,3 +1,5 @@
+// naanas/money-tracker-frontend/src/components/TransactionForm.jsx
+
 import React, { useState, useEffect, useRef } from 'react';
 import axiosClient from '../api/axiosClient';
 import { formatNumberInput, parseNumberInput } from '../utils/format';
@@ -20,37 +22,30 @@ const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCateg
   
   // --- STATE UI & LOADING ---
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false); // Loading saat submit transaksi
-  
-  // --- STATE KHUSUS OCR/UPLOAD ---
+  const [loading, setLoading] = useState(false); 
   const [receiptUrl, setReceiptUrl] = useState(null); 
-  const [isProcessing, setIsProcessing] = useState(false); // Loading saat scan struk
+  const [isProcessing, setIsProcessing] = useState(false); 
   const [processingStatus, setProcessingStatus] = useState(''); 
   
   const fileInputRef = useRef(null); 
 
-  // Filter kategori berdasarkan tipe (income/expense)
   const currentCategories = categories.filter(c => c.type === type && c.name !== 'Transfer');
 
-  // Set akun default jika belum dipilih
   useEffect(() => {
     if (!accountId && accounts.length > 0) {
       setAccountId(accounts[0].id);
     }
   }, [accounts, accountId]);
 
-  // Reset kategori jika tipe transaksi berubah
   useEffect(() => {
     setCategory('');
   }, [type]);
 
-  // === HANDLER 1: KLIK TOMBOL SCAN ===
   const handleScanClick = () => {
-    // Buka dialog pilih file
     fileInputRef.current.click();
   };
 
-  // === HANDLER 2: PROSES FILE SETELAH DIPILIH (INTI PERUBAHAN) ===
+  // === LOGIKA UTAMA SCAN ===
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (!file || !user) return;
@@ -60,7 +55,7 @@ const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCateg
     setProcessingStatus('Memulai proses...');
 
     try {
-      // 1. UPLOAD gambar ke Supabase Storage
+      // 1. Upload ke Supabase
       setProcessingStatus('Mengupload struk...');
       const fileExt = file.name.split('.').pop();
       const fileName = `${user.id}/${Date.now()}.${fileExt}`;
@@ -72,42 +67,34 @@ const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCateg
 
       if (uploadError) throw new Error(`Upload gagal: ${uploadError.message}`);
 
-      // 2. Dapatkan URL Publik gambar
       const { data: urlData } = supabase.storage
         .from(bucketName)
         .getPublicUrl(uploadData.path);
       const publicUrl = urlData.publicUrl;
-      setReceiptUrl(publicUrl); // Simpan URL untuk nanti dikirim saat submit form
+      setReceiptUrl(publicUrl);
 
-      // 3. PANGGIL API PYTHON (Gantikan Tesseract di sini)
+      // 2. Panggil API Python
       setProcessingStatus('🤖 AI sedang membaca struk...');
-      
-      // Ambil URL dari .env, atau hardcode jika belum ada .env
-      // const API_URL = "https://url-api-python-kamu.hf.space/parse-receipt"; 
       const API_URL = import.meta.env.VITE_PYTHON_API_URL; 
+      if (!API_URL) throw new Error("URL API Python belum disetting di .env");
 
-      if (!API_URL) {
-          throw new Error("URL API Python belum disetting di .env (VITE_PYTHON_API_URL)");
-      }
-
-      // Panggil API Python kita sendiri (bukan axiosClient karena ini mungkin beda domain/auth)
-      // Kita pakai 'fetch' atau 'axios' biasa. Jika API Python public, tidak perlu header auth khusus.
       const response = await fetch(API_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ url: publicUrl })
       });
 
-      if (!response.ok) {
-          throw new Error(`Gagal menghubungi API AI: ${response.statusText}`);
-      }
+      if (!response.ok) throw new Error(`Gagal menghubungi API AI: ${response.statusText}`);
 
       const result = await response.json();
 
       if (result.success && result.data) {
+          // Ambil data hasil scan
           const { total, date: detectedDate, merchant } = result.data;
 
-          // --- ISI FORM OTOMATIS DARI HASIL AI ---
+          // --- AUTO-FILL LOGIC DI SINI ---
+          
+          // 1. Isi Jumlah
           if (total > 0) {
               setAmount(total.toString());
               setProcessingStatus(`✅ Sukses! Total: Rp ${total.toLocaleString('id-ID')}`);
@@ -115,17 +102,21 @@ const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCateg
               setProcessingStatus('⚠️ Struk terbaca, tapi total tidak ditemukan otomatis.');
           }
 
+          // 2. Isi Tanggal (Jika ditemukan di struk)
           if (detectedDate) {
               setDate(detectedDate);
           }
 
-          if (merchant && merchant !== "Tidak diketahui") {
-              setDescription(`Belanja di ${merchant}`);
+          // 3. Isi Deskripsi (Nama Toko)
+          if (merchant && merchant !== "Merchant" && merchant !== "Tidak diketahui") {
+              // Bersihkan nama merchant dari karakter aneh jika ada
+              const cleanMerchant = merchant.replace(/[^a-zA-Z0-9\s.,&-]/g, '').trim();
+              setDescription(`Belanja di ${cleanMerchant}`);
           } else {
               setDescription('Belanja harian');
           }
 
-          setType('expense'); // Struk biasanya pengeluaran
+          setType('expense'); 
       }
 
     } catch (err) {
@@ -134,16 +125,12 @@ const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCateg
       setProcessingStatus('');
     } finally {
       setIsProcessing(false);
-      if (fileInputRef.current) {
-          fileInputRef.current.value = ''; // Reset input file agar bisa pilih file yang sama lagi
-      }
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
-  // === HANDLER 3: SUBMIT FORM KE BACKEND ===
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // Validasi dasar
     if (!category && currentCategories.length > 0) { setError('Pilih kategori'); return; }
     if (!accountId) { setError('Pilih akun'); return; }
 
@@ -151,7 +138,6 @@ const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCateg
     setError('');
     
     try {
-      // Kirim data transaksi ke backend Node.js kita
       await axiosClient.post('/api/transactions', {
         amount: parseFloat(amount),
         category: category || (type === 'expense' ? 'Other Expenses' : 'Other Income'),
@@ -159,17 +145,16 @@ const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCateg
         description,
         date,
         account_id: accountId,
-        receipt_url: receiptUrl, // Sertakan URL struk jika ada
+        receipt_url: receiptUrl,
       });
       
-      // Reset form setelah berhasil
       setAmount('');
       setCategory('');
       setDescription('');
       setReceiptUrl(null);
       setProcessingStatus('');
-      setDate(getTodayDateString()); // Kembalikan tanggal ke hari ini
-      onTransactionAdded(); // Trigger refresh data di dashboard
+      setDate(getTodayDateString()); 
+      onTransactionAdded(); 
       
     } catch (err) {
       setError(err.response?.data?.error || 'Gagal menambah transaksi');
@@ -178,13 +163,10 @@ const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCateg
     }
   };
   
-  // Gabungan status loading untuk UI
   const isLoading = loading || isRefetching || isProcessing;
 
   return (
     <form onSubmit={handleSubmit} className="transaction-form" style={{ position: 'relative' }}>
-      
-      {/* OVERLAY LOADING SAAT SCANNING */}
       {isProcessing && (
         <div className="ocr-loading-overlay">
           <div className="btn-spinner"></div>
@@ -192,16 +174,8 @@ const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCateg
         </div>
       )}
 
-      {/* INPUT FILE RAHASIA (hidden) */}
-      <input
-        type="file"
-        accept="image/*"
-        ref={fileInputRef}
-        onChange={handleFileChange}
-        style={{ display: 'none' }}
-      />
+      <input type="file" accept="image/*" ref={fileInputRef} onChange={handleFileChange} style={{ display: 'none' }} />
       
-      {/* TOMBOL SCAN */}
       <button 
         type="button" 
         className="btn-secondary" 
@@ -212,26 +186,16 @@ const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCateg
         📸 Scan Struk dengan AI
       </button>
 
-      {/* STATUS TEXT (Bukan Error) */}
       {processingStatus && !isProcessing && !error && (
         <p className="success" style={{textAlign: 'center', margin: '-0.5rem 0 1rem 0', fontSize: '0.9rem'}}>
           {processingStatus}
         </p>
       )}
-
-      {/* ERROR MESSAGE */}
       {error && <p className="error">{error}</p>}
       
-      {/* --- INPUT FORM STANDAR --- */}
       <div className="form-group-radio">
-         <label>
-            <input type="radio" value="expense" checked={type === 'expense'} onChange={() => setType('expense')}/>
-            Pengeluaran
-         </label>
-         <label>
-            <input type="radio" value="income" checked={type === 'income'} onChange={() => setType('income')}/>
-            Pemasukan
-         </label>
+         <label><input type="radio" value="expense" checked={type === 'expense'} onChange={() => setType('expense')}/> Pengeluaran</label>
+         <label><input type="radio" value="income" checked={type === 'income'} onChange={() => setType('income')}/> Pemasukan</label>
       </div>
 
       <div className="form-group-inline">
@@ -239,22 +203,12 @@ const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCateg
             <label>Akun</label>
             <select value={accountId} onChange={(e) => setAccountId(e.target.value)} required>
                 <option value="" disabled>Pilih Akun</option>
-                {accounts.map(acc => (
-                  <option key={acc.id} value={acc.id}>{acc.name}</option>
-                ))}
+                {accounts.map(acc => (<option key={acc.id} value={acc.id}>{acc.name}</option>))}
             </select>
         </div>
         <div className="form-group" style={{ flex: 3 }}>
             <label>Jumlah</label>
-            <input 
-              type="text" 
-              inputMode="numeric" 
-              value={formatNumberInput(amount)} 
-              onChange={(e) => setAmount(parseNumberInput(e.target.value))} 
-              placeholder="0" 
-              required 
-              className="input-currency" 
-            />
+            <input type="text" inputMode="numeric" value={formatNumberInput(amount)} onChange={(e) => setAmount(parseNumberInput(e.target.value))} placeholder="0" required className="input-currency" />
         </div>
       </div>
 
@@ -263,40 +217,24 @@ const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCateg
           <label>Kategori</label>
           <select value={category} onChange={(e) => setCategory(e.target.value)} required>
             <option value="" disabled>Pilih Kategori</option>
-            {currentCategories.map(c => (
-              <option key={c.id || c.name} value={c.name}>{c.name}</option>
-            ))}
+            {currentCategories.map(c => (<option key={c.id || c.name} value={c.name}>{c.name}</option>))}
           </select>
         </div>
-        <button type="button" className="btn-new-category" onClick={onOpenCategoryModal} title="Tambah Kategori Baru">
-          Baru +
-        </button>
+        <button type="button" className="btn-new-category" onClick={onOpenCategoryModal} title="Tambah Kategori Baru">Baru +</button>
       </div>
 
       <div className="form-group-inline">
           <div className="form-group" style={{flex: 1}}>
             <label>Tanggal</label>
-            <input 
-              type="date" 
-              value={date} 
-              onChange={(e) => setDate(e.target.value)} 
-              required 
-            />
+            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
           </div>
           <div className="form-group" style={{flex: 2}}>
             <label>Deskripsi (Opsional)</label>
-            <input 
-              type="text" 
-              value={description} 
-              onChange={(e) => setDescription(e.target.value)} 
-              placeholder="Makan siang, bensin, dll." 
-            />
+            <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Makan siang, bensin, dll." />
           </div>
       </div>
 
-      <button type="submit" disabled={isLoading}>
-        {loading ? <div className="btn-spinner"></div> : 'Simpan Transaksi'}
-      </button>
+      <button type="submit" disabled={isLoading}>{loading ? <div className="btn-spinner"></div> : 'Simpan Transaksi'}</button>
     </form>
   );
 };
