@@ -1,147 +1,149 @@
-// naanas/money-tracker-frontend/src/components/TransactionForm.jsx
-
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axiosClient from '../api/axiosClient';
-import { createWorker } from 'tesseract.js';
-import { formatNumberInput, parseNumberInput, parseReceiptText } from '../utils/format';
+import { formatNumberInput, parseNumberInput } from '../utils/format';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../contexts/AuthContext';
 
 const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCategoryModal, selectedDate, isRefetching }) => {
   const { user } = useAuth(); 
   
+  // --- STATE FORM UTAMA ---
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState('');
   const [type, setType] = useState('expense');
   const [description, setDescription] = useState('');
   const [accountId, setAccountId] = useState(''); 
   
-  // Helper untuk tanggal hari ini YYYY-MM-DD
+  // Helper tanggal hari ini (YYYY-MM-DD)
   const getTodayDateString = () => new Date().toISOString().split('T')[0];
   const [date, setDate] = useState(getTodayDateString());
   
+  // --- STATE UI & LOADING ---
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false); 
+  const [loading, setLoading] = useState(false); // Loading saat submit transaksi
   
-  // State untuk OCR + Upload
+  // --- STATE KHUSUS OCR/UPLOAD ---
   const [receiptUrl, setReceiptUrl] = useState(null); 
-  const [isProcessing, setIsProcessing] = useState(false); 
+  const [isProcessing, setIsProcessing] = useState(false); // Loading saat scan struk
   const [processingStatus, setProcessingStatus] = useState(''); 
   
   const fileInputRef = useRef(null); 
-  const workerRef = useRef(null);
 
+  // Filter kategori berdasarkan tipe (income/expense)
   const currentCategories = categories.filter(c => c.type === type && c.name !== 'Transfer');
 
+  // Set akun default jika belum dipilih
   useEffect(() => {
     if (!accountId && accounts.length > 0) {
       setAccountId(accounts[0].id);
     }
   }, [accounts, accountId]);
 
+  // Reset kategori jika tipe transaksi berubah
   useEffect(() => {
     setCategory('');
   }, [type]);
 
-  // === [INISIALISASI TESSERACT DUAL BAHASA] ===
-  const initializeWorker = useCallback(async () => {
-    try {
-      if (workerRef.current === null) { 
-        setProcessingStatus('Memuat mesin OCR...');
-        // Muat Bahasa Indonesia DAN Inggris agar lebih akurat membaca "Total", "Cash", dll.
-        workerRef.current = await createWorker(['ind', 'eng'], 1, {
-          logger: m => {
-            if (m.status.includes('loading')) {
-               setProcessingStatus(`Memuat model... (${Math.round(m.progress * 100)}%)`);
-            } else if (m.status === 'recognizing text') {
-              setProcessingStatus(`Membaca gambar... (${Math.round(m.progress * 100)}%)`);
-            }
-          }
-        });
-        setProcessingStatus(''); 
-      }
-    } catch (err) {
-      console.error("Gagal inisialisasi OCR", err);
-      setError(`Fitur OCR gagal dimuat. Coba refresh halaman.`);
-      setProcessingStatus('');
-    }
-  }, []);
-
-  useEffect(() => {
-    initializeWorker();
-    return () => {
-      workerRef.current?.terminate();
-      workerRef.current = null;
-    }
-  }, [initializeWorker]);
-
-  // === [HANDLER UTAMA: SCAN & UPLOAD] ===
-  const handleScanAndUpload = () => {
-    if (!workerRef.current || processingStatus.includes('Memuat')) {
-      alert("Mesin OCR sedang disiapkan... Harap tunggu sebentar.");
-      return;
-    }
+  // === HANDLER 1: KLIK TOMBOL SCAN ===
+  const handleScanClick = () => {
+    // Buka dialog pilih file
     fileInputRef.current.click();
   };
 
+  // === HANDLER 2: PROSES FILE SETELAH DIPILIH (INTI PERUBAHAN) ===
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
-    if (!file || !workerRef.current || !user) return;
+    if (!file || !user) return;
 
     setIsProcessing(true);
     setError('');
-    setReceiptUrl(null);
+    setProcessingStatus('Memulai proses...');
 
     try {
+      // 1. UPLOAD gambar ke Supabase Storage
+      setProcessingStatus('Mengupload struk...');
       const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}/${new Date().getTime()}.${fileExt}`;
+      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
       const bucketName = 'receipts';
 
-      setProcessingStatus('Memindai & Mengupload...');
+      const { error: uploadError, data: uploadData } = await supabase.storage
+        .from(bucketName)
+        .upload(fileName, file);
 
-      // Jalankan Upload ke Supabase dan OCR Tesseract secara paralel
-      const uploadPromise = supabase.storage.from(bucketName).upload(fileName, file);
-      const ocrPromise = workerRef.current.recognize(file);
+      if (uploadError) throw new Error(`Upload gagal: ${uploadError.message}`);
 
-      const [uploadResult, ocrResult] = await Promise.all([uploadPromise, ocrPromise]);
+      // 2. Dapatkan URL Publik gambar
+      const { data: urlData } = supabase.storage
+        .from(bucketName)
+        .getPublicUrl(uploadData.path);
+      const publicUrl = urlData.publicUrl;
+      setReceiptUrl(publicUrl); // Simpan URL untuk nanti dikirim saat submit form
 
-      if (uploadResult.error) throw new Error(`Upload gagal: ${uploadResult.error.message}`);
+      // 3. PANGGIL API PYTHON (Gantikan Tesseract di sini)
+      setProcessingStatus('🤖 AI sedang membaca struk...');
       
-      // Dapatkan URL publik gambar
-      const { data: urlData } = supabase.storage.from(bucketName).getPublicUrl(uploadResult.data.path);
-      setReceiptUrl(urlData.publicUrl);
+      // Ambil URL dari .env, atau hardcode jika belum ada .env
+      // const API_URL = "https://url-api-python-kamu.hf.space/parse-receipt"; 
+      const API_URL = import.meta.env.VITE_PYTHON_API_URL; 
 
-      // Proses hasil teks OCR
-      setProcessingStatus('Menganalisis teks...');
-      const { data: { text } } = ocrResult;
-      // console.log("Raw OCR:", text); // Uncomment untuk debug hasil mentah
-
-      const parsedData = parseReceiptText(text); 
-
-      if (parsedData.amount === 0) {
-          setError('Total belanja tidak ditemukan otomatis. Mohon isi manual.');
-      } else {
-          setAmount(parsedData.amount.toString());
-          setProcessingStatus(`Sukses! Total terbaca: Rp ${parsedData.amount.toLocaleString('id-ID')}`);
+      if (!API_URL) {
+          throw new Error("URL API Python belum disetting di .env (VITE_PYTHON_API_URL)");
       }
 
-      setDescription(parsedData.description);
-      // Gunakan tanggal dari struk jika ada, jika tidak gunakan hari ini
-      setDate(parsedData.date || getTodayDateString());
-      setType('expense'); 
+      // Panggil API Python kita sendiri (bukan axiosClient karena ini mungkin beda domain/auth)
+      // Kita pakai 'fetch' atau 'axios' biasa. Jika API Python public, tidak perlu header auth khusus.
+      const response = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: publicUrl })
+      });
+
+      if (!response.ok) {
+          throw new Error(`Gagal menghubungi API AI: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+
+      if (result.success && result.data) {
+          const { total, date: detectedDate, merchant } = result.data;
+
+          // --- ISI FORM OTOMATIS DARI HASIL AI ---
+          if (total > 0) {
+              setAmount(total.toString());
+              setProcessingStatus(`✅ Sukses! Total: Rp ${total.toLocaleString('id-ID')}`);
+          } else {
+              setProcessingStatus('⚠️ Struk terbaca, tapi total tidak ditemukan otomatis.');
+          }
+
+          if (detectedDate) {
+              setDate(detectedDate);
+          }
+
+          if (merchant && merchant !== "Tidak diketahui") {
+              setDescription(`Belanja di ${merchant}`);
+          } else {
+              setDescription('Belanja harian');
+          }
+
+          setType('expense'); // Struk biasanya pengeluaran
+      }
 
     } catch (err) {
-      console.error("Error proses struk:", err);
+      console.error("Error processing receipt:", err);
       setError(err.message || 'Gagal memproses struk.');
       setProcessingStatus('');
+    } finally {
+      setIsProcessing(false);
+      if (fileInputRef.current) {
+          fileInputRef.current.value = ''; // Reset input file agar bisa pilih file yang sama lagi
+      }
     }
-    
-    setIsProcessing(false);
-    if (fileInputRef.current) fileInputRef.current.value = ''; // Reset input file
   };
 
+  // === HANDLER 3: SUBMIT FORM KE BACKEND ===
   const handleSubmit = async (e) => {
     e.preventDefault();
+    // Validasi dasar
     if (!category && currentCategories.length > 0) { setError('Pilih kategori'); return; }
     if (!accountId) { setError('Pilih akun'); return; }
 
@@ -149,6 +151,7 @@ const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCateg
     setError('');
     
     try {
+      // Kirim data transaksi ke backend Node.js kita
       await axiosClient.post('/api/transactions', {
         amount: parseFloat(amount),
         category: category || (type === 'expense' ? 'Other Expenses' : 'Other Income'),
@@ -156,59 +159,79 @@ const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCateg
         description,
         date,
         account_id: accountId,
-        receipt_url: receiptUrl, // Kirim URL struk (bisa null)
+        receipt_url: receiptUrl, // Sertakan URL struk jika ada
       });
       
-      // Reset form setelah sukses
+      // Reset form setelah berhasil
       setAmount('');
       setCategory('');
       setDescription('');
       setReceiptUrl(null);
       setProcessingStatus('');
-      setDate(getTodayDateString()); // Reset tanggal ke hari ini
-      onTransactionAdded(); 
+      setDate(getTodayDateString()); // Kembalikan tanggal ke hari ini
+      onTransactionAdded(); // Trigger refresh data di dashboard
       
     } catch (err) {
       setError(err.response?.data?.error || 'Gagal menambah transaksi');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
   
+  // Gabungan status loading untuk UI
   const isLoading = loading || isRefetching || isProcessing;
 
   return (
     <form onSubmit={handleSubmit} className="transaction-form" style={{ position: 'relative' }}>
-      {/* Overlay saat OCR berjalan */}
+      
+      {/* OVERLAY LOADING SAAT SCANNING */}
       {isProcessing && (
         <div className="ocr-loading-overlay">
           <div className="btn-spinner"></div>
-          <p>{processingStatus || 'Memproses...'}</p>
+          <p>{processingStatus}</p>
         </div>
       )}
 
-      <input type="file" accept="image/*" ref={fileInputRef} onChange={handleFileChange} style={{ display: 'none' }} />
+      {/* INPUT FILE RAHASIA (hidden) */}
+      <input
+        type="file"
+        accept="image/*"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        style={{ display: 'none' }}
+      />
       
+      {/* TOMBOL SCAN */}
       <button 
         type="button" 
         className="btn-secondary" 
-        onClick={handleScanAndUpload}
+        onClick={handleScanClick}
         disabled={isLoading}
         style={{ marginBottom: '1rem', background: 'var(--color-bg-light)' }}
       >
-        📸 Pindai / Upload Struk
+        📸 Scan Struk dengan AI
       </button>
 
+      {/* STATUS TEXT (Bukan Error) */}
       {processingStatus && !isProcessing && !error && (
-        <p className="success" style={{textAlign: 'center', margin: '-0.5rem 0 1rem 0'}}>
+        <p className="success" style={{textAlign: 'center', margin: '-0.5rem 0 1rem 0', fontSize: '0.9rem'}}>
           {processingStatus}
         </p>
       )}
 
+      {/* ERROR MESSAGE */}
       {error && <p className="error">{error}</p>}
       
+      {/* --- INPUT FORM STANDAR --- */}
       <div className="form-group-radio">
-         <label><input type="radio" value="expense" checked={type === 'expense'} onChange={() => setType('expense')}/> Pengeluaran</label>
-         <label><input type="radio" value="income" checked={type === 'income'} onChange={() => setType('income')}/> Pemasukan</label>
+         <label>
+            <input type="radio" value="expense" checked={type === 'expense'} onChange={() => setType('expense')}/>
+            Pengeluaran
+         </label>
+         <label>
+            <input type="radio" value="income" checked={type === 'income'} onChange={() => setType('income')}/>
+            Pemasukan
+         </label>
       </div>
 
       <div className="form-group-inline">
@@ -216,12 +239,22 @@ const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCateg
             <label>Akun</label>
             <select value={accountId} onChange={(e) => setAccountId(e.target.value)} required>
                 <option value="" disabled>Pilih Akun</option>
-                {accounts.map(acc => (<option key={acc.id} value={acc.id}>{acc.name}</option>))}
+                {accounts.map(acc => (
+                  <option key={acc.id} value={acc.id}>{acc.name}</option>
+                ))}
             </select>
         </div>
         <div className="form-group" style={{ flex: 3 }}>
             <label>Jumlah</label>
-            <input type="text" inputMode="numeric" value={formatNumberInput(amount)} onChange={(e) => setAmount(parseNumberInput(e.target.value))} placeholder="0" required className="input-currency" />
+            <input 
+              type="text" 
+              inputMode="numeric" 
+              value={formatNumberInput(amount)} 
+              onChange={(e) => setAmount(parseNumberInput(e.target.value))} 
+              placeholder="0" 
+              required 
+              className="input-currency" 
+            />
         </div>
       </div>
 
@@ -230,25 +263,39 @@ const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCateg
           <label>Kategori</label>
           <select value={category} onChange={(e) => setCategory(e.target.value)} required>
             <option value="" disabled>Pilih Kategori</option>
-            {currentCategories.map(c => (<option key={c.id || c.name} value={c.name}>{c.name}</option>))}
+            {currentCategories.map(c => (
+              <option key={c.id || c.name} value={c.name}>{c.name}</option>
+            ))}
           </select>
         </div>
-        <button type="button" className="btn-new-category" onClick={onOpenCategoryModal} title="Buat Kategori Baru">Baru +</button>
+        <button type="button" className="btn-new-category" onClick={onOpenCategoryModal} title="Tambah Kategori Baru">
+          Baru +
+        </button>
       </div>
 
       <div className="form-group-inline">
           <div className="form-group" style={{flex: 1}}>
             <label>Tanggal</label>
-            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
+            <input 
+              type="date" 
+              value={date} 
+              onChange={(e) => setDate(e.target.value)} 
+              required 
+            />
           </div>
           <div className="form-group" style={{flex: 2}}>
             <label>Deskripsi (Opsional)</label>
-            <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Makan siang, dll." />
+            <input 
+              type="text" 
+              value={description} 
+              onChange={(e) => setDescription(e.target.value)} 
+              placeholder="Makan siang, bensin, dll." 
+            />
           </div>
       </div>
 
       <button type="submit" disabled={isLoading}>
-        {loading ? <div className="btn-spinner"></div> : 'Tambah'}
+        {loading ? <div className="btn-spinner"></div> : 'Simpan Transaksi'}
       </button>
     </form>
   );
