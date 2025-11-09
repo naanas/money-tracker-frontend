@@ -1,4 +1,4 @@
-/* naanas/money-tracker-frontend/money-tracker-frontend-93f64fc0bdf098eeeda4e51adbfa651c35390e0c/src/index.css */
+/* naanas/money-tracker-frontend/src/index.css */
 
 /* === [BARU] Variabel Non-Warna (Berlaku di semua tema) === */
 :root {
@@ -104,27 +104,25 @@ a {
   transition: color 0.2s ease-in-out, background-color 0.2s ease-in-out;
 }
 
-/* === [MODIFIKASI] AUTH LAYOUT (LOGIN/REGISTER) === */
+/* === AUTH LAYOUT (LOGIN/REGISTER) === */
 .auth-layout {
   display: flex;
-  flex-direction: column; /* Mengatur tumpukan vertikal */
-  align-items: center;    /* Pusatkan horizontal */
-  justify-content: center; /* Pusatkan vertikal */
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   width: 100%;
-  min-height: 100vh; /* Pastikan mengisi layar */
-  padding: 2rem;          /* Beri padding untuk mobile */
-  background: var(--gradient-auth); /* Gunakan gradient di seluruh latar */
+  min-height: 100vh;
+  padding: 2rem;
+  background: var(--gradient-auth);
   transition: background-image 0.3s ease;
 }
 
-/* [BARU] Container untuk branding dan card */
 .auth-container {
   width: 100%;
-  max-width: 450px; /* Lebar maksimum konten */
+  max-width: 450px;
   margin: 0 auto;
 }
 
-/* [BARU] Styling untuk branding di atas */
 .auth-branding-top {
   text-align: center;
   margin-bottom: 2rem;
@@ -142,11 +140,10 @@ a {
   margin-top: 0.5rem;
 }
 
-/* [BARU] Card yang membungkus form */
 .auth-card {
   background-color: var(--color-bg-medium);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-large); /* Radius lebih besar */
+  border-radius: var(--radius-large);
   padding: 2.5rem;
   box-shadow: var(--shadow-medium);
   transition: background-color 0.3s ease, border-color 0.3s ease;
@@ -156,10 +153,9 @@ a {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
-/* [MODIFIKASI] .auth-form-container sekarang ada di dalam .auth-card */
 .auth-card .auth-form-container {
   width: 100%;
-  max-width: 100%; /* Hapus max-width lama */
+  max-width: 100%;
   margin: 0;
 }
 
@@ -171,21 +167,19 @@ a {
   width: 100%;
 }
 
-/* [MODIFIKASI] Judul form di dalam card */
 .auth-card h2 {
-  text-align: center; /* Pusatkan judul form */
+  text-align: center;
   margin-top: 0;
-  margin-bottom: 0.5rem; /* Kurangi margin bawah */
+  margin-bottom: 0.5rem;
   font-size: 1.75rem;
 }
 
-/* [MODIFIKASI] Welcome text di dalam card */
 .auth-card .auth-welcome {
-  text-align: center; /* Pusatkan juga */
+  text-align: center;
   font-size: 1rem;
   font-weight: 400;
   color: var(--color-text-muted);
-  margin-bottom: 2rem; /* Beri jarak ke form */
+  margin-bottom: 2rem;
 }
 
 
@@ -271,9 +265,8 @@ button:disabled {
   box-shadow: none;
 }
 
-/* [MODIFIKASI] Teks link di bawah form */
 .auth-card p {
-  text-align: center; /* Pusatkan link "Daftar di sini" */
+  text-align: center;
   margin-top: 1.5rem;
   font-size: 0.9rem;
   color: var(--color-text-muted);
@@ -388,23 +381,45 @@ button:disabled {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 1rem;
+  gap: 0.5rem;
   margin-bottom: 1.5rem;
   background-color: var(--color-bg-medium);
-  padding: 0.5rem;
+  padding: 0.75rem;
   border-radius: var(--radius-medium);
   transition: background-color 0.3s ease;
 }
 .month-navigator button {
-  width: auto;
-  font-size: 1.5rem;
-  padding: 0.25rem 1rem;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border-radius: var(--radius-medium);
+  border: 1px solid var(--color-border);
   background-color: var(--color-bg-light);
+  color: var(--color-text-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1;
+  transition: all 0.2s ease-out;
 }
 .month-navigator button:hover:not(:disabled) {
   background-color: var(--color-primary);
   border-color: var(--color-primary);
   color: var(--color-button-text);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px var(--color-primary-glow-shadow);
+}
+.month-navigator button:active:not(:disabled) {
+  transform: translateY(0px) scale(0.98);
+  box-shadow: none;
+}
+.month-navigator button:disabled {
+  background-color: var(--color-bg-medium);
+  color: var(--color-border);
+  border-color: var(--color-border);
+  opacity: 0.7;
   transform: none;
   box-shadow: none;
 }
@@ -418,9 +433,9 @@ button:disabled {
 /* Grid Dashboard */
 .dashboard-grid {
   display: grid;
-  grid-template-columns: 1fr; /* [DIUBAH] Default 1 kolom */
+  grid-template-columns: 1fr; 
   gap: 1.5rem;
-  margin-top: 0; /* [DIUBAH] Margin atas diatur oleh tabs */
+  margin-top: 0; 
 }
 
 /* Kartu dengan style baru */
@@ -492,7 +507,6 @@ button:disabled {
   grid-column: span 1 / span 1;
 }
 
-/* === [PERBAIKAN] CSS Selector diubah ke .card-budget-pocket === */
 .card-budget-pocket .budget-info {
   display: flex;
   justify-content: space-between;
@@ -505,7 +519,6 @@ button:disabled {
   color: var(--color-text);
   margin-top: 0.5rem;
 }
-/* === [AKHIR PERBAIKAN] === */
 
 .progress-bar-container {
   width: 100%;
@@ -681,12 +694,10 @@ button:disabled {
 .card-list .list-item {
   position: relative; 
   display: flex;
-  /* Hapus padding, akan ditangani oleh wrapper */
   padding: 0; 
   border-bottom: 1px solid var(--color-border);
   border-radius: var(--radius-small);
 }
-/* Hapus hover dari list-item */
 .card-list .list-item:hover {
   background-color: transparent;
 }
@@ -696,7 +707,6 @@ button:disabled {
 .card-list .list-item .list-item-details {
   display: flex;
   flex-direction: column;
-  /* Hapus padding-left, ditangani oleh wrapper */
   padding-left: 0; 
   flex-grow: 1;
 }
@@ -713,7 +723,7 @@ button:disabled {
   left: 0;
   top: 50%;
   transform: translateY(-50%);
-  z-index: 5; /* Pastikan di atas area klik */
+  z-index: 5;
   width: 24px;
   height: 24px;
   padding: 0;
@@ -738,8 +748,6 @@ button:disabled {
   color: white;
 }
 .card-list.full-height-card {
-  /* [DIUBAH] Tidak lagi span 2 row by default */
-  /* grid-row: span 2; */
   display: flex;
   flex-direction: column;
 }
@@ -749,14 +757,12 @@ button:disabled {
   max-height: 600px; 
   padding-right: 10px; 
 }
-/* [BARU] Wrapper di dalam list item yang bisa diklik */
 .list-item-clickable-area {
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-grow: 1;
   padding: 1rem 0.5rem;
-  /* Tambahkan padding kiri untuk memberi ruang bagi tombol hapus */
   padding-left: 30px; 
   cursor: pointer;
   transition: background-color 0.2s ease;
@@ -779,6 +785,8 @@ button:disabled {
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  /* [BARU] Pastikan backdrop menutupi semuanya dan siap untuk scrolling di dalamnya jika konten terlalu tinggi */
+  padding: 1rem; 
 }
 :root[data-theme='light'] .modal-backdrop {
   background-color: rgba(0, 0, 0, 0.6);
@@ -793,7 +801,14 @@ button:disabled {
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
   animation: modal-fade-in 0.3s ease;
   transition: background-color 0.3s ease, border-color 0.3s ease;
+
+  /* === [PERBAIKAN UTAMA UNTUK SEMUA MODAL] === */
+  max-height: 90vh; /* Maksimal tinggi 90% dari layar */
+  overflow-y: auto; /* Scroll vertikal jika kontennya panjang */
+  display: flex;
+  flex-direction: column;
 }
+
 @keyframes modal-fade-in {
   from { opacity: 0; transform: translateY(-20px); }
   to { opacity: 1; transform: translateY(0); }
@@ -1131,13 +1146,7 @@ button:disabled {
 .card-savings {
   grid-column: span 1;
 }
-/*
-@media (min-width: 1024px) {
-  .card-savings {
-    grid-column: span 2 / span 2; 
-  }
-}
-*/
+
 .savings-form .form-group-triple {
     grid-template-columns: 1fr;
     gap: 1rem;
@@ -1200,17 +1209,16 @@ button:disabled {
 
 /* === MEDIA QUERIES (MOBILE) === */
 @media (max-width: 768px) {
-  /* [MODIFIKASI] Auth layout di mobile */
   .auth-layout {
     padding: 1rem;
-    justify-content: flex-start; /* Mulai dari atas di mobile */
+    justify-content: flex-start; 
     padding-top: 3rem;
   }
   .auth-container {
     max-width: 100%;
   }
   .auth-card {
-    padding: 2rem 1.5rem; /* Kurangi padding card di mobile */
+    padding: 2rem 1.5rem; 
   }
   .auth-branding-top h1 {
     font-size: 2rem;
@@ -1230,7 +1238,7 @@ button:disabled {
   }
   .main-content {
     padding: 1rem;
-    padding-bottom: 100px; /* Ruang untuk nav & FAB */
+    padding-bottom: 100px; 
     background-image: var(--gradient-mobile);
   }
   .mobile-header {
@@ -1302,10 +1310,15 @@ button:disabled {
   .card {
     padding: 1rem;
   }
+
+  /* === [PERBAIKAN KHUSUS MOBILE MODAL] === */
   .modal-content {
-    max-width: 90%;
-    padding: 1.5rem;
+    max-width: 95%; /* Gunakan hampir seluruh lebar layar */
+    padding: 1.5rem; /* Padding lebih kecil untuk hemat ruang */
+    max-height: 85vh; /* Beri sedikit ruang di atas/bawah */
   }
+  /* === [AKHIR PERBAIKAN] === */
+
   .modal-actions {
     flex-direction: column;
     gap: 0.75rem;
@@ -1366,9 +1379,16 @@ button:disabled {
     grid-template-columns: 1fr;
   }
 
-  /* [DIHAPUS] Sembunyikan FAB Theme Toggle di mobile */
   .main-content > .theme-switch {
      display: none;
+  }
+
+  .sidebar-footer .theme-switch {
+    display: none;
+  }
+  
+  .dashboard-tabs {
+    display: flex;
   }
 }
 
@@ -1431,13 +1451,12 @@ button:disabled {
 .account-list {
   margin-top: 1.5rem;
 }
-/* === [BARU] CSS UNTUK AKUN SWIPE === */
 
+/* === CSS UNTUK AKUN SWIPE === */
 .pocket-item-swipe-wrapper {
   position: relative;
   overflow: hidden;
   border-radius: var(--radius-large);
-  /* Latar belakang dipindah ke wrapper agar tombol tersembunyi terlihat */
   background-color: var(--color-bg-light); 
   transition: background-color 0.3s ease;
 }
@@ -1448,14 +1467,14 @@ button:disabled {
   right: 0;
   height: 100%;
   display: flex;
-  align-items: stretch; /* Membuat tombol setinggi kartu */
+  align-items: stretch; 
 }
 
 .pocket-action-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 80px; /* Lebar setiap tombol */
+  width: 80px; 
   border: none;
   border-radius: 0;
   font-size: 0.9rem;
@@ -1480,24 +1499,21 @@ button:disabled {
 }
 
 .pocket-item-content {
-  /* Ini adalah kartu yang terlihat dan bisa digeser */
   position: relative;
   background-color: var(--color-bg-medium);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-large);
   padding: 1rem;
   transition: transform 0.3s ease-out, background-color 0.3s ease, border-color 0.3s ease;
-  z-index: 2; /* Pastikan di atas tombol */
-  cursor: grab; /* Tanda bisa digeser */
+  z-index: 2; 
+  cursor: grab; 
 }
 
 .pocket-item-content.swiped-open {
-  /* Geser ke kiri sejauh 160px (2 tombol x 80px) */
   transform: translateX(-160px);
-  cursor: default; /* Tidak perlu digeser lagi jika sudah terbuka */
+  cursor: default; 
 }
 
-/* Di desktop, kita tidak ingin ada swipe. Cukup hover */
 @media (min-width: 769px) {
   .pocket-item-content {
     cursor: default;
@@ -1506,7 +1522,6 @@ button:disabled {
     transform: translateX(-160px);
   }
   .pocket-item-content.swiped-open {
-     /* Hapus state swipe di desktop agar hover bisa mengontrol */
     transform: translateX(0);
   }
 }
@@ -1526,14 +1541,10 @@ button:disabled {
   grid-template-columns: 1fr;
   gap: 1.5rem;
 }
-/* === [MODIFIKASI] Grid Laporan untuk Desktop === */
 @media (min-width: 1024px) {
-  /* ... (style .summary-layout, .forms-layout, dll. tetap di sini) ... */
-
   .reports-grid {
     grid-template-columns: 1fr 1fr; 
   }
-  /* [BARU] Atur chart pertama (Line) agar span 2 kolom */
   .reports-grid .chart-container:first-child {
     grid-column: span 1 / -1;
   }
@@ -1542,7 +1553,6 @@ button:disabled {
 .chart-container {
   padding: 1.5rem;
   position: relative;
-  /* [MODIFIKASI] Menggunakan min-height agar konsisten */
   min-height: 400px;
 }
 .list-item-details span {
@@ -1589,8 +1599,7 @@ button:disabled {
   color: var(--color-text-muted);
 }
 
-/* === [MODIFIKASI] ENHANCEMENT HALAMAN LOGIN === */
-/* Style .auth-welcome sudah diatur di dalam .auth-card */
+/* === ENHANCEMENT HALAMAN LOGIN === */
 .auth-welcome {
   font-size: 1.1rem;
   font-weight: 500;
@@ -1639,7 +1648,6 @@ button:disabled {
   text-decoration: underline;
 }
 
-/* Style .auth-switch-page sudah di-handle oleh .auth-card p */
 .auth-switch-page {
   text-align: center;
   margin-top: 1.5rem;
@@ -1663,7 +1671,6 @@ button:disabled {
   color: var(--color-accent-error);
   font-weight: 600;
 }
-/* Sembunyikan error default jika .auth-error-box digunakan */
 .auth-card p.error {
   display: none;
 }
@@ -1801,53 +1808,15 @@ input:checked + .theme-slider .slider-icon {
    transform: translateX(26px);
 }
 
-/* [DESKTOP] Toggle di Sidebar */
 .sidebar-footer .theme-switch {
   display: inline-block;
   margin-bottom: 1rem;
 }
-/* [DIHAPUS] Sembunyikan toggle mobile (yang ada di main-content) */
 .main-content > .theme-switch {
   display: none;
 }
 
-
-/* === [MODIFIKASI] MEDIA QUERIES (MOBILE) === */
-@media (max-width: 768px) {
-  /* ... (semua style mobile Anda yang lain) ... */
-  
-  .main-content {
-    padding-bottom: 100px; /* Ruang untuk nav & FAB */
-  }
-  
-  /* [BARU] Logika Mobile: */
-  /* 1. Sembunyikan toggle di sidebar */
-  .sidebar-footer .theme-switch {
-    display: none;
-  }
-  
-  /* 2. [DIHAPUS] FAB Theme toggle tidak lagi ada */
-  /*
-  .main-content > .theme-switch {
-    ...
-  }
-  */
-
-  /* 3. [MODIFIKASI] .dashboard-tabs sekarang Tampil di mobile */
-  .dashboard-tabs {
-    display: flex;
-  }
-  
-  /* 4. [DIHAPUS] FAB mobile tidak lagi ditampilkan */
-  /*
-  .mobile-fab-container {
-    display: none;
-  }
-  */
-}
-
-/* === [MODIFIKASI] STYLING UNTUK DASHBOARD TABS === */
-
+/* === STYLING UNTUK DASHBOARD TABS === */
 .dashboard-tabs {
   display: flex;
   gap: 0.5rem;
@@ -1855,16 +1824,16 @@ input:checked + .theme-slider .slider-icon {
   padding: 0.5rem;
   border-radius: var(--radius-medium);
   margin-bottom: 1.5rem;
-  overflow-x: auto; /* Memastikan bisa di-scroll di mobile jika tab terlalu banyak */
+  overflow-x: auto; 
 }
 .dashboard-tabs button {
-  width: 100%; /* Lebar penuh dibagi rata */
+  width: 100%; 
   background-color: var(--color-bg-light);
   color: var(--color-text-muted);
   font-weight: 500;
   border: none;
   padding: 0.75rem 1rem;
-  white-space: nowrap; /* Mencegah teks tab terpotong */
+  white-space: nowrap; 
 }
 .dashboard-tabs button:hover {
   background-color: var(--color-border);
@@ -1883,19 +1852,14 @@ input:checked + .theme-slider .slider-icon {
   color: var(--color-text-muted);
 }
 
-
-
-/* [MODIFIKASI] dashboard-grid sekarang adalah layout dasar 1 kolom */
 .dashboard-grid {
   display: grid;
   grid-template-columns: 1fr;
   gap: 1.5rem;
-  margin-top: 0; /* Margin atas sudah diatur oleh .dashboard-tabs */
+  margin-top: 0; 
 }
 
-/* [MODIFIKASI] Layout grid spesifik per tab (HANYA DESKTOP) */
 @media (min-width: 1024px) {
-  /* Layout untuk Tab Ringkasan */
   .dashboard-grid.summary-layout {
     grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   }
@@ -1910,32 +1874,27 @@ input:checked + .theme-slider .slider-icon {
     grid-column: span 1; 
   }
 
-  /* Layout untuk Tab Input Form */
   .dashboard-grid.forms-layout {
     grid-template-columns: 1fr 1fr;
-    align-items: start; /* Mencegah card meregang tinggi */
+    align-items: start; 
   }
 
-  /* Layout untuk Tab Budget & Tabungan (dibuat lebih sempit) */
   .dashboard-grid.budget-layout,
   .dashboard-grid.savings-layout {
     grid-template-columns: 1fr;
-    max-width: 1000px; /* Agar tidak terlalu lebar di layar besar */
+    max-width: 1000px; 
     margin: 0 auto;
   }
   
-  /* [MODIFIKASI] Grid Laporan untuk Desktop */
   .reports-grid {
     grid-template-columns: 1fr 1fr;
   }
-  /* [BARU] Atur chart pertama (Line) agar span 2 kolom */
   .reports-grid .chart-container:first-child {
     grid-column: span 1 / -1;
   }
 }
 
-
-/* === [MODIFIKASI] Mobile Dropdown Menu (Pojok Kanan Atas di Header) === */
+/* === Mobile Dropdown Menu === */
 .mobile-menu-container {
   position: relative;
   display: inline-block;
@@ -1962,16 +1921,16 @@ input:checked + .theme-slider .slider-icon {
 
 .mobile-menu-dropdown {
   position: absolute;
-  top: calc(100% + 10px); /* 10px below the toggle */
+  top: calc(100% + 10px); 
   right: 0;
-  background-color: var(--color-bg-light); /* Lighter than header */
+  background-color: var(--color-bg-light); 
   border: 1px solid var(--color-border);
   border-radius: var(--radius-medium);
   box-shadow: var(--shadow-medium);
-  width: 200px; /* Fixed width */
+  width: 200px; 
   z-index: 101;
-  overflow: hidden; /* To clip the button radius */
-  animation: modal-fade-in 0.2s ease-out; /* Use existing animation */
+  overflow: hidden; 
+  animation: modal-fade-in 0.2s ease-out; 
 }
 
 .mobile-menu-dropdown button {
@@ -1996,35 +1955,32 @@ input:checked + .theme-slider .slider-icon {
   box-shadow: none;
 }
 
-/* Make reset button have red text for caution */
 .mobile-menu-dropdown button.menu-item-reset {
   color: var(--color-accent-error);
   font-weight: 600;
 }
 .mobile-menu-dropdown button.menu-item-reset:hover {
-  background-color: rgba(248, 113, 113, 0.1); /* Red-ish hover */
+  background-color: rgba(248, 113, 113, 0.1); 
 }
 
-/* [BARU] Style untuk item ThemeToggle di dalam dropdown */
 .mobile-menu-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.5rem 1rem; /* Padding vertikal lebih kecil untuk switch */
+  padding: 0.5rem 1rem; 
   border-bottom: 1px solid var(--color-border);
   color: var(--color-text);
   font-weight: 500;
   font-size: 1rem;
 }
 
-/* [BARU] Perkecil ukuran theme-switch di dalam menu */
 .mobile-menu-item .theme-switch {
-  transform: scale(0.8); /* 80% ukuran asli */
+  transform: scale(0.8); 
 }
 
-/* === [BARU] STYLING UNTUK MODAL DETAIL TRANSAKSI === */
+/* === STYLING UNTUK MODAL DETAIL TRANSAKSI === */
 .transaction-detail-modal {
-  max-width: 450px; /* Sedikit lebih lebar dari modal kategori */
+  max-width: 450px; 
 }
 .transaction-detail-modal .detail-description {
   text-align: center;
@@ -2091,56 +2047,43 @@ input:checked + .theme-slider .slider-icon {
   transform: scale(1.02);
 }
 
-/* === [PERBAIKAN] Mempercantik Navigasi Bulan === */
-
+/* === Navigasi Bulan === */
 .month-navigator {
-  /* Perkecil jarak antar elemen agar lebih menyatu */
   gap: 0.5rem;
-  padding: 0.75rem; /* Sesuaikan padding container */
+  padding: 0.75rem; 
 }
 
 .month-navigator button {
-  /* 1. Buat bentuknya jadi kotak */
   width: 44px;
   height: 44px;
   padding: 0;
-  
-  /* 2. Atur radius (sesuai container) & border */
   border-radius: var(--radius-medium);
   border: 1px solid var(--color-border);
   background-color: var(--color-bg-light);
   color: var(--color-text-muted);
-
-  /* 3. Pusatkan ikon panah (< >) */
   display: inline-flex;
   align-items: center;
   justify-content: center;
   font-size: 1.5rem;
   font-weight: 600;
   line-height: 1;
-
-  /* 4. Pastikan transisi mulus */
   transition: all 0.2s ease-out;
 }
 
 .month-navigator button:hover:not(:disabled) {
-  /* 5. Efek hover yang lebih "pop" */
   background-color: var(--color-primary);
   border-color: var(--color-primary);
   color: var(--color-button-text);
-  /* Gunakan transform dan shadow dari style utama */
   transform: translateY(-2px);
   box-shadow: 0 6px 12px var(--color-primary-glow-shadow);
 }
 
 .month-navigator button:active:not(:disabled) {
-  /* 6. Efek saat ditekan */
   transform: translateY(0px) scale(0.98);
   box-shadow: none;
 }
 
 .month-navigator button:disabled {
-  /* 7. Style disabled yang lebih jelas */
   background-color: var(--color-bg-medium);
   color: var(--color-border);
   border-color: var(--color-border);
@@ -2150,12 +2093,10 @@ input:checked + .theme-slider .slider-icon {
 }
 
 .month-picker-input {
-  /* 8. Beri sedikit padding agar bisa di-hover */
   padding: 0.25rem 0.5rem;
-  width: 200px; /* Sedikit lebih sempit */
+  width: 200px; 
 }
 
-/* 9. Penyesuaian untuk Mobile */
 @media (max-width: 768px) {
   .month-navigator button {
     width: 40px;
