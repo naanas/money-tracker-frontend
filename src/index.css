@@ -2212,8 +2212,8 @@ input:checked + .theme-slider .slider-icon {
   position: fixed;
   bottom: 100px; /* 20px di atas nav mobile */
   right: 20px;
-  width: 60px;
-  height: 60px;
+  width: 50px;;
+  height: 50px;
   border-radius: 50%;
   background-color: var(--color-primary);
   color: var(--color-button-text);
