@@ -1900,7 +1900,7 @@ input:checked + .theme-slider .slider-icon {
   background-color: var(--color-bg-medium);
   padding: 0.5rem;
   border-radius: var(--radius-medium);
-  margin-bottom: 1.5rem;
+  margin-bottom: 5rem;
   overflow-x: auto; 
 }
 
