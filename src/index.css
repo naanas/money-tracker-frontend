@@ -1904,13 +1904,19 @@ input:checked + .theme-slider .slider-icon {
   overflow-x: auto; 
 }
 .dashboard-tabs button {
-  flex: 1; /* <-- SUDAH DIPERBAIKI */
+  width: auto;      /* <-- PERBAIKAN UTAMA DI SINI */
+  flex-shrink: 0; /* <-- TAMBAHAN: Mencegah tombol menyusut */
   background-color: var(--color-bg-light);
   color: var(--color-text-muted);
   font-weight: 500;
   border: none;
   padding: 0.75rem 1rem;
   white-space: nowrap; 
+}
+
+.modal-content .dashboard-tabs button {
+  flex: 1; /* Paksa 2 tombol untuk berbagi ruang 50/50 */
+  width: 50%; /* Bantu flexbox */
 }
 .dashboard-tabs button:hover {
   background-color: var(--color-border);
@@ -2188,7 +2194,7 @@ input:checked + .theme-slider .slider-icon {
 
 .fab {
   position: fixed;
-  bottom: 80px; /* 20px di atas nav mobile */
+  bottom: 80px; 
   right: 20px;
   width: 60px;
   height: 60px;
@@ -2196,14 +2202,13 @@ input:checked + .theme-slider .slider-icon {
   background-color: var(--color-primary);
   color: var(--color-button-text);
   font-size: 2.5rem;
-  /* line-height: 1; <-- DIHAPUS */
   display: flex;
   align-items: center;
   justify-content: center;
   box-shadow: var(--shadow-medium);
   border: 1px solid var(--color-primary-hover);
   z-index: 101; 
-  /* padding-bottom: 5px; <-- DIHAPUS */
+  padding: 0; /* <-- PERBAIKAN UTAMA DI SINI */
 }
 .fab:hover {
   transform: scale(1.1) translateY(-2px);
