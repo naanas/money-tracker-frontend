@@ -270,7 +270,7 @@ button:disabled {
 }
 
 /* [BARU] Tombol Loading Stabil */
-/* Gunakan kelas .is-loading pada button saat state loading aktif */
+/* Gunakan kelas .is-loading pada button saat state loadingaktif */
 button.is-loading {
   color: transparent !important;
   pointer-events: none;
@@ -1904,7 +1904,7 @@ input:checked + .theme-slider .slider-icon {
   overflow-x: auto; 
 }
 .dashboard-tabs button {
-  width: 100%; 
+  flex: 1; /* <-- INI PERBAIKANNYA */
   background-color: var(--color-bg-light);
   color: var(--color-text-muted);
   font-weight: 500;
@@ -2339,11 +2339,12 @@ input:checked + .theme-slider .slider-icon {
   align-items: center;
   justify-content: center;
   height: 100%;
-  padding: 0 0.25rem;
-  font-size: 0.85rem; /* Perkecil sedikit untuk 5 item */
+  padding: 0 0.2rem; /* Perkecil padding */
+  font-size: 0.8rem; /* <-- PERKECIL FONT DARI 0.85rem atau 0.95rem */
   color: var(--color-text-muted);
   text-decoration: none;
   font-weight: 500;
+  white-space: nowrap; /* Pastikan tidak terpotong */
 }
 .mobile-nav a.active {
   color: var(--color-primary);
