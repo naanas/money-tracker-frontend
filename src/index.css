@@ -1896,7 +1896,7 @@ input:checked + .theme-slider .slider-icon {
 /* === [PERBAIKAN FINAL] STYLING UNTUK DASHBOARD TABS === */
 .dashboard-tabs {
   display: flex;
-  gap: 0.5rem;
+  gap: 1rem;
   background-color: var(--color-bg-medium);
   padding: 0.5rem;
   border-radius: var(--radius-medium);
@@ -1940,7 +1940,7 @@ input:checked + .theme-slider .slider-icon {
 
 /* Aturan khusus HANYA untuk tab di dalam Modal */
 .modal-content .dashboard-tabs {
-  margin-bottom: 2rem; /* <-- PERBAIKAN JARAK */
+  margin-bottom: 5rem; /* <-- PERBAIKAN JARAK */
 }
 
 .modal-content .dashboard-tabs > button {
