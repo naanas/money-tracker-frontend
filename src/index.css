@@ -2224,26 +2224,63 @@ input:checked + .theme-slider .slider-icon {
   box-shadow: var(--shadow-medium);
   border: 1px solid var(--color-primary-hover);
   z-index: 101;
-  padding: 0; /* Pastikan padding 0 */
-  margin: 0; /* Pastikan margin 0 */
-  line-height: 1; /* Penting untuk teks/icon */
-  cursor: pointer; /* Tambahkan pointer cursor */
+  padding: 0;
+  margin: 0;
+  line-height: 1;
+  cursor: pointer;
+  text-decoration: none;
+  /* Reset tambahan untuk elemen button */
+  box-sizing: border-box;
+  outline: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
-/* Jika menggunakan elemen button, reset style tambahan */
-.fab {
-  box-sizing: border-box; /* Pastikan box-sizing konsisten */
+/* Pastikan icon "+" benar-benar di tengah */
+.fab::before {
+  content: "+";
+  display: block;
+  text-align: center;
+  width: 100%;
+  height: 100%;
+  line-height: 60px; /* Sama dengan height */
+  font-weight: 300;
+  margin: 0;
+  padding: 0;
 }
 
+/* Hover effects */
 .fab:hover {
   transform: scale(1.1) translateY(-2px);
   box-shadow: 0 8px 20px var(--color-primary-glow-shadow);
+  background-color: var(--color-primary-hover);
+}
+
+/* Active state */
+.fab:active {
+  transform: scale(1.05) translateY(0);
+  box-shadow: 0 4px 10px var(--color-primary-glow-shadow);
 }
 
 /* Sembunyikan di desktop */
 @media (min-width: 769px) {
   .fab {
     display: none;
+  }
+}
+
+/* Untuk mobile landscape */
+@media (max-height: 500px) and (max-width: 768px) {
+  .fab {
+    bottom: 80px;
+    right: 15px;
+    width: 50px;
+    height: 50px;
+    font-size: 2rem;
+  }
+  
+  .fab::before {
+    line-height: 50px; /* Sesuaikan dengan height baru */
   }
 }
 
