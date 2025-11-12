@@ -833,7 +833,8 @@ button.is-loading .btn-spinner {
 }
 .modal-content {
   background-color: var(--color-bg-medium);
-  padding: 1.5rem 2.5rem 2.5rem 2.5rem; /* <-- PADDING ATAS DIPERBAIKI */
+  /* Kita beri padding atas yang normal (2rem) */
+  padding: 2rem 2.5rem 2.5rem 2.5rem; 
   border-radius: var(--radius-large);
   border: 1px solid var(--color-border);
   width: 100%;
@@ -1939,15 +1940,25 @@ input:checked + .theme-slider .slider-icon {
 
 /* Aturan khusus HANYA untuk tab di dalam Modal */
 .modal-content .dashboard-tabs {
-  margin-top: -0.5rem;
   margin-bottom: 1.5rem; 
 }
 
 .modal-content .dashboard-tabs > button {
-  flex: 1;    /* Paksa 50/50 */
-  width: 50%; /* Paksa 50/50 */
+  flex: 1; 
+  width: 50%;
+  background-color: var(--color-bg-light);
+  color: var(--color-text-muted);
 }
-/* === AKHIR PERBAIKAN TAB === */
+.modal-content .dashboard-tabs > button.active {
+  background-color: var(--color-primary);
+  color: var(--color-button-text);
+  font-weight: 600;
+  box-shadow: 0 4px 10px var(--color-primary-glow-shadow);
+}
+.modal-content .dashboard-tabs > button:hover:not(.active) {
+  background-color: var(--color-border);
+  color: var(--color-text);
+}
 
 
 .dashboard-grid {
