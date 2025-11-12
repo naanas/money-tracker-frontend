@@ -2236,18 +2236,6 @@ input:checked + .theme-slider .slider-icon {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Pastikan icon "+" benar-benar di tengah */
-.fab::before {
-  content: "+";
-  display: block;
-  text-align: center;
-  width: 100%;
-  height: 100%;
-  line-height: 60px; /* Sama dengan height */
-  font-weight: 300;
-  margin: 0;
-  padding: 0;
-}
 
 /* Hover effects */
 .fab:hover {
