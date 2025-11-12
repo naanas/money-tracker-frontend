@@ -831,8 +831,6 @@ button.is-loading .btn-spinner {
 :root[data-theme='light'] .modal-backdrop {
   background-color: rgba(0, 0, 0, 0.6);
 }
-
-/* === PERBAIKAN #3: MODAL PADDING === */
 .modal-content {
   background-color: var(--color-bg-medium);
   padding: 2.5rem; /* <-- KEMBALIKAN PADDING ATAS */
@@ -1916,6 +1914,7 @@ input:checked + .theme-slider .slider-icon {
   white-space: nowrap;
   flex-shrink: 0;
   width: auto; /* Defaultnya auto */
+  /* Hapus width: 100% atau flex: 1 dari sini */
 }
 
 /* Aturan hover untuk SEMUA tombol tab (kecuali yg aktif) */
@@ -1941,8 +1940,7 @@ input:checked + .theme-slider .slider-icon {
 
 /* Aturan khusus HANYA untuk tab di dalam Modal */
 .modal-content .dashboard-tabs {
-  margin-bottom: 1.5rem; 
-  /* Hapus margin-top negatif */
+  margin-bottom: 2rem; /* <-- PERBAIKAN JARAK */
 }
 
 .modal-content .dashboard-tabs > button {
