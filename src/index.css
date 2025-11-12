@@ -831,10 +831,11 @@ button.is-loading .btn-spinner {
 :root[data-theme='light'] .modal-backdrop {
   background-color: rgba(0, 0, 0, 0.6);
 }
+
+/* === PERBAIKAN #3: MODAL PADDING === */
 .modal-content {
   background-color: var(--color-bg-medium);
-  /* Kita beri padding atas yang normal (2rem) */
-  padding: 2rem 2.5rem 2.5rem 2.5rem; 
+  padding: 2.5rem; /* <-- KEMBALIKAN PADDING ATAS */
   border-radius: var(--radius-large);
   border: 1px solid var(--color-border);
   width: 100%;
@@ -1372,7 +1373,7 @@ button.is-loading .btn-spinner {
 
  .modal-content {
     max-width: 95%; 
-    padding: 1rem 1rem 1.5rem 1rem; /* <-- PADDING ATAS MOBILE DIPERBAIKI */
+    padding: 2rem 1rem 1.5rem 1rem; /* <-- PADDING ATAS MOBILE DIPERBAIKI */
     max-height: 90vh;
     display: flex;
     flex-direction: column;
@@ -1941,24 +1942,14 @@ input:checked + .theme-slider .slider-icon {
 /* Aturan khusus HANYA untuk tab di dalam Modal */
 .modal-content .dashboard-tabs {
   margin-bottom: 1.5rem; 
+  /* Hapus margin-top negatif */
 }
 
 .modal-content .dashboard-tabs > button {
-  flex: 1; 
-  width: 50%;
-  background-color: var(--color-bg-light);
-  color: var(--color-text-muted);
+  flex: 1;    /* Paksa 50/50 */
+  width: 50%; /* Paksa 50/50 */
 }
-.modal-content .dashboard-tabs > button.active {
-  background-color: var(--color-primary);
-  color: var(--color-button-text);
-  font-weight: 600;
-  box-shadow: 0 4px 10px var(--color-primary-glow-shadow);
-}
-.modal-content .dashboard-tabs > button:hover:not(.active) {
-  background-color: var(--color-border);
-  color: var(--color-text);
-}
+/* === AKHIR PERBAIKAN TAB === */
 
 
 .dashboard-grid {
