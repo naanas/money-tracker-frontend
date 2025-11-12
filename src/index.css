@@ -270,7 +270,7 @@ button:disabled {
 }
 
 /* [BARU] Tombol Loading Stabil */
-/* Gunakan kelas .is-loading pada button saat state loadingaktif */
+/* Gunakan kelas .is-loading pada button saat state loading aktif */
 button.is-loading {
   color: transparent !important;
   pointer-events: none;
@@ -1904,7 +1904,7 @@ input:checked + .theme-slider .slider-icon {
   overflow-x: auto; 
 }
 .dashboard-tabs button {
-  flex: 1; /* <-- INI PERBAIKANNYA */
+  flex: 1; /* <-- SUDAH DIPERBAIKI */
   background-color: var(--color-bg-light);
   color: var(--color-text-muted);
   font-weight: 500;
@@ -2196,14 +2196,14 @@ input:checked + .theme-slider .slider-icon {
   background-color: var(--color-primary);
   color: var(--color-button-text);
   font-size: 2.5rem;
-  line-height: 1;
+  /* line-height: 1; <-- DIHAPUS */
   display: flex;
   align-items: center;
   justify-content: center;
   box-shadow: var(--shadow-medium);
   border: 1px solid var(--color-primary-hover);
-  z-index: 101; /* <-- UBAH INI DARI 99 KE 101 */
-  padding-bottom: 5px; 
+  z-index: 101; 
+  /* padding-bottom: 5px; <-- DIHAPUS */
 }
 .fab:hover {
   transform: scale(1.1) translateY(-2px);
