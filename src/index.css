@@ -1898,7 +1898,6 @@ input:checked + .theme-slider .slider-icon {
   display: flex;
   gap: 1rem;
   background-color: var(--color-bg-medium);
-  padding: 2rem;
   border-radius: var(--radius-medium);
 }
 
