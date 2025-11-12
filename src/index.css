@@ -833,7 +833,7 @@ button.is-loading .btn-spinner {
 }
 .modal-content {
   background-color: var(--color-bg-medium);
-  padding: 2.5rem;
+  padding: 1.5rem 2.5rem 2.5rem 2.5rem;
   border-radius: var(--radius-large);
   border: 1px solid var(--color-border);
   width: 100%;
@@ -1371,7 +1371,7 @@ button.is-loading .btn-spinner {
 
  .modal-content {
     max-width: 95%; 
-    padding: 1.5rem 1rem; /* Ubah padding horizontal agar tidak terlalu mepet */
+    padding: 1rem 1rem 1.5rem 1rem; /* Ubah padding horizontal agar tidak terlalu mepet */
     max-height: 90vh; /* Ubah dari 85vh ke 90vh agar lebih tinggi */
     display: flex; /* Tambahkan ini */
     flex-direction: column; /* Tambahkan ini */
@@ -1915,8 +1915,8 @@ input:checked + .theme-slider .slider-icon {
 }
 
 .modal-content .dashboard-tabs button {
-  flex: 1; /* Paksa 2 tombol untuk berbagi ruang 50/50 */
-  width: 50%; /* Bantu flexbox */
+  margin-top: -0.5rem; /* <-- TAMBAHKAN INI */
+  margin-bottom: 1rem;
 }
 .dashboard-tabs button:hover {
   background-color: var(--color-border);
