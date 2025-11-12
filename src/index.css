@@ -833,7 +833,7 @@ button.is-loading .btn-spinner {
 }
 .modal-content {
   background-color: var(--color-bg-medium);
-  padding: 1.5rem 2.5rem 2.5rem 2.5rem; /* <-- PERBAIKAN PADDING ATAS */
+  padding: 1.5rem 2.5rem 2.5rem 2.5rem; /* <-- PADDING ATAS DIPERBAIKI */
   border-radius: var(--radius-large);
   border: 1px solid var(--color-border);
   width: 100%;
@@ -1371,7 +1371,7 @@ button.is-loading .btn-spinner {
 
  .modal-content {
     max-width: 95%; 
-    padding: 1rem 1rem 1.5rem 1rem; /* <-- PERBAIKAN PADDING ATAS MOBILE */
+    padding: 1rem 1rem 1.5rem 1rem; /* <-- PADDING ATAS MOBILE DIPERBAIKI */
     max-height: 90vh;
     display: flex;
     flex-direction: column;
@@ -1893,7 +1893,7 @@ input:checked + .theme-slider .slider-icon {
   display: none;
 }
 
-/* === STYLING UNTUK DASHBOARD TABS === */
+/* === [PERBAIKAN FINAL] STYLING UNTUK DASHBOARD TABS === */
 .dashboard-tabs {
   display: flex;
   gap: 0.5rem;
@@ -1903,42 +1903,52 @@ input:checked + .theme-slider .slider-icon {
   margin-bottom: 1.5rem;
   overflow-x: auto; 
 }
-/* === PERBAIKAN #2A === */
+
+/* Aturan default untuk SEMUA tombol tab (termasuk di modal) */
 .dashboard-tabs > button {
-  width: auto;      /* Aturan untuk tab di halaman utama (bisa scroll) */
-  flex-shrink: 0; 
-  background-color: var(--color-bg-light);
+  background-color: var(--color-bg-light); /* INI WARNA TOMBOL INAKTIF */
   color: var(--color-text-muted);
   font-weight: 500;
   border: none;
   padding: 0.75rem 1rem;
-  white-space: nowrap; 
+  white-space: nowrap;
+  flex-shrink: 0;
+  width: auto; /* Defaultnya auto */
 }
-.dashboard-tabs > button:hover {
+
+/* Aturan hover untuk SEMUA tombol tab (kecuali yg aktif) */
+.dashboard-tabs > button:hover:not(.active) {
   background-color: var(--color-border);
   color: var(--color-text);
   transform: none;
   box-shadow: none;
 }
+
+/* Aturan ACTIVE untuk SEMUA tombol tab */
 .dashboard-tabs > button.active {
   background-color: var(--color-primary);
   color: var(--color-button-text);
   font-weight: 600;
   box-shadow: 0 4px 10px var(--color-primary-glow-shadow);
 }
+
 .dashboard-tabs > button:disabled {
   background-color: var(--color-border);
   color: var(--color-text-muted);
 }
-/* === PERBAIKAN #2B: Aturan khusus untuk Tab di dalam Modal === */
+
+/* Aturan khusus HANYA untuk tab di dalam Modal */
 .modal-content .dashboard-tabs {
   margin-top: -0.5rem;
-  margin-bottom: 1rem; 
+  margin-bottom: 1.5rem; 
 }
+
 .modal-content .dashboard-tabs > button {
-  flex: 1; 
+  flex: 1;    /* Paksa 50/50 */
   width: 50%; /* Paksa 50/50 */
 }
+/* === AKHIR PERBAIKAN TAB === */
+
 
 .dashboard-grid {
   display: grid;
@@ -2197,7 +2207,7 @@ input:checked + .theme-slider .slider-icon {
   }
 }
 
-/* === PERBAIKAN #1: FAB === */
+/* === [PERBAIKAN FINAL] FAB === */
 .fab {
   position: fixed;
   bottom: 80px; /* 20px di atas nav mobile */
@@ -2214,7 +2224,7 @@ input:checked + .theme-slider .slider-icon {
   box-shadow: var(--shadow-medium);
   border: 1px solid var(--color-primary-hover);
   z-index: 101; 
-  padding: 0; /* <-- MENGHAPUS PADDING BAWAAN */
+  padding: 0; /* <-- PERBAIKAN: Menghapus padding bawaan */
 }
 .fab:hover {
   transform: scale(1.1) translateY(-2px);
