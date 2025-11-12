@@ -1,9 +1,11 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axiosClient from '../api/axiosClient';
 import { useAuth } from '../contexts/AuthContext';
+import { useData } from '../contexts/DataContext'; // [BARU]
 import { formatCurrency, formatNumberInput, parseNumberInput } from '../utils/format';
+import EmptyState from '../components/EmptyState'; // [BARU]
 
-// Komponen Form Akun (Tidak berubah)
+// ... (Komponen AccountForm tidak berubah, biarkan apa adanya)
 const AccountForm = ({ onAccountAdded, accountToEdit, setAccountToEdit }) => {
   const [name, setName] = useState('');
   const [type, setType] = useState('Bank');
@@ -100,38 +102,25 @@ const AccountForm = ({ onAccountAdded, accountToEdit, setAccountToEdit }) => {
   );
 };
 
+
 // Halaman Utama Akun
 const Accounts = () => {
   const { triggerSuccessAnimation } = useAuth();
-  const [accounts, setAccounts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  
+  // [BARU] Ambil data dari context
+  const { accounts, refetchAccounts, loading, error } = useData();
+  
   const [accountToEdit, setAccountToEdit] = useState(null);
-
-  // === [STATE BARU UNTUK SWIPE] ===
   const [swipedAccountId, setSwipedAccountId] = useState(null);
   const touchStartRef = useRef(null);
-  const minSwipeDistance = 50; // Jarak swipe minimal (pixel)
+  const minSwipeDistance = 50; 
 
-  const fetchAccounts = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await axiosClient.get('/api/accounts');
-      setAccounts(res.data.data);
-    } catch (err) {
-      setError(err.response?.data?.error || 'Gagal memuat akun');
-    }
-    setLoading(false);
-  }, []);
-
-  useEffect(() => {
-    fetchAccounts();
-  }, [fetchAccounts]);
+  // [DIHAPUS] fetchAccounts() lokal dihapus, diganti context
 
   const handleSuccess = () => {
-    fetchAccounts();
+    refetchAccounts(); // [DIUBAH] Panggil refetch dari context
     triggerSuccessAnimation();
-    setSwipedAccountId(null); // Tutup semua swipe
+    setSwipedAccountId(null); 
   };
 
   const handleDelete = async (account) => {
@@ -146,51 +135,31 @@ const Accounts = () => {
     }
   };
 
-  // === [HANDLER BARU UNTUK SWIPE] ===
+  // ... (Semua handler swipe tidak berubah)
   const handleTouchStart = (e, accountId) => {
-    // Hanya simpan jika tidak ada kartu lain yang terbuka
     if (!swipedAccountId || swipedAccountId === accountId) {
       touchStartRef.current = e.targetTouches[0].clientX;
     }
   };
-
   const handleTouchEnd = (e, accountId) => {
     if (touchStartRef.current === null) return;
-
     const touchEnd = e.changedTouches[0].clientX;
     const deltaX = touchEnd - touchStartRef.current;
-
-    // Geser ke Kiri (Buka)
-    if (deltaX < -minSwipeDistance) {
-      setSwipedAccountId(accountId);
-    } 
-    // Geser ke Kanan (Tutup)
-    else if (deltaX > minSwipeDistance) {
-      setSwipedAccountId(null);
-    }
-    
+    if (deltaX < -minSwipeDistance) setSwipedAccountId(accountId);
+    else if (deltaX > minSwipeDistance) setSwipedAccountId(null);
     touchStartRef.current = null;
   };
-  
-  // Klik pada kartu untuk menutupnya
   const handleCardClick = (accountId) => {
-    if (swipedAccountId === accountId) {
-      setSwipedAccountId(null);
-    }
-    // Jika diklik tapi tidak terbuka, jangan lakukan apa-apa
+    if (swipedAccountId === accountId) setSwipedAccountId(null);
   };
-
-  // Handler baru untuk tombol yang menutup swipe setelah diklik
   const handleEditClick = (account) => {
     setAccountToEdit(account);
-    setSwipedAccountId(null); // Tutup swipe
+    setSwipedAccountId(null);
   };
-
   const handleDeleteClick = (account) => {
     handleDelete(account);
-    setSwipedAccountId(null); // Tutup swipe
+    setSwipedAccountId(null);
   };
-  // === [AKHIR HANDLER BARU] ===
 
   return (
     <div className="accounts-page">
@@ -208,10 +177,13 @@ const Accounts = () => {
         {loading && <p>Memuat...</p>}
         {error && <p className="error">{error}</p>}
         {!loading && accounts.length === 0 && (
-          <p>Anda belum memiliki akun. Silakan tambahkan di atas.</p>
+          // [BARU] Empty state
+          <EmptyState
+            title="Belum Ada Akun"
+            message="Anda belum memiliki akun. Silakan tambahkan satu di atas untuk memulai."
+          />
         )}
         
-        {/* === [STRUKTUR JSX DIMODIFIKASI] === */}
         <div className="pocket-grid">
           {accounts.map(acc => (
             <div className="pocket-item-swipe-wrapper" key={acc.id}>
@@ -248,13 +220,10 @@ const Accounts = () => {
                 <span style={{fontSize: '0.8em', color: 'var(--color-text-muted)', textAlign: 'right'}}>
                   Saldo Awal: {formatCurrency(acc.initial_balance)}
                 </span>
-                {/* DIV account-actions yang lama dihapus dari sini */}
               </div>
             </div>
           ))}
         </div>
-        {/* === [AKHIR MODIFIKASI JSX] === */}
-
       </div>
     </div>
   );

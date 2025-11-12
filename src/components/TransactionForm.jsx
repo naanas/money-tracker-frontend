@@ -1,31 +1,59 @@
-// naanas/money-tracker-frontend/src/components/TransactionForm.jsx
-
 import React, { useState, useEffect, useRef } from 'react';
 import axiosClient from '../api/axiosClient';
-import { formatNumberInput, parseNumberInput } from '../utils/format';
+import { formatNumberInput, parseNumberInput, formatCurrency } from '../utils/format'; // [BARU] Impor formatCurrency
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../contexts/AuthContext';
+
+// [BARU] Komponen Review AI
+const AiReviewBox = ({ result, onApply, onCancel }) => {
+  const { total, date, merchant } = result;
+  return (
+    <div className="ai-review-box">
+      <h4>✅ Struk Terbaca!</h4>
+      <p>Silakan periksa data di bawah sebelum diterapkan ke form.</p>
+      <ul className="ai-review-list">
+        <li>
+          <span>Total</span>
+          <strong>{formatCurrency(total)}</strong>
+        </li>
+        <li>
+          <span>Toko</span>
+          <strong>{merchant || 'Tidak terdeteksi'}</strong>
+        </li>
+        <li>
+          <span>Tanggal</span>
+          <strong>{date ? new Date(date).toLocaleDateString('id-ID') : 'Tidak terdeteksi'}</strong>
+        </li>
+      </ul>
+      <div className="ai-review-actions">
+        <button type="button" className="btn-secondary" onClick={onCancel}>Batal</button>
+        <button type="button" onClick={onApply}>Terapkan</button>
+      </div>
+    </div>
+  );
+};
+
 
 const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCategoryModal, selectedDate, isRefetching }) => {
   const { user } = useAuth(); 
   
-  // --- STATE FORM UTAMA ---
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState('');
   const [type, setType] = useState('expense');
   const [description, setDescription] = useState('');
   const [accountId, setAccountId] = useState(''); 
   
-  // Helper tanggal hari ini (YYYY-MM-DD)
   const getTodayDateString = () => new Date().toISOString().split('T')[0];
   const [date, setDate] = useState(getTodayDateString());
   
-  // --- STATE UI & LOADING ---
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false); 
   const [receiptUrl, setReceiptUrl] = useState(null); 
   const [isProcessing, setIsProcessing] = useState(false); 
   const [processingStatus, setProcessingStatus] = useState(''); 
+  
+  // [BARU] State untuk hasil AI
+  const [aiResult, setAiResult] = useState(null);
   
   const fileInputRef = useRef(null); 
 
@@ -41,21 +69,29 @@ const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCateg
     setCategory('');
   }, [type]);
 
+  // [DIUBAH] Gunakan prop selectedDate untuk tanggal
+  useEffect(() => {
+    if (selectedDate) {
+      const offset = selectedDate.getTimezoneOffset();
+      const localDate = new Date(selectedDate.getTime() - (offset*60*1000));
+      setDate(localDate.toISOString().split('T')[0]);
+    }
+  }, [selectedDate]);
+
   const handleScanClick = () => {
     fileInputRef.current.click();
   };
 
-  // === LOGIKA UTAMA SCAN ===
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (!file || !user) return;
 
     setIsProcessing(true);
+    setAiResult(null); // [BARU] Reset review box
     setError('');
     setProcessingStatus('Memulai proses...');
 
     try {
-      // 1. Upload ke Supabase
       setProcessingStatus('Mengupload struk...');
       const fileExt = file.name.split('.').pop();
       const fileName = `${user.id}/${Date.now()}.${fileExt}`;
@@ -71,9 +107,8 @@ const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCateg
         .from(bucketName)
         .getPublicUrl(uploadData.path);
       const publicUrl = urlData.publicUrl;
-      setReceiptUrl(publicUrl);
+      setReceiptUrl(publicUrl); // Simpan URL untuk submit
 
-      // 2. Panggil API Python
       setProcessingStatus('🤖 AI sedang membaca struk...');
       const API_URL = import.meta.env.VITE_PYTHON_API_URL; 
       if (!API_URL) throw new Error("URL API Python belum disetting di .env");
@@ -89,34 +124,11 @@ const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCateg
       const result = await response.json();
 
       if (result.success && result.data) {
-          // Ambil data hasil scan
-          const { total, date: detectedDate, merchant } = result.data;
-
-          // --- AUTO-FILL LOGIC DI SINI ---
-          
-          // 1. Isi Jumlah
-          if (total > 0) {
-              setAmount(total.toString());
-              setProcessingStatus(`✅ Sukses! Total: Rp ${total.toLocaleString('id-ID')}`);
-          } else {
-              setProcessingStatus('⚠️ Struk terbaca, tapi total tidak ditemukan otomatis.');
-          }
-
-          // 2. Isi Tanggal (Jika ditemukan di struk)
-          if (detectedDate) {
-              setDate(detectedDate);
-          }
-
-          // 3. Isi Deskripsi (Nama Toko)
-          if (merchant && merchant !== "Merchant" && merchant !== "Tidak diketahui") {
-              // Bersihkan nama merchant dari karakter aneh jika ada
-              const cleanMerchant = merchant.replace(/[^a-zA-Z0-9\s.,&-]/g, '').trim();
-              setDescription(`Belanja di ${cleanMerchant}`);
-          } else {
-              setDescription('Belanja harian');
-          }
-
-          setType('expense'); 
+          // [DIUBAH] Tampilkan review box, jangan langsung isi form
+          setAiResult(result.data);
+          setProcessingStatus('✅ Struk terbaca! Silakan review.');
+      } else {
+          throw new Error(result.error || 'AI tidak dapat memproses struk.');
       }
 
     } catch (err) {
@@ -127,6 +139,36 @@ const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCateg
       setIsProcessing(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
+  };
+
+  // [BARU] Handler untuk review AI
+  const handleAiApply = () => {
+    if (!aiResult) return;
+    
+    // 1. Isi Jumlah
+    if (aiResult.total > 0) {
+      setAmount(aiResult.total.toString());
+    }
+    // 2. Isi Tanggal
+    if (aiResult.date) {
+      setDate(aiResult.date);
+    }
+    // 3. Isi Deskripsi
+    if (aiResult.merchant && aiResult.merchant !== "Merchant" && aiResult.merchant !== "Tidak diketahui") {
+      const cleanMerchant = aiResult.merchant.replace(/[^a-zA-Z0-9\s.,&-]/g, '').trim();
+      setDescription(`Belanja di ${cleanMerchant}`);
+    } else {
+      setDescription('Belanja harian');
+    }
+    setType('expense');
+    setAiResult(null); // Sembunyikan review box
+    setProcessingStatus('Data AI telah diterapkan ke form.');
+  };
+  
+  const handleAiCancel = () => {
+    setAiResult(null);
+    setProcessingStatus('');
+    setReceiptUrl(null); // Hapus juga struknya jika dibatalkan
   };
 
   const handleSubmit = async (e) => {
@@ -153,6 +195,7 @@ const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCateg
       setDescription('');
       setReceiptUrl(null);
       setProcessingStatus('');
+      setAiResult(null); // [BARU]
       setDate(getTodayDateString()); 
       onTransactionAdded(); 
       
@@ -174,13 +217,22 @@ const TransactionForm = ({ categories, accounts, onTransactionAdded, onOpenCateg
         </div>
       )}
 
+      {/* [BARU] Tampilkan AI Review Box */}
+      {aiResult && (
+        <AiReviewBox
+          result={aiResult}
+          onApply={handleAiApply}
+          onCancel={handleAiCancel}
+        />
+      )}
+
       <input type="file" accept="image/*" ref={fileInputRef} onChange={handleFileChange} style={{ display: 'none' }} />
       
       <button 
         type="button" 
         className="btn-secondary" 
         onClick={handleScanClick}
-        disabled={isLoading}
+        disabled={isLoading || aiResult} // Disable jika sedang review
         style={{ marginBottom: '1rem', background: 'var(--color-bg-light)' }}
       >
         📸 Scan Struk dengan AI

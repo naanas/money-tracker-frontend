@@ -5,13 +5,14 @@ import Dashboard from './pages/Dashboard';
 import AuthCallback from './pages/AuthCallback';
 import PrivateRoute from './components/PrivateRoute';
 import AuthLayout from './components/AuthLayout';
-
-// [BARU] Impor halaman baru
 import Accounts from './pages/Accounts';
 import Reports from './pages/Reports';
 import MainLayout from './components/MainLayout';
-// [BARU] Impor halaman ResetPassword
 import ResetPassword from './pages/ResetPassword';
+
+// [BARU] Impor halaman baru
+import Budget from './pages/Budget';
+import Savings from './pages/Savings';
 
 function App() {
   return (
@@ -20,7 +21,6 @@ function App() {
       <Route element={<AuthLayout />}>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        {/* [BARU] Tambahkan rute untuk reset password di sini */}
         <Route path="/reset-password" element={<ResetPassword />} />
       </Route>
 
@@ -39,6 +39,9 @@ function App() {
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="accounts" element={<Accounts />} />
         <Route path="reports" element={<Reports />} />
+        {/* [BARU] Tambahkan rute untuk Budget dan Savings */}
+        <Route path="budget" element={<Budget />} />
+        <Route path="savings" element={<Savings />} />
       </Route>
       
     </Routes>

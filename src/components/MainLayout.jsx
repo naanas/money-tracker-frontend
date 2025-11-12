@@ -3,6 +3,9 @@ import { Link, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import axiosClient from '../api/axiosClient';
 import ThemeToggle from './ThemeToggle';
+// [BARU] Impor modal dan hook data baru
+import AddTransactionModal from './AddTransactionModal';
+import { useData } from '../contexts/DataContext';
 
 // Pisahkan Sidebar agar bisa dipakai ulang
 const Sidebar = ({ onLogout, onReset }) => {
@@ -17,18 +20,30 @@ const Sidebar = ({ onLogout, onReset }) => {
       </div>
       
       <nav className="sidebar-nav">
-        {/* ... (Link navigasi tidak berubah) ... */}
+        {/* === [NAVIGASI DIPERBARUI] === */}
         <Link 
           to="/dashboard" 
           className={currentPath === '/' || currentPath === '/dashboard' ? 'active' : ''}
         >
-          Dashboard
+          Ringkasan
         </Link>
         <Link 
           to="/accounts" 
           className={currentPath === '/accounts' ? 'active' : ''}
         >
-          Akun Saya
+          Akun
+        </Link>
+        <Link 
+          to="/budget" 
+          className={currentPath === '/budget' ? 'active' : ''}
+        >
+          Budget
+        </Link>
+        <Link 
+          to="/savings" 
+          className={currentPath === '/savings' ? 'active' : ''}
+        >
+          Tabungan
         </Link>
         <Link 
           to="/reports" 
@@ -36,10 +51,10 @@ const Sidebar = ({ onLogout, onReset }) => {
         >
           Laporan
         </Link>
+        {/* === [AKHIR NAVIGASI DIPERBARUI] === */}
       </nav>
 
       <div className="sidebar-footer">
-        {/* Toggle ini untuk Desktop */}
         <ThemeToggle /> 
         <div className="user-info">{user?.email}</div>
         <button onClick={onLogout} className="logout-btn">
@@ -58,8 +73,14 @@ const MainLayout = () => {
   const { logout } = useAuth();
   const [isResetting, setIsResetting] = useState(false);
   
-  // State untuk mengontrol menu dropdown mobile
+  // [BARU] State untuk mengontrol menu dropdown mobile
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  // [BARU] State untuk FAB modal
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  
+  // [BARU] Ambil data dari context untuk modal
+  const { categories, accounts, refetchCategories, refetchAccounts, refetchSavings } = useData();
+  const { triggerSuccessAnimation } = useAuth();
 
   const handleResetTransactions = async () => {
     // ... (Fungsi ini tidak berubah) ...
@@ -80,16 +101,23 @@ const MainLayout = () => {
     setIsResetting(false); 
   };
 
-  // Wrapper untuk handle reset dari dropdown
   const handleMobileMenuReset = () => {
     handleResetTransactions();
     setIsMobileMenuOpen(false);
   };
   
-  // Wrapper untuk handle logout dari dropdown
   const handleMobileMenuLogout = () => {
     logout();
     setIsMobileMenuOpen(false);
+  };
+
+  // [BARU] Fungsi handler setelah modal ditutup
+  const onModalSuccess = () => {
+    setIsAddModalOpen(false);
+    triggerSuccessAnimation();
+    // Panggil refetch yang relevan
+    refetchAccounts();
+    refetchSavings(); 
   };
 
   return (
@@ -105,12 +133,11 @@ const MainLayout = () => {
             <h1>💰 Money Tracker</h1>
             
             <div>
-              {/* [BARU] Container Dropdown Menu */}
               <div className="mobile-menu-container">
                 <button 
                   className="mobile-menu-toggle" 
                   onClick={(e) => {
-                    e.stopPropagation(); // Mencegah main-content onClick
+                    e.stopPropagation(); 
                     setIsMobileMenuOpen(!isMobileMenuOpen);
                   }}
                   title="Menu Opsi"
@@ -120,14 +147,10 @@ const MainLayout = () => {
                 
                 {isMobileMenuOpen && (
                   <div className="mobile-menu-dropdown" onClick={(e) => e.stopPropagation()}>
-                    
-                    {/* === [BARU] TOMBOL THEME TOGGLE DITAMBAHKAN DI SINI === */}
                     <div className="mobile-menu-item">
                       <span>Ganti Tema</span>
                       <ThemeToggle />
                     </div>
-                    {/* === [AKHIR PENAMBAHAN] === */}
-
                     <button onClick={handleMobileMenuReset} className="menu-item-reset">
                       Reset Semua Data
                     </button>
@@ -139,17 +162,40 @@ const MainLayout = () => {
               </div>
             </div>
             
+            {/* === [NAVIGASI MOBILE DIPERBARUI] === */}
             <nav className="mobile-nav">
-                <Link to="/dashboard">Dashboard</Link>
+                <Link to="/dashboard">Ringkasan</Link>
                 <Link to="/accounts">Akun</Link>
+                <Link to="/budget">Budget</Link>
+                <Link to="/savings">Tabungan</Link>
                 <Link to="/reports">Laporan</Link>
             </nav>
+            {/* === [AKHIR NAVIGASI MOBILE] === */}
         </header>
-
-        {/* [DIHAPUS] ThemeToggle yang melayang dihapus dari sini */}
 
         <Outlet />
       </main>
+
+      {/* === [FAB (FLOATING ACTION BUTTON) BARU] === */}
+      <button 
+        className="fab" 
+        onClick={() => setIsAddModalOpen(true)}
+        title="Tambah Transaksi/Transfer"
+      >
+        +
+      </button>
+
+      {/* === [MODAL TRANSAKSI BARU] === */}
+      {isAddModalOpen && (
+        <AddTransactionModal
+          isOpen={isAddModalOpen}
+          onClose={() => setIsAddModalOpen(false)}
+          categories={categories}
+          accounts={accounts}
+          onSuccess={onModalSuccess}
+          onRefetchCategories={refetchCategories}
+        />
+      )}
     </div>
   );
 };
