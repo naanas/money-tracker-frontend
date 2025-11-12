@@ -1346,11 +1346,12 @@ button.is-loading .btn-spinner {
     align-items: center;
     justify-content: center;
     height: 100%;
-    padding: 0 0.25rem;
-    font-size: 0.95rem;
+    padding: 0 0.2rem; /* Perkecil padding */
+    font-size: 0.8rem; /* <-- PERKECIL FONT DARI 0.85rem atau 0.95rem */
     color: var(--color-text-muted);
     text-decoration: none;
     font-weight: 500;
+    white-space: nowrap; /* Pastikan tidak terpotong */
   }
   .mobile-nav a.active {
     color: var(--color-primary);
@@ -1368,10 +1369,12 @@ button.is-loading .btn-spinner {
     padding: 1rem;
   }
 
-  .modal-content {
+ .modal-content {
     max-width: 95%; 
-    padding: 1.5rem; 
-    max-height: 85vh; 
+    padding: 1.5rem 1rem; /* Ubah padding horizontal agar tidak terlalu mepet */
+    max-height: 90vh; /* Ubah dari 85vh ke 90vh agar lebih tinggi */
+    display: flex; /* Tambahkan ini */
+    flex-direction: column; /* Tambahkan ini */
   }
 
   .modal-actions {
@@ -2182,9 +2185,7 @@ input:checked + .theme-slider .slider-icon {
     font-size: 1.25rem !important;
   }
 }
-/* === [GAYA-GAYA BARU DI BAWAH INI] === */
 
-/* === FAB (Floating Action Button) === */
 .fab {
   position: fixed;
   bottom: 80px; /* 20px di atas nav mobile */
@@ -2201,8 +2202,8 @@ input:checked + .theme-slider .slider-icon {
   justify-content: center;
   box-shadow: var(--shadow-medium);
   border: 1px solid var(--color-primary-hover);
-  z-index: 99;
-  padding-bottom: 5px; /* Menengahkan '+' */
+  z-index: 101; /* <-- UBAH INI DARI 99 KE 101 */
+  padding-bottom: 5px; 
 }
 .fab:hover {
   transform: scale(1.1) translateY(-2px);
