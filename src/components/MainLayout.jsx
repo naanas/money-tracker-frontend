@@ -177,7 +177,7 @@ const MainLayout = () => {
       </main>
 
       {/* === [FAB (FLOATING ACTION BUTTON) BARU] === */}
-      <button class="fab" aria-label="Tambah item">+</button>
+      <button class="fab" aria-label="Tambah Transaksi/Transfer">+</button>
 
       {/* === [MODAL TRANSAKSI BARU] === */}
       {isAddModalOpen && (
