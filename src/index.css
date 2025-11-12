@@ -2418,3 +2418,27 @@ input:checked + .theme-slider .slider-icon {
   color: var(--color-primary);
   font-weight: 600;
 }
+
+/* === [PENAMBAHAN BARU] Style untuk Scrollbar === */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-bg-light);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background-color: var(--color-border);
+  border-radius: 10px;
+  border: 2px solid var(--color-bg-light);
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-primary);
+}
+
+/* === [PENAMBAHAN BARU] Style untuk Seleksi Teks === */
+::selection {
+  background-color: var(--color-primary);
+  color: var(--color-button-text);
+}
