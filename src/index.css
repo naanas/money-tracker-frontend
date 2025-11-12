@@ -2210,10 +2210,10 @@ input:checked + .theme-slider .slider-icon {
 /* === [PERBAIKAN FINAL] FAB === */
 .fab {
   position: fixed;
-  bottom: 100px; /* 20px di atas nav mobile */
+  bottom: 100px;
   right: 20px;
-  width: 50px;;
-  height: 50px;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
   background-color: var(--color-primary);
   color: var(--color-button-text);
@@ -2223,14 +2223,24 @@ input:checked + .theme-slider .slider-icon {
   justify-content: center;
   box-shadow: var(--shadow-medium);
   border: 1px solid var(--color-primary-hover);
-  z-index: 101; 
-  padding: 0; /* <-- PERBAIKAN: Menghapus padding bawaan */
+  z-index: 101;
+  padding: 0; /* Pastikan padding 0 */
+  margin: 0; /* Pastikan margin 0 */
+  line-height: 1; /* Penting untuk teks/icon */
+  cursor: pointer; /* Tambahkan pointer cursor */
 }
+
+/* Jika menggunakan elemen button, reset style tambahan */
+.fab {
+  box-sizing: border-box; /* Pastikan box-sizing konsisten */
+}
+
 .fab:hover {
   transform: scale(1.1) translateY(-2px);
   box-shadow: 0 8px 20px var(--color-primary-glow-shadow);
 }
-/* Sembunyikan di desktop, karena ada sidebar */
+
+/* Sembunyikan di desktop */
 @media (min-width: 769px) {
   .fab {
     display: none;
