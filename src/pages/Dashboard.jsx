@@ -1,15 +1,15 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { useAuth } from '../contexts/AuthContext';
 import axiosClient from '../api/axiosClient';
 import { formatCurrency, formatMonthYear } from '../utils/format';
-import { useData } from '../contexts/DataContext'; // [BARU]
+import { useData } from '../contexts/DataContext';
 
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 
 import AccountSummary from '../components/AccountSummary'; 
 import TransactionDetailModal from '../components/TransactionDetailModal';
-import EmptyState from '../components/EmptyState'; // [BARU]
+import EditTransactionModal from '../components/EditTransactionModal'; // [BARU] Import Modal Edit
+import EmptyState from '../components/EmptyState';
 
 const LoadingSpinner = () => (
   <div className="page-spinner-container" style={{ minHeight: '50vh' }}>
@@ -25,13 +25,14 @@ const Dashboard = () => {
   const [analytics, setAnalytics] = useState(null);
   const [transactions, setTransactions] = useState([]);
   
-  // [BARU] Ambil data global dari Context
+  // Ambil data global dari Context
   const { 
     accounts, 
     categories, 
     loading: dataLoading, 
     refetchAccounts, 
-    refetchSavings 
+    refetchSavings,
+    refetchCategories // [BARU] Diperlukan untuk modal edit (jika tambah kategori)
   } = useData();
   
   // State UI
@@ -39,7 +40,13 @@ const Dashboard = () => {
   const [isRefetching, setIsRefetching] = useState(false); 
   const [error, setError] = useState('');
   
+  // State Modal Detail
   const [selectedTransaction, setSelectedTransaction] = useState(null);
+  
+  // [BARU] State Modal Edit
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [transactionToEdit, setTransactionToEdit] = useState(null);
+
   const [animationClass, setAnimationClass] = useState('');
 
   // --- Fungsi Data Fetching ---
@@ -57,7 +64,7 @@ const Dashboard = () => {
 
     // Jangan fetch jika data statis (akun/kategori) belum ada
     if (accounts.length === 0 || categories.length === 0) {
-      if (!dataLoading) { // Hanya jika data context selesai loading
+      if (!dataLoading) { 
          setAnalytics(null);
          setTransactions([]);
       }
@@ -84,29 +91,42 @@ const Dashboard = () => {
 
   // Efek untuk memuat data bulanan saat halaman dibuka atau data konteks berubah
   useEffect(() => {
-    // Hanya fetch jika data konteks sudah dimuat
     if (!dataLoading) {
       fetchMonthlyData(false); 
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dataLoading, fetchMonthlyData]); // <-- fetchMonthlyData tidak di dependency array awal
+  }, [dataLoading, fetchMonthlyData]); 
 
   // Efek untuk refetch saat tanggal berubah
   useEffect(() => {
     if (!dataLoading) {
         fetchMonthlyData(true);
     }
-  }, [selectedDate, dataLoading]); // <-- Hapus fetchMonthlyData dari sini
+  }, [selectedDate, dataLoading]);
 
-  // Fungsi update data (dipanggil dari modal)
+  // Fungsi update data
   const handleDataUpdate = async () => {
     if (accounts.length > 0 && categories.length > 0) {
-      await fetchMonthlyData(true); // true = refetch
+      await fetchMonthlyData(true); 
     }
-    // Refetch data global
     refetchAccounts();
     refetchSavings();
   };
+
+  // --- [BARU] Handlers Edit ---
+  const handleEditClick = (transaction) => {
+    setTransactionToEdit(transaction); // Simpan data yang mau diedit
+    setSelectedTransaction(null);      // Tutup modal detail
+    setIsEditModalOpen(true);          // Buka modal edit
+  };
+
+  const handleEditSuccess = () => {
+    setIsEditModalOpen(false);
+    setTransactionToEdit(null);
+    handleDataUpdate(); // Refresh semua data dashboard
+    alert("Transaksi berhasil diperbarui!"); 
+  };
+  // -----------------------------
 
   // --- Memos ---
   const totalBalance = useMemo(() => {
@@ -119,7 +139,7 @@ const Dashboard = () => {
   const totalTransferredToSavings = analytics?.summary?.total_transferred_to_savings || 0;
   const currentBalance = totalIncome - totalExpensesFiltered; 
 
-  // --- Handlers ---
+  // --- Handlers UI ---
   const handlePrevMonth = () => {
     if (isRefetching || animationClass || isLoading) return; 
     setAnimationClass('slide-in-right');
@@ -137,7 +157,7 @@ const Dashboard = () => {
     setIsRefetching(true); 
     try {
       await axiosClient.delete(`/api/transactions/${transactionId}`);
-      handleDataUpdate(); // Panggil fungsi update
+      handleDataUpdate(); 
     } catch (err) {
       setError(err.response?.data?.error || 'Gagal menghapus transaksi');
       setIsRefetching(false);
@@ -163,8 +183,6 @@ const Dashboard = () => {
         <button onClick={handleNextMonth} disabled={isRefetching || !!animationClass || isLoading}>&gt;</button>
       </div>
       
-      {/* Hapus Navigasi Tab */}
-
       <div className="dashboard-content-wrapper">
         {showSkeleton ? (
           <LoadingSpinner />
@@ -176,7 +194,6 @@ const Dashboard = () => {
           </div>
         ) :
         (accounts.length === 0) ? (
-          // [BARU] Menggunakan EmptyState
           <EmptyState
             title="Selamat Datang! 🎉"
             message="Anda belum memiliki akun. Akun adalah tempat Anda menyimpan uang (misal: Bank, E-Wallet, atau Tunai). Silakan buat akun pertama Anda untuk memulai."
@@ -190,8 +207,7 @@ const Dashboard = () => {
             onAnimationEnd={() => setAnimationClass('')} 
           >
             
-            {/* --- TAB 1: SUMMARY (Sekarang satu-satunya konten) --- */}
-            
+            {/* --- SUMMARY SECTION --- */}
             {analytics ? (
               <section className="card card-summary">
                 <h3>Ringkasan {formatMonthYear(selectedDate)}</h3>
@@ -221,6 +237,7 @@ const Dashboard = () => {
 
             <AccountSummary accounts={accounts} />
 
+            {/* --- LIST TRANSAKSI --- */}
             <section className="card card-list full-height-card">
               <h3>Transaksi {formatMonthYear(selectedDate)}</h3>
               <ul>
@@ -258,7 +275,6 @@ const Dashboard = () => {
                     </li>
                   ))
                 ) : (
-                  // [BARU] Empty state yang lebih baik
                   <EmptyState 
                     title="Tidak Ada Transaksi"
                     message="Belum ada transaksi yang tercatat di bulan ini."
@@ -272,13 +288,28 @@ const Dashboard = () => {
         }
       </div> 
 
-      {/* Modal Detail Transaksi (Tidak berubah) */}
+      {/* [MODIFIKASI] Modal Detail Transaksi dengan prop onEdit */}
       {selectedTransaction && (
         <TransactionDetailModal 
           transaction={selectedTransaction} 
-          onClose={() => setSelectedTransaction(null)} 
+          onClose={() => setSelectedTransaction(null)}
+          onEdit={handleEditClick} // Pasang handler edit di sini
         />
       )}
+
+      {/* [BARU] Modal Edit Transaksi */}
+      {isEditModalOpen && (
+        <EditTransactionModal
+            isOpen={isEditModalOpen}
+            onClose={() => setIsEditModalOpen(false)}
+            transaction={transactionToEdit}
+            categories={categories}
+            accounts={accounts}
+            onSuccess={handleEditSuccess}
+            onRefetchCategories={refetchCategories}
+        />
+      )}
+
     </>
   );
 };
